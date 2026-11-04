@@ -4,9 +4,23 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <cmath>
+#include <cstdlib>
 
 struct Mahshy { int id; float yStart, yEnd, centerY; };
-struct Hawawshy { int laneId; float xPos, spd; };
+
+// Member 2 Player Unit (with health, jump/duck state & tint timer)
+struct Hawawshy {
+    int laneId;
+    float xPos;
+    float spd;
+    float yOffset;    // Jump height offset
+    bool isJumping;   // Air state
+    bool isDucking;   // Ducking state
+    float jumpTimer;  // Jump duration
+    int health;       // Player unit health
+    float damageTint; // Red flash timer when damaged
+};
 
 struct Beshamel {
     float x, y;
@@ -106,7 +120,8 @@ void dos_zrar(GLFWwindow* tabl, int nono, int zaza, int pika, int mizo) {
     if (nono == GLFW_KEY_SPACE && pika == GLFW_PRESS) {
         for (size_t i = 0; i < tamtam.size(); ++i) {
             if (tamtam[i]) {
-                basal.push_back({ (int)i, soso.akhdar, 3.5f });
+                // laneId, xPos, spd, yOffset, isJumping, isDucking, jumpTimer, health, damageTint
+                basal.push_back({ (int)i, soso.akhdar, 3.5f, 0.0f, false, false, 0.0f, 5, 0.0f });
             }
         }
     }
@@ -161,6 +176,8 @@ struct Enemy {
     float speed;
     int damage;
     bool isAlive;
+    float damageTint; // Red flash timer when damaged
+    bool blocked;     // True while colliding with a player this frame
 
     // --- ENEMY CONSTRUCTOR (PDF Spec: Easy=5, Med=5, Hard=7 HP) ---
 Enemy(int enemyId, EnemyType t, int lane, float startX, float laneY) {
@@ -170,6 +187,8 @@ Enemy(int enemyId, EnemyType t, int lane, float startX, float laneY) {
     xPos = startX;
     yPos = laneY;
     isAlive = true;
+    damageTint = 0.0f;
+    blocked = false;
 
     if (type == EASY_UPPER) {
         health = 5;      // PDF Spec: 5 lives
@@ -187,7 +206,7 @@ Enemy(int enemyId, EnemyType t, int lane, float startX, float laneY) {
 }
 
     void update(float dt) {
-        if (isAlive) {
+        if (isAlive && !blocked) {
             xPos -= speed * dt; // Move left towards the castle base
         }
     }
@@ -358,55 +377,107 @@ int main() {
                 spawnWave(g_currentWave, soso);
             }
 
-            // Enemy Updates & Loss Condition
-            bool allDefeated = true;
-            for (auto& enemy : g_enemies) {
-                if (enemy.isAlive) {
-                    enemy.update(koko);
-                    allDefeated = false;
-
-                    // LOSS CONDITION: Freeze game when enemy hits Home Base (X <= 3.5f)
-                    if (enemy.xPos <= 3.5f) {
-                        g_gameOver = true;
-                        std::cout << "GAME OVER! Enemy breached Home Base!" << std::endl;
-                    }
-
-                    // Enemy Defeat Check
-                    if (enemy.health <= 0) {
-                        enemy.isAlive = false;
-                        Coin drop;
-                        drop.xPos = enemy.xPos;
-                        drop.yPos = enemy.yPos;
-                        drop.collected = false;
-                        g_coins.push_back(drop);
+            // --- MEMBER 2: Jump & Duck (only players in selected lanes) ---
+            bool wPressed = (glfwGetKey(hamada, GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(hamada, GLFW_KEY_UP) == GLFW_PRESS);
+            bool sPressed = (glfwGetKey(hamada, GLFW_KEY_S) == GLFW_PRESS || glfwGetKey(hamada, GLFW_KEY_DOWN) == GLFW_PRESS);
+            for (auto& p : basal) {
+                bool laneSelected = tamtam[p.laneId];
+                if (laneSelected && wPressed && !p.isJumping) {
+                    p.isJumping = true;
+                    p.jumpTimer = 0.0f;
+                }
+                p.isDucking = laneSelected && sPressed;
+                if (p.isJumping) {
+                    p.jumpTimer += koko * 5.0f;
+                    p.yOffset = 0.6f * sin(p.jumpTimer);
+                    if (p.jumpTimer >= 3.14159f) {
+                        p.isJumping = false;
+                        p.yOffset = 0.0f;
                     }
                 }
             }
 
-            // Projectile vs Enemy Collision Check
-            for (auto pIt = basal.begin(); pIt != basal.end(); ) {
-                bool projectileHit = false;
-                for (auto& enemy : g_enemies) {
-                    if (enemy.isAlive && enemy.laneId == pIt->laneId && std::abs(pIt->xPos - enemy.xPos) < 0.6f) {
-                        enemy.health -= 1;
-                        projectileHit = true;
+            // --- MEMBER 2: Collision, Block & Damage Engine (vs Member 3 enemies) ---
+            for (auto& enemy : g_enemies) {
+                enemy.blocked = false;
+                if (enemy.damageTint > 0.0f) enemy.damageTint -= koko * 3.0f;
+            }
+            for (auto pIt = basal.begin(); pIt != basal.end();) {
+                bool playerDestroyed = false;
+                bool isColliding = false;
+                if (pIt->damageTint > 0.0f) pIt->damageTint -= koko * 3.0f;
 
-                        if (enemy.health <= 0) {
-                            enemy.isAlive = false;
-                            Coin drop;
-                            drop.xPos = enemy.xPos;
-                            drop.yPos = enemy.yPos;
-                            drop.collected = false;
-                            g_coins.push_back(drop);
-                            std::cout << "Enemy Defeated! Gold Coin Dropped!" << std::endl;
+                for (auto& enemy : g_enemies) {
+                    if (!enemy.isAlive || enemy.laneId != pIt->laneId) continue;
+                    if (std::abs(pIt->xPos - enemy.xPos) < 0.6f) {
+                        isColliding = true;
+                        enemy.blocked = true;
+
+                        bool hit = true;
+                        if (enemy.type == EASY_UPPER && pIt->isDucking) hit = false;   // duck avoids high attacks
+                        if (enemy.type == MEDIUM_LOWER && pIt->isJumping) hit = false; // jump avoids low attacks
+
+                        if (hit && pIt->damageTint <= 0.0f) {
+                            pIt->health -= enemy.damage;
+                            pIt->damageTint = 0.5f;
+                            enemy.health -= 1;
+                            enemy.damageTint = 0.5f;
+
+                            if (enemy.health <= 0) {
+                                enemy.isAlive = false;
+                                Coin drop;
+                                drop.xPos = enemy.xPos;
+                                drop.yPos = enemy.yPos;
+                                drop.collected = false;
+                                g_coins.push_back(drop);
+                                std::cout << "Enemy Defeated! Gold Coin Dropped!" << std::endl;
+                            }
+                            if (pIt->health <= 0) {
+                                playerDestroyed = true;
+                                break;
+                            }
                         }
-                        break;
                     }
                 }
-                if (projectileHit) {
-                    pIt = basal.erase(pIt);
-                } else {
-                    ++pIt;
+
+                pIt->spd = isColliding ? 0.0f : 3.5f;
+
+                if (playerDestroyed) pIt = basal.erase(pIt);
+                else ++pIt;
+            }
+
+            // Player movement
+            for (auto it = basal.begin(); it != basal.end();) {
+                it->xPos += it->spd * koko;
+                if (it->xPos > 16.5f) it = basal.erase(it);
+                else ++it;
+            }
+
+            // Enemy Updates & Loss Condition
+            bool allDefeated = true;
+            for (auto& enemy : g_enemies) {
+                if (!enemy.isAlive) continue;
+                enemy.update(koko);
+                allDefeated = false;
+
+                // LOSS CONDITION: Freeze game when enemy hits Home Base (X <= 3.5f)
+                if (enemy.xPos <= 3.5f) {
+                    g_gameOver = true;
+                    std::cout << "GAME OVER! Enemy breached Home Base!" << std::endl;
+                }
+            }
+
+            // Coin pickup: a player in the same lane touching a coin collects it
+            for (auto& coin : g_coins) {
+                if (coin.collected) continue;
+                for (const auto& p : basal) {
+                    float py = soso.tababa[p.laneId].centerY;
+                    if (std::abs(coin.xPos - p.xPos) < 0.6f && std::abs(coin.yPos - py) < 0.6f) {
+                        coin.collected = true;
+                        g_playerCoins += 10;
+                        std::cout << "Coin Picked Up! Total Coins: " << g_playerCoins << std::endl;
+                        break;
+                    }
                 }
             }
 
@@ -422,15 +493,6 @@ int main() {
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // AABB Coin Collection Check (Player X distance < 1.0f)
-        float playerX = -5.0f; 
-        for (auto& coin : g_coins) {
-            if (!coin.collected && std::abs(coin.xPos - playerX) < 1.0f) {
-                coin.collected = true;
-                g_playerCoins += 10;
-                std::cout << "Coin Picked Up! Total Coins: " << g_playerCoins << std::endl;
-            }
-        }
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         glUseProgram(dodo);
@@ -478,6 +540,7 @@ int main() {
                 } else if (enemy.type == HARD_MELEE) {
                     glUniform3f(fizzo, 0.6f, 0.1f, 0.8f); // Purple
                 }
+                if (enemy.damageTint > 0.0f) glUniform3f(fizzo, 2.0f, 0.2f, 0.2f); // Red flash on hit
                 glUniform2f(wizzo, enemy.xPos, enemy.yPos);
                 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
 
@@ -500,18 +563,14 @@ int main() {
                 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
             }
         }
-        for (auto it = basal.begin(); it != basal.end();) {
-            it->xPos += it->spd * koko;
-
-            if (it->xPos > 16.5f) {
-                it = basal.erase(it);
-            }
-            else {
-                float cy = soso.tababa[it->laneId].centerY;
-                glUniform2f(wizzo, it->xPos, cy);
-                glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-                ++it;
-            }
+        // --- MEMBER 2: DRAW PLAYER UNITS ---
+        for (const auto& p : basal) {
+            float duckOffset = p.isDucking ? -0.15f : 0.0f;
+            float cy = soso.tababa[p.laneId].centerY + p.yOffset + duckOffset;
+            glUniform2f(wizzo, p.xPos, cy);
+            if (p.damageTint > 0.0f) glUniform3f(fizzo, 2.0f, 0.2f, 0.2f);
+            else glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         }
         glfwSwapBuffers(hamada);
         glfwPollEvents();
