@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
+#include <glm/glm.hpp>
 
 struct Mahshy { int id; float yStart, yEnd, centerY; };
 
@@ -45,13 +46,11 @@ bool isPaused = false;
 bool inMainMenu = true;
 int menuHover = -1;
 
-struct Vec2 { float x, y; };
-
-float triSign(Vec2 p1, Vec2 p2, Vec2 p3) {
+float triSign(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3) {
     return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
 }
 
-bool pointInTriangle(Vec2 pt, Vec2 a, Vec2 b, Vec2 c) {
+bool pointInTriangle(glm::vec2 pt, glm::vec2 a, glm::vec2 b, glm::vec2 c) {
     float d1 = triSign(pt, a, b);
     float d2 = triSign(pt, b, c);
     float d3 = triSign(pt, c, a);
@@ -69,12 +68,12 @@ float menuBtn[3][4] = {
 };
 
 int menuButtonAt(float x, float y) {
-    Vec2 pt = { x, y };
+    glm::vec2 pt(x, y);
     for (int i = 0; i < 3; i++) {
-        Vec2 p0 = { menuBtn[i][0], menuBtn[i][1] };
-        Vec2 p1 = { menuBtn[i][2], menuBtn[i][1] };
-        Vec2 p2 = { menuBtn[i][2], menuBtn[i][3] };
-        Vec2 p3 = { menuBtn[i][0], menuBtn[i][3] };
+        glm::vec2 p0(menuBtn[i][0], menuBtn[i][1]);
+        glm::vec2 p1(menuBtn[i][2], menuBtn[i][1]);
+        glm::vec2 p2(menuBtn[i][2], menuBtn[i][3]);
+        glm::vec2 p3(menuBtn[i][0], menuBtn[i][3]);
         if (pointInTriangle(pt, p0, p1, p2) || pointInTriangle(pt, p2, p3, p0)) return i;
     }
     return -1;
