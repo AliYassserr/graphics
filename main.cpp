@@ -61,21 +61,14 @@ bool pointInTriangle(glm::vec2 pt, glm::vec2 a, glm::vec2 b, glm::vec2 c) {
     return !(hasNeg && hasPos);
 }
 
-float menuBtn[3][4] = {
-    { 5.5f, 6.0f, 10.5f, 7.4f },
-    { 5.5f, 4.1f, 10.5f, 5.5f },
-    { 5.5f, 2.2f, 10.5f, 3.6f }
-};
-
 int menuButtonAt(float x, float y) {
     glm::vec2 pt(x, y);
-    for (int i = 0; i < 3; i++) {
-        glm::vec2 p0(menuBtn[i][0], menuBtn[i][1]);
-        glm::vec2 p1(menuBtn[i][2], menuBtn[i][1]);
-        glm::vec2 p2(menuBtn[i][2], menuBtn[i][3]);
-        glm::vec2 p3(menuBtn[i][0], menuBtn[i][3]);
-        if (pointInTriangle(pt, p0, p1, p2) || pointInTriangle(pt, p2, p3, p0)) return i;
-    }
+    if (pointInTriangle(pt, glm::vec2(5.5f, 6.0f), glm::vec2(10.5f, 6.0f), glm::vec2(10.5f, 7.4f)) ||
+        pointInTriangle(pt, glm::vec2(10.5f, 7.4f), glm::vec2(5.5f, 7.4f), glm::vec2(5.5f, 6.0f))) return 0;
+    if (pointInTriangle(pt, glm::vec2(5.5f, 4.1f), glm::vec2(10.5f, 4.1f), glm::vec2(10.5f, 5.5f)) ||
+        pointInTriangle(pt, glm::vec2(10.5f, 5.5f), glm::vec2(5.5f, 5.5f), glm::vec2(5.5f, 4.1f))) return 1;
+    if (pointInTriangle(pt, glm::vec2(5.5f, 2.2f), glm::vec2(10.5f, 2.2f), glm::vec2(10.5f, 3.6f)) ||
+        pointInTriangle(pt, glm::vec2(10.5f, 3.6f), glm::vec2(5.5f, 3.6f), glm::vec2(5.5f, 2.2f))) return 2;
     return -1;
 }
 
@@ -101,17 +94,6 @@ void el_tabkh(float z1, float z2, float z3, float z4, float c1, float c2, float 
     kofta.push_back(bada2 + 2);
     kofta.push_back(bada2 + 3);
     kofta.push_back(bada2 + 0);
-}
-
-void el_zarbootan(float x1, float y1, float x2, float y2, float x3, float y3, float c1, float c2, float c3,
-    std::vector<Beshamel>& batates, std::vector<unsigned int>& kofta) {
-    unsigned int bada2 = (unsigned int)batates.size();
-    batates.push_back({ x1, y1, c1, c2, c3 });
-    batates.push_back({ x2, y2, c1, c2, c3 });
-    batates.push_back({ x3, y3, c1, c2, c3 });
-    kofta.push_back(bada2 + 0);
-    kofta.push_back(bada2 + 1);
-    kofta.push_back(bada2 + 2);
 }
 
 const char* kalmita ="#version 330 core\n"
@@ -401,34 +383,77 @@ int main() {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Beshamel), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
-    std::vector<Beshamel> menuVerts;
-    std::vector<unsigned int> menuInds;
-    el_tabkh(4.9f, 1.7f, 6.2f, 6.3f, 0.18f, 0.20f, 0.28f, menuVerts, menuInds);
-    el_tabkh(menuBtn[0][0], menuBtn[0][1], menuBtn[0][2] - menuBtn[0][0], menuBtn[0][3] - menuBtn[0][1], 0.20f, 0.60f, 0.25f, menuVerts, menuInds);
-    el_tabkh(menuBtn[1][0], menuBtn[1][1], menuBtn[1][2] - menuBtn[1][0], menuBtn[1][3] - menuBtn[1][1], 0.20f, 0.40f, 0.80f, menuVerts, menuInds);
-    el_tabkh(menuBtn[2][0], menuBtn[2][1], menuBtn[2][2] - menuBtn[2][0], menuBtn[2][3] - menuBtn[2][1], 0.75f, 0.20f, 0.20f, menuVerts, menuInds);
-    el_zarbootan(7.7f, 6.2f, 7.7f, 7.2f, 8.5f, 6.7f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
-    el_tabkh(7.55f, 4.3f, 0.25f, 0.4f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
-    el_tabkh(7.95f, 4.3f, 0.25f, 0.7f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
-    el_tabkh(8.35f, 4.3f, 0.25f, 1.0f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
-    el_zarbootan(7.6f, 2.4f, 7.85f, 2.4f, 8.4f, 3.4f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
-    el_zarbootan(8.4f, 3.4f, 8.15f, 3.4f, 7.6f, 2.4f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
-    el_zarbootan(7.6f, 3.4f, 7.85f, 3.4f, 8.4f, 2.4f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
-    el_zarbootan(8.4f, 2.4f, 8.15f, 2.4f, 7.6f, 3.4f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
-    int menuIconCount = (int)menuInds.size() - 24;
+    std::vector<float> menuVertices = {
+        4.90f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
+        11.10f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
+        11.10f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
+        11.10f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
+        4.90f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
+        4.90f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
+        5.50f, 6.00f, 0.0f,   0.20f, 0.60f, 0.25f,
+        10.50f, 6.00f, 0.0f,   0.20f, 0.60f, 0.25f,
+        10.50f, 7.40f, 0.0f,   0.20f, 0.60f, 0.25f,
+        10.50f, 7.40f, 0.0f,   0.20f, 0.60f, 0.25f,
+        5.50f, 7.40f, 0.0f,   0.20f, 0.60f, 0.25f,
+        5.50f, 6.00f, 0.0f,   0.20f, 0.60f, 0.25f,
+        5.50f, 4.10f, 0.0f,   0.20f, 0.40f, 0.80f,
+        10.50f, 4.10f, 0.0f,   0.20f, 0.40f, 0.80f,
+        10.50f, 5.50f, 0.0f,   0.20f, 0.40f, 0.80f,
+        10.50f, 5.50f, 0.0f,   0.20f, 0.40f, 0.80f,
+        5.50f, 5.50f, 0.0f,   0.20f, 0.40f, 0.80f,
+        5.50f, 4.10f, 0.0f,   0.20f, 0.40f, 0.80f,
+        5.50f, 2.20f, 0.0f,   0.75f, 0.20f, 0.20f,
+        10.50f, 2.20f, 0.0f,   0.75f, 0.20f, 0.20f,
+        10.50f, 3.60f, 0.0f,   0.75f, 0.20f, 0.20f,
+        10.50f, 3.60f, 0.0f,   0.75f, 0.20f, 0.20f,
+        5.50f, 3.60f, 0.0f,   0.75f, 0.20f, 0.20f,
+        5.50f, 2.20f, 0.0f,   0.75f, 0.20f, 0.20f,
+        7.70f, 6.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.70f, 7.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.50f, 6.70f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.55f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.80f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.80f, 4.70f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.80f, 4.70f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.55f, 4.70f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.55f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.95f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.20f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.20f, 5.00f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.20f, 5.00f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.95f, 5.00f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.95f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.35f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.60f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.60f, 5.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.60f, 5.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.35f, 5.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.35f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.85f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.15f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.85f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.15f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f
+    };
+    int menuIconStart = 24;
+    int menuIconCount = (int)(menuVertices.size() / 6) - menuIconStart;
 
-    unsigned int menuVBO, menuVAO, menuEBO;
+    unsigned int menuVBO, menuVAO;
     glGenVertexArrays(1, &menuVAO);
     glGenBuffers(1, &menuVBO);
-    glGenBuffers(1, &menuEBO);
     glBindVertexArray(menuVAO);
     glBindBuffer(GL_ARRAY_BUFFER, menuVBO);
-    glBufferData(GL_ARRAY_BUFFER, menuVerts.size() * sizeof(Beshamel), menuVerts.data(), GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, menuEBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, menuInds.size() * sizeof(unsigned int), menuInds.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Beshamel), (void*)0);
+    glBufferData(GL_ARRAY_BUFFER, menuVertices.size() * sizeof(float), menuVertices.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Beshamel), (void*)(2 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
     unsigned int tigers = glCreateShader(GL_VERTEX_SHADER);
@@ -593,13 +618,13 @@ int main() {
             glBindVertexArray(menuVAO);
             glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
             glUniform1f(hilo, 0.0f);
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
             for (int i = 0; i < 3; i++) {
                 glUniform1f(hilo, i == menuHover ? 0.5f : 0.0f);
-                glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)((6 + i * 6) * sizeof(unsigned int)));
+                glDrawArrays(GL_TRIANGLES, 6 + i * 6, 6);
             }
             glUniform1f(hilo, 0.0f);
-            glDrawElements(GL_TRIANGLES, menuIconCount, GL_UNSIGNED_INT, (void*)(24 * sizeof(unsigned int)));
+            glDrawArrays(GL_TRIANGLES, menuIconStart, menuIconCount);
             glfwSwapBuffers(hamada);
             glfwPollEvents();
             continue;
