@@ -103,7 +103,7 @@ void el_tabkh(float z1, float z2, float z3, float z4, float c1, float c2, float 
     kofta.push_back(bada2 + 0);
 }
 
-void el_masla3(float x1, float y1, float x2, float y2, float x3, float y3, float c1, float c2, float c3,
+void el_zarbootan(float x1, float y1, float x2, float y2, float x3, float y3, float c1, float c2, float c3,
     std::vector<Beshamel>& batates, std::vector<unsigned int>& kofta) {
     unsigned int bada2 = (unsigned int)batates.size();
     batates.push_back({ x1, y1, c1, c2, c3 });
@@ -407,14 +407,14 @@ int main() {
     el_tabkh(menuBtn[0][0], menuBtn[0][1], menuBtn[0][2] - menuBtn[0][0], menuBtn[0][3] - menuBtn[0][1], 0.20f, 0.60f, 0.25f, menuVerts, menuInds);
     el_tabkh(menuBtn[1][0], menuBtn[1][1], menuBtn[1][2] - menuBtn[1][0], menuBtn[1][3] - menuBtn[1][1], 0.20f, 0.40f, 0.80f, menuVerts, menuInds);
     el_tabkh(menuBtn[2][0], menuBtn[2][1], menuBtn[2][2] - menuBtn[2][0], menuBtn[2][3] - menuBtn[2][1], 0.75f, 0.20f, 0.20f, menuVerts, menuInds);
-    el_masla3(7.7f, 6.2f, 7.7f, 7.2f, 8.5f, 6.7f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
+    el_zarbootan(7.7f, 6.2f, 7.7f, 7.2f, 8.5f, 6.7f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
     el_tabkh(7.55f, 4.3f, 0.25f, 0.4f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
     el_tabkh(7.95f, 4.3f, 0.25f, 0.7f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
     el_tabkh(8.35f, 4.3f, 0.25f, 1.0f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
-    el_masla3(7.6f, 2.4f, 7.85f, 2.4f, 8.4f, 3.4f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
-    el_masla3(8.4f, 3.4f, 8.15f, 3.4f, 7.6f, 2.4f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
-    el_masla3(7.6f, 3.4f, 7.85f, 3.4f, 8.4f, 2.4f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
-    el_masla3(8.4f, 2.4f, 8.15f, 2.4f, 7.6f, 3.4f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
+    el_zarbootan(7.6f, 2.4f, 7.85f, 2.4f, 8.4f, 3.4f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
+    el_zarbootan(8.4f, 3.4f, 8.15f, 3.4f, 7.6f, 2.4f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
+    el_zarbootan(7.6f, 3.4f, 7.85f, 3.4f, 8.4f, 2.4f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
+    el_zarbootan(8.4f, 2.4f, 8.15f, 2.4f, 7.6f, 3.4f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
     int menuIconCount = (int)menuInds.size() - 24;
 
     unsigned int menuVBO, menuVAO, menuEBO;
