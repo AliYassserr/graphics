@@ -97,13 +97,13 @@ void el_tabkh(float z1, float z2, float z3, float z4, float c1, float c2, float 
 }
 
 const char* kalmita ="#version 330 core\n"
-"layout (location = 0) in vec2 aPos;\n"
+"layout (location = 0) in vec3 aPos;\n"
 "layout (location = 1) in vec3 aColor;\n"
 "out vec3 vertexColor;\n"
 "uniform mat4 uProjection;\n"
 "uniform vec2 uOffset;\n"
 "void main(){\n"
-"   gl_Position = uProjection * vec4(aPos + uOffset, 0.0, 1.0);\n"
+"   gl_Position = uProjection * vec4(aPos.xy + uOffset, aPos.z, 1.0);\n"
 "   vertexColor = aColor;\n"
 "}\n";
 
@@ -144,7 +144,7 @@ void el_shasha_betrg3(GLFWwindow* bobo, int ard, int tool) {
 }
 void el_mouse_dakhal(GLFWwindow* bobo, int dakhal) {
     tot = dakhal;
-    if (!dakhal) { ziz = -1; menuHover = -1; }
+    if (!dakhal) ziz = -1;
 
 }
 void dos_zrar(GLFWwindow* tabl, int nono, int zaza, int pika, int mizo) {
@@ -451,7 +451,7 @@ int main() {
     glBindVertexArray(menuVAO);
     glBindBuffer(GL_ARRAY_BUFFER, menuVBO);
     glBufferData(GL_ARRAY_BUFFER, menuVertices.size() * sizeof(float), menuVertices.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
@@ -476,8 +476,6 @@ int main() {
     int wizzo = glGetUniformLocation(dodo, "uOffset");
     int fizzo = glGetUniformLocation(dodo, "uTint");
     int hilo = glGetUniformLocation(dodo, "u_Highlight");
-    glUseProgram(dodo);
-    glUniform1f(hilo, 0.0f);
     double el_wa2t_el_adeem = glfwGetTime();
 
     while (!glfwWindowShouldClose(hamada)) {
@@ -620,7 +618,7 @@ int main() {
             glUniform1f(hilo, 0.0f);
             glDrawArrays(GL_TRIANGLES, 0, 6);
             for (int i = 0; i < 3; i++) {
-                glUniform1f(hilo, i == menuHover ? 0.5f : 0.0f);
+                glUniform1f(hilo, i == menuHover ? 1.0f : 0.0f);
                 glDrawArrays(GL_TRIANGLES, 6 + i * 6, 6);
             }
             glUniform1f(hilo, 0.0f);
