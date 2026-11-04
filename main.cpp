@@ -4,39 +4,9 @@
 #include <vector>
 #include <string>
 #include <algorithm>
-#include <cmath>
 
 struct Mahshy { int id; float yStart, yEnd, centerY; };
-
-// Member 2 Player Unit (with health & tint timer)
-struct Hawawshy {
-    int laneId;
-    float xPos;
-    float spd;
-    float yOffset;    // Jump height offset
-    bool isJumping;   // Air state
-    bool isDucking;   // Ducking state
-    float jumpTimer;  // Jump duration
-    int health;       // Player unit health
-    float damageTint; // Red flash timer when damaged
-};
-
-// Member 2 Enemy Unit
-struct Enemy {
-    int laneId;
-    float xPos;
-    float spd;
-    int health;
-    int attackType;   // 0 = High Attack (Dodge with S), 1 = Low Attack (Dodge with W)
-    float damageTint; // Red flash timer when damaged
-};
-
-// Global vectors
-std::vector<Enemy> batates_enemies;
-std::vector<Hawawshy> basal;
-std::vector<bool> tamtam(3, false);
-int ziz = -1;
-bool tot = true;
+struct Hawawshy { int laneId; float xPos, spd; };
 
 struct Beshamel {
     float x, y;
@@ -59,15 +29,20 @@ public:
 };
 
 Koshary soso;
+std::vector<Hawawshy> basal;
+std::vector<bool> tamtam(3, false);
+int ziz = -1;
+bool tot = true;
+
 int ard_3ard = 1280, tol_3ard = 720;
 
 void el_tabkh(float z1, float z2, float z3, float z4, float c1, float c2, float c3,
     std::vector<Beshamel>& batates, std::vector<unsigned int>& kofta) {
     unsigned int bada2 = (unsigned int)batates.size();
-    batates.push_back({ z1,      z2,      c1, c2, c3 });
-    batates.push_back({ z1 + z3, z2,      c1, c2, c3 });
+    batates.push_back({ z1,     z2,     c1, c2, c3 });
+    batates.push_back({ z1 + z3, z2,     c1, c2, c3 });
     batates.push_back({ z1 + z3, z2 + z4, c1, c2, c3 });
-    batates.push_back({ z1,      z2 + z4, c1, c2, c3 });
+    batates.push_back({ z1,     z2 + z4, c1, c2, c3 });
 
     kofta.push_back(bada2 + 0);
     kofta.push_back(bada2 + 1);
@@ -121,50 +96,28 @@ void el_shasha_betrg3(GLFWwindow* bobo, int ard, int tool) {
     tol_3ard = tool;
     glViewport(0, 0, ard, tool);
 }
-
 void el_mouse_dakhal(GLFWwindow* bobo, int dakhal) {
     tot = dakhal;
     if (!dakhal) ziz = -1;
-}
 
+}
 void dos_zrar(GLFWwindow* tabl, int nono, int zaza, int pika, int mizo) {
     if (nono == GLFW_KEY_ESCAPE && pika == GLFW_PRESS) glfwSetWindowShouldClose(tabl, true);
-
-    // SPACEBAR: Spawn Player Unit
     if (nono == GLFW_KEY_SPACE && pika == GLFW_PRESS) {
         for (size_t i = 0; i < tamtam.size(); ++i) {
             if (tamtam[i]) {
-                // laneId, xPos, spd, yOffset, isJumping, isDucking, jumpTimer, health, damageTint
-                basal.push_back({ (int)i, soso.akhdar, 3.5f, 0.0f, false, false, 0.0f, 5, 0.0f });
-            }
-        }
-    }
-
-    // E KEY: Spawn High-Attack Enemy Unit (Dodge with S / Duck)
-    if (nono == GLFW_KEY_E && pika == GLFW_PRESS) {
-        for (size_t i = 0; i < tamtam.size(); ++i) {
-            if (tamtam[i]) {
-                // laneId, xPos, spd, health, attackType (0 = High), damageTint
-                batates_enemies.push_back({ (int)i, 15.5f, 2.0f, 3, 0, 0.0f });
-            }
-        }
-    }
-
-    // R KEY: Spawn Low-Attack Enemy Unit (Dodge with W / Jump)
-    if (nono == GLFW_KEY_R && pika == GLFW_PRESS) {
-        for (size_t i = 0; i < tamtam.size(); ++i) {
-            if (tamtam[i]) {
-                // laneId, xPos, spd, health, attackType (1 = Low), damageTint
-                batates_enemies.push_back({ (int)i, 15.5f, 2.0f, 3, 1, 0.0f });
+                basal.push_back({ (int)i, soso.akhdar, 3.5f });
             }
         }
     }
 }
-
 void el_mouse_beteeth(GLFWwindow* tabl, double mash, double mosh) {
     if (!tot || tol_3ard == 0) return;
-    float wX = (float)mash / ard_3ard * 16.0f;
-    float wY = (1.0f - (float)mosh / tol_3ard) * 9.0f;
+    int winW, winH;
+    glfwGetWindowSize(tabl, &winW, &winH);
+    if (winW == 0 || winH == 0) return;
+    float wX = (float)mash / winW * 16.0f;
+    float wY = (1.0f - (float)mosh / winH) * 10.0f;
     if (wX > soso.akhdar) {
         ziz = soso.getLaneFromY(wY);
     }
@@ -177,8 +130,11 @@ void el_mouse_dos(GLFWwindow* tabl, int b, int a, int m) {
     if (b != GLFW_MOUSE_BUTTON_LEFT || a != GLFW_PRESS || tol_3ard == 0) return;
     double mash, mosh;
     glfwGetCursorPos(tabl, &mash, &mosh);
-    float wX = (float)mash / ard_3ard * 16.0f;
-    float wY = (1.0f - (float)mosh / tol_3ard) * 9.0f;
+    int winW, winH;
+    glfwGetWindowSize(tabl, &winW, &winH);
+    if (winW == 0 || winH == 0) return;
+    float wX = (float)mash / winW * 16.0f;
+    float wY = (1.0f - (float)mosh / winH) * 10.0f;
     if (wX >= soso.asfar && wX <= soso.akhdar) {
         std::cout << "Clicked Gatehouse Home Base!\n";
     }
@@ -189,7 +145,94 @@ void el_mouse_dos(GLFWwindow* tabl, int b, int a, int m) {
         }
     }
 }
+// ==========================================
+// MEMBER 3: ENEMY, WAVE & COLLECTIBLE SYSTEM
+// ==========================================
+bool g_gameOver = false;
+enum EnemyType { EASY_UPPER, MEDIUM_LOWER, HARD_MELEE };
 
+struct Enemy {
+    int id;
+    EnemyType type;
+    int laneId;       // 0 (top), 1 (middle), 2 (bottom)
+    float xPos;       // Moves right-to-left (+X to -X)
+    float yPos;       // Fixed lane Y center
+    int health;
+    float speed;
+    int damage;
+    bool isAlive;
+
+    // --- ENEMY CONSTRUCTOR (PDF Spec: Easy=5, Med=5, Hard=7 HP) ---
+Enemy(int enemyId, EnemyType t, int lane, float startX, float laneY) {
+    id = enemyId;
+    type = t;
+    laneId = lane;
+    xPos = startX;
+    yPos = laneY;
+    isAlive = true;
+
+    if (type == EASY_UPPER) {
+        health = 5;      // PDF Spec: 5 lives
+        speed = 0.8f;    // Balanced speed
+        damage = 1;
+    } else if (type == MEDIUM_LOWER) {
+        health = 5;      // PDF Spec: 5 lives
+        speed = 0.6f;    // Balanced speed
+        damage = 1;
+    } else if (type == HARD_MELEE) {
+        health = 7;      // PDF Spec: 7 lives
+        speed = 0.4f;    // Balanced speed
+        damage = 2;      // PDF Spec: 2 damage
+    }
+}
+
+    void update(float dt) {
+        if (isAlive) {
+            xPos -= speed * dt; // Move left towards the castle base
+        }
+    }
+};
+
+struct Coin {
+    float xPos;
+    float yPos;
+    bool collected;
+};
+
+// Member 3 Global State Variables
+std::vector<Enemy> g_enemies;
+std::vector<Coin> g_coins;
+int g_currentWave = 1;
+int g_playerCoins = 0;
+bool g_waveInProgress = false;
+
+void spawnWave(int waveNumber, const Koshary& grid) {
+    g_enemies.clear();
+    float startX = 16.0f;
+
+    if (waveNumber == 1) {
+        for (int i = 0; i < 3; i++) {
+            int lane = rand() % 3; // Random lane selection
+            float laneY = grid.tababa[lane].centerY;
+            g_enemies.push_back(Enemy(i, EASY_UPPER, lane, startX + (i * 2.5f), laneY));
+        }
+    } else if (waveNumber == 2) {
+        for (int i = 0; i < 5; i++) {
+            EnemyType type = (i % 2 == 0) ? EASY_UPPER : MEDIUM_LOWER;
+            int lane = rand() % 3;
+            float laneY = grid.tababa[lane].centerY;
+            g_enemies.push_back(Enemy(i, type, lane, startX + (i * 2.5f), laneY));
+        }
+    } else if (waveNumber == 3) {
+        for (int i = 0; i < 10; i++) {
+            EnemyType type = (i % 3 == 0) ? EASY_UPPER : ((i % 3 == 1) ? MEDIUM_LOWER : HARD_MELEE);
+            int lane = rand() % 3;
+            float laneY = grid.tababa[lane].centerY;
+            g_enemies.push_back(Enemy(i, type, lane, startX + (i * 2.5f), laneY));
+        }
+    }
+    g_waveInProgress = true;
+}
 int main() {
     if (!glfwInit()) return -1;
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -200,9 +243,9 @@ int main() {
     glfwMakeContextCurrent(hamada);
     glfwSwapInterval(1);
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cout << "Failed to initialize GLAD\n";
-        return -1;
-    }
+    std::cout << "Failed to initialize GLAD" << std::endl;
+    return -1;
+}
     glfwGetFramebufferSize(hamada, &ard_3ard, &tol_3ard);
     glViewport(0, 0, ard_3ard, tol_3ard);
     glfwSetFramebufferSizeCallback(hamada, el_shasha_betrg3);
@@ -210,7 +253,6 @@ int main() {
     glfwSetCursorPosCallback(hamada, el_mouse_beteeth);
     glfwSetKeyCallback(hamada, dos_zrar);
     glfwSetMouseButtonCallback(hamada, el_mouse_dos);
-
     std::vector<Beshamel> batates;
     std::vector<unsigned int> kofta;
     el_tabkh(0.5f, 0.5f, 3.0f, 8.0f, 0.32f, 0.35f, 0.42f, batates, kofta);
@@ -281,7 +323,6 @@ int main() {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Beshamel), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
-
     unsigned int tigers = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(tigers, 1, &kalmita, NULL);
     glCompileShader(tigers);
@@ -291,7 +332,6 @@ int main() {
     glShaderSource(chipsy, 1, &shabash, NULL);
     glCompileShader(chipsy);
     ftesh(chipsy, "FRAGMENT");
-
     unsigned int dodo = glCreateProgram();
     glAttachShader(dodo, tigers);
     glAttachShader(dodo, chipsy);
@@ -299,7 +339,6 @@ int main() {
     ftesh(dodo, "PROGRAM");
     glDeleteShader(tigers);
     glDeleteShader(chipsy);
-
     int gizmo = glGetUniformLocation(dodo, "uProjection");
     int wizzo = glGetUniformLocation(dodo, "uOffset");
     int fizzo = glGetUniformLocation(dodo, "uTint");
@@ -311,106 +350,87 @@ int main() {
         el_wa2t_el_adeem = el_wa2t_el_goded;
         if (koko > 0.1f) koko = 0.1f;
 
-        // --- Member 2: Jump & Duck Controls ---
-        bool wPressed = (glfwGetKey(hamada, GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(hamada, GLFW_KEY_UP) == GLFW_PRESS);
-        bool sPressed = (glfwGetKey(hamada, GLFW_KEY_S) == GLFW_PRESS || glfwGetKey(hamada, GLFW_KEY_DOWN) == GLFW_PRESS);
+        // 1. OPEN THE GAME OVER WRAPPER
+        if (!g_gameOver) {
 
-        for (auto& p : basal) {
-            if (wPressed && !p.isJumping) {
-                p.isJumping = true;
-                p.jumpTimer = 0.0f;
+            // Wave Progression
+            if (!g_waveInProgress && g_currentWave <= 3) {
+                spawnWave(g_currentWave, soso);
             }
 
-            p.isDucking = sPressed;
+            // Enemy Updates & Loss Condition
+            bool allDefeated = true;
+            for (auto& enemy : g_enemies) {
+                if (enemy.isAlive) {
+                    enemy.update(koko);
+                    allDefeated = false;
 
-            if (p.isJumping) {
-                p.jumpTimer += koko * 5.0f;
-                p.yOffset = 0.6f * sin(p.jumpTimer);
-                if (p.jumpTimer >= 3.14159f) {
-                    p.isJumping = false;
-                    p.yOffset = 0.0f;
-                }
-            }
-        }
+                    // LOSS CONDITION: Freeze game when enemy hits Home Base (X <= 3.5f)
+                    if (enemy.xPos <= 3.5f) {
+                        g_gameOver = true;
+                        std::cout << "GAME OVER! Enemy breached Home Base!" << std::endl;
+                    }
 
-        // --- Member 2: Collision, Block & Damage Engine ---
-        for (auto pIt = basal.begin(); pIt != basal.end();) {
-            bool playerDestroyed = false;
-            bool isColliding = false;
-
-            if (pIt->damageTint > 0.0f) {
-                pIt->damageTint -= koko * 3.0f;
-            }
-
-            for (auto eIt = batates_enemies.begin(); eIt != batates_enemies.end();) {
-                if (eIt->damageTint > 0.0f) {
-                    eIt->damageTint -= koko * 3.0f;
-                }
-
-                if (pIt->laneId == eIt->laneId) {
-                    float distanceX = std::abs(pIt->xPos - eIt->xPos);
-
-                    if (distanceX < 0.6f) {
-                        isColliding = true;
-                        pIt->spd = 0.0f;
-                        eIt->spd = 0.0f;
-
-                        bool hit = true;
-
-                        // Ducking (S) dodges High Attacks (attackType 0)
-                        if (eIt->attackType == 0 && pIt->isDucking) {
-                            hit = false;
-                        }
-
-                        // Jumping (W) dodges Low Attacks (attackType 1)
-                        if (eIt->attackType == 1 && pIt->isJumping) {
-                            hit = false;
-                        }
-
-                        if (hit && pIt->damageTint <= 0.0f) {
-                            pIt->health -= 1;
-                            pIt->damageTint = 0.5f;
-
-                            eIt->health -= 1;
-                            eIt->damageTint = 0.5f;
-
-                            if (pIt->health <= 0) {
-                                playerDestroyed = true;
-                            }
-                            if (eIt->health <= 0) {
-                                eIt = batates_enemies.erase(eIt);
-                                continue;
-                            }
-                        }
+                    // Enemy Defeat Check
+                    if (enemy.health <= 0) {
+                        enemy.isAlive = false;
+                        Coin drop;
+                        drop.xPos = enemy.xPos;
+                        drop.yPos = enemy.yPos;
+                        drop.collected = false;
+                        g_coins.push_back(drop);
                     }
                 }
-                ++eIt;
             }
 
-            // Resume walking forward if no enemy is blocking
-            if (!isColliding) {
-                pIt->spd = 3.5f;
+            // Projectile vs Enemy Collision Check
+            for (auto pIt = basal.begin(); pIt != basal.end(); ) {
+                bool projectileHit = false;
+                for (auto& enemy : g_enemies) {
+                    if (enemy.isAlive && enemy.laneId == pIt->laneId && std::abs(pIt->xPos - enemy.xPos) < 0.6f) {
+                        enemy.health -= 1;
+                        projectileHit = true;
+
+                        if (enemy.health <= 0) {
+                            enemy.isAlive = false;
+                            Coin drop;
+                            drop.xPos = enemy.xPos;
+                            drop.yPos = enemy.yPos;
+                            drop.collected = false;
+                            g_coins.push_back(drop);
+                            std::cout << "Enemy Defeated! Gold Coin Dropped!" << std::endl;
+                        }
+                        break;
+                    }
+                }
+                if (projectileHit) {
+                    pIt = basal.erase(pIt);
+                } else {
+                    ++pIt;
+                }
             }
 
-            if (playerDestroyed) {
-                pIt = basal.erase(pIt);
+            // Clear-Screen Condition
+            if (allDefeated && g_waveInProgress) {
+                g_waveInProgress = false;
+                g_currentWave++;
+                std::cout << "Wave Cleared! Advancing to Wave " << g_currentWave << std::endl;
             }
-            else {
-                ++pIt;
+
+        } // 2. CLOSE THE GAME OVER WRAPPER (JUST ABOVE glClearColor)
+
+        glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        // AABB Coin Collection Check (Player X distance < 1.0f)
+        float playerX = -5.0f; 
+        for (auto& coin : g_coins) {
+            if (!coin.collected && std::abs(coin.xPos - playerX) < 1.0f) {
+                coin.collected = true;
+                g_playerCoins += 10;
+                std::cout << "Coin Picked Up! Total Coins: " << g_playerCoins << std::endl;
             }
         }
-
-        // --- Update Enemy Movement ---
-        for (auto eIt = batates_enemies.begin(); eIt != batates_enemies.end();) {
-            eIt->xPos -= eIt->spd * koko;
-            if (eIt->xPos < 0.5f) {
-                eIt = batates_enemies.erase(eIt);
-            }
-            else {
-                ++eIt;
-            }
-        }
-
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         glUseProgram(dodo);
@@ -426,7 +446,7 @@ int main() {
         glBindVertexArray(biko);
         glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
         glDrawElements(GL_TRIANGLES, meshmesh, GL_UNSIGNED_INT, (void*)0);
-
+        
         int laneIndexOffset = meshmesh;
         int indicesPerLane = 6;
         for (int i = 0; i < 3; i++) {
@@ -445,10 +465,41 @@ int main() {
         glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
         int envIndexOffset = meshmesh + (3 * indicesPerLane);
         glDrawElements(GL_TRIANGLES, falafel_indices, GL_UNSIGNED_INT, (void*)(envIndexOffset * sizeof(unsigned int)));
-
         glBindVertexArray(ziro_vao);
 
-        // --- Render Player Units ---
+        // --- MEMBER 3: DRAW ENEMIES & HEALTH BARS ---
+        for (const auto& enemy : g_enemies) {
+            if (enemy.isAlive) {
+                // 1. Draw Enemy Body
+                if (enemy.type == EASY_UPPER) {
+                    glUniform3f(fizzo, 1.0f, 0.2f, 0.2f); // Red
+                } else if (enemy.type == MEDIUM_LOWER) {
+                    glUniform3f(fizzo, 1.0f, 0.6f, 0.0f); // Orange
+                } else if (enemy.type == HARD_MELEE) {
+                    glUniform3f(fizzo, 0.6f, 0.1f, 0.8f); // Purple
+                }
+                glUniform2f(wizzo, enemy.xPos, enemy.yPos);
+                glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
+
+                // 2. Draw Enemy Health Bar (Bright Green Indicator Offset Above Head)
+                glUniform3f(fizzo, 0.0f, 1.0f, 0.2f);
+                glUniform2f(wizzo, enemy.xPos, enemy.yPos + 0.35f);
+                glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
+            }
+        }
+        // --- MEMBER 3: DRAW COLLECTIBLE COINS ON SCREEN ---
+        for (const auto& coin : g_coins) {
+            if (!coin.collected) {
+                // Gold Yellow Tint (R=1.0, G=0.85, B=0.0)
+                glUniform3f(fizzo, 1.0f, 0.85f, 0.0f);
+
+                // Send coin X, Y coordinates to translation uniform
+                glUniform2f(wizzo, coin.xPos, coin.yPos);
+
+                // Draw coin shape using the character quad VAO
+                glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
+            }
+        }
         for (auto it = basal.begin(); it != basal.end();) {
             it->xPos += it->spd * koko;
 
@@ -456,40 +507,12 @@ int main() {
                 it = basal.erase(it);
             }
             else {
-                float duckOffset = it->isDucking ? -0.15f : 0.0f; // Visual ducking squish
-                float cy = soso.tababa[it->laneId].centerY + it->yOffset + duckOffset;
+                float cy = soso.tababa[it->laneId].centerY;
                 glUniform2f(wizzo, it->xPos, cy);
-
-                if (it->damageTint > 0.0f) {
-                    glUniform3f(fizzo, 2.0f, 0.2f, 0.2f); // Red flash tint on hit
-                }
-                else {
-                    glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
-                }
-
                 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
                 ++it;
             }
         }
-
-        // --- Render Enemy Units ---
-        for (auto& enemy : batates_enemies) {
-            float cy = soso.tababa[enemy.laneId].centerY;
-            glUniform2f(wizzo, enemy.xPos, cy);
-
-            if (enemy.damageTint > 0.0f) {
-                glUniform3f(fizzo, 2.0f, 0.2f, 0.2f);
-            }
-            else if (enemy.attackType == 1) {
-                glUniform3f(fizzo, 0.9f, 0.5f, 0.1f); // Orange for Low Attack Enemies
-            }
-            else {
-                glUniform3f(fizzo, 0.8f, 0.2f, 0.2f); // Dark Red for High Attack Enemies
-            }
-
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        }
-
         glfwSwapBuffers(hamada);
         glfwPollEvents();
     }

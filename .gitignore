@@ -1,8 +1,13 @@
 .vs/
+**/.vs/
 *.exe
 *.pdb
 *.ipch
 *.obj
 *.ilk
 x64/
-Template/x64/
+**/x64/
+UpgradeLog*.htm
+*.user
+game
+.DS_Store
