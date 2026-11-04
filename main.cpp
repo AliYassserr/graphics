@@ -9,17 +9,16 @@
 
 struct Mahshy { int id; float yStart, yEnd, centerY; };
 
-// Member 2 Player Unit (with health, jump/duck state & tint timer)
 struct Hawawshy {
     int laneId;
     float xPos;
     float spd;
-    float yOffset;    // Jump height offset
-    bool isJumping;   // Air state
-    bool isDucking;   // Ducking state
-    float jumpTimer;  // Jump duration
-    int health;       // Player unit health
-    float damageTint; // Red flash timer when damaged
+    float yOffset;
+    bool isJumping;
+    bool isDucking;
+    float jumpTimer;
+    int health;
+    float damageTint;
 };
 
 struct Beshamel {
@@ -42,7 +41,6 @@ public:
     }
 };
 
-// Member 4: pause flag, a global bool set from the callback (like isMousePressed in the lab)
 bool isPaused = false;
 
 Koshary soso;
@@ -119,13 +117,13 @@ void el_mouse_dakhal(GLFWwindow* bobo, int dakhal) {
 
 }
 void dos_zrar(GLFWwindow* tabl, int nono, int zaza, int pika, int mizo) {
-    // ESC toggles pause (lab pattern: key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+
     if (nono == GLFW_KEY_ESCAPE && pika == GLFW_PRESS)
         isPaused = !isPaused;
     if (nono == GLFW_KEY_SPACE && pika == GLFW_PRESS) {
         for (size_t i = 0; i < tamtam.size(); ++i) {
             if (tamtam[i]) {
-                // laneId, xPos, spd, yOffset, isJumping, isDucking, jumpTimer, health, damageTint
+
                 basal.push_back({ (int)i, soso.akhdar, 3.5f, 0.0f, false, false, 0.0f, 5, 0.0f });
             }
         }
@@ -165,26 +163,23 @@ void el_mouse_dos(GLFWwindow* tabl, int b, int a, int m) {
         }
     }
 }
-// ==========================================
-// MEMBER 3: ENEMY, WAVE & COLLECTIBLE SYSTEM
-// ==========================================
+
 bool g_gameOver = false;
 enum EnemyType { EASY_UPPER, MEDIUM_LOWER, HARD_MELEE };
 
 struct Enemy {
     int id;
     EnemyType type;
-    int laneId;       // 0 (top), 1 (middle), 2 (bottom)
-    float xPos;       // Moves right-to-left (+X to -X)
-    float yPos;       // Fixed lane Y center
+    int laneId;
+    float xPos;
+    float yPos;
     int health;
     float speed;
     int damage;
     bool isAlive;
-    float damageTint; // Red flash timer when damaged
-    bool blocked;     // True while colliding with a player this frame
+    float damageTint;
+    bool blocked;
 
-    // --- ENEMY CONSTRUCTOR (PDF Spec: Easy=5, Med=5, Hard=7 HP) ---
 Enemy(int enemyId, EnemyType t, int lane, float startX, float laneY) {
     id = enemyId;
     type = t;
@@ -196,23 +191,23 @@ Enemy(int enemyId, EnemyType t, int lane, float startX, float laneY) {
     blocked = false;
 
     if (type == EASY_UPPER) {
-        health = 5;      // PDF Spec: 5 lives
-        speed = 0.8f;    // Balanced speed
+        health = 5;
+        speed = 0.8f;
         damage = 1;
     } else if (type == MEDIUM_LOWER) {
-        health = 5;      // PDF Spec: 5 lives
-        speed = 0.6f;    // Balanced speed
+        health = 5;
+        speed = 0.6f;
         damage = 1;
     } else if (type == HARD_MELEE) {
-        health = 7;      // PDF Spec: 7 lives
-        speed = 0.4f;    // Balanced speed
-        damage = 2;      // PDF Spec: 2 damage
+        health = 7;
+        speed = 0.4f;
+        damage = 2;
     }
 }
 
     void update(float dt) {
         if (isAlive && !blocked) {
-            xPos -= speed * dt; // Move left towards the castle base
+            xPos -= speed * dt;
         }
     }
 };
@@ -223,7 +218,6 @@ struct Coin {
     bool collected;
 };
 
-// Member 3 Global State Variables
 std::vector<Enemy> g_enemies;
 std::vector<Coin> g_coins;
 int g_currentWave = 1;
@@ -236,7 +230,7 @@ void spawnWave(int waveNumber, const Koshary& grid) {
 
     if (waveNumber == 1) {
         for (int i = 0; i < 3; i++) {
-            int lane = rand() % 3; // Random lane selection
+            int lane = rand() % 3;
             float laneY = grid.tababa[lane].centerY;
             g_enemies.push_back(Enemy(i, EASY_UPPER, lane, startX + (i * 2.5f), laneY));
         }
@@ -374,15 +368,12 @@ int main() {
         el_wa2t_el_adeem = el_wa2t_el_goded;
         if (koko > 0.1f) koko = 0.1f;
 
-        // 1. OPEN THE GAME OVER WRAPPER
         if (!g_gameOver && !isPaused) {
 
-            // Wave Progression
             if (!g_waveInProgress && g_currentWave <= 3) {
                 spawnWave(g_currentWave, soso);
             }
 
-            // --- MEMBER 2: Jump & Duck (only players in selected lanes) ---
             bool wPressed = (glfwGetKey(hamada, GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(hamada, GLFW_KEY_UP) == GLFW_PRESS);
             bool sPressed = (glfwGetKey(hamada, GLFW_KEY_S) == GLFW_PRESS || glfwGetKey(hamada, GLFW_KEY_DOWN) == GLFW_PRESS);
             for (auto& p : basal) {
@@ -402,7 +393,6 @@ int main() {
                 }
             }
 
-            // --- MEMBER 2: Collision, Block & Damage Engine (vs Member 3 enemies) ---
             for (auto& enemy : g_enemies) {
                 enemy.blocked = false;
                 if (enemy.damageTint > 0.0f) enemy.damageTint -= koko * 3.0f;
@@ -419,8 +409,8 @@ int main() {
                         enemy.blocked = true;
 
                         bool hit = true;
-                        if (enemy.type == EASY_UPPER && pIt->isDucking) hit = false;   // duck avoids high attacks
-                        if (enemy.type == MEDIUM_LOWER && pIt->isJumping) hit = false; // jump avoids low attacks
+                        if (enemy.type == EASY_UPPER && pIt->isDucking) hit = false;
+                        if (enemy.type == MEDIUM_LOWER && pIt->isJumping) hit = false;
 
                         if (hit && pIt->damageTint <= 0.0f) {
                             pIt->health -= enemy.damage;
@@ -451,28 +441,24 @@ int main() {
                 else ++pIt;
             }
 
-            // Player movement
             for (auto it = basal.begin(); it != basal.end();) {
                 it->xPos += it->spd * koko;
                 if (it->xPos > 16.5f) it = basal.erase(it);
                 else ++it;
             }
 
-            // Enemy Updates & Loss Condition
             bool allDefeated = true;
             for (auto& enemy : g_enemies) {
                 if (!enemy.isAlive) continue;
                 enemy.update(koko);
                 allDefeated = false;
 
-                // LOSS CONDITION: Freeze game when enemy hits Home Base (X <= 3.5f)
                 if (enemy.xPos <= 3.5f) {
                     g_gameOver = true;
                     std::cout << "GAME OVER! Enemy breached Home Base!" << std::endl;
                 }
             }
 
-            // Coin pickup: a player in the same lane touching a coin collects it
             for (auto& coin : g_coins) {
                 if (coin.collected) continue;
                 for (const auto& p : basal) {
@@ -486,14 +472,13 @@ int main() {
                 }
             }
 
-            // Clear-Screen Condition
             if (allDefeated && g_waveInProgress) {
                 g_waveInProgress = false;
                 g_currentWave++;
                 std::cout << "Wave Cleared! Advancing to Wave " << g_currentWave << std::endl;
             }
 
-        } // 2. CLOSE THE GAME OVER WRAPPER (JUST ABOVE glClearColor)
+        }
 
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -513,7 +498,7 @@ int main() {
         glBindVertexArray(biko);
         glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
         glDrawElements(GL_TRIANGLES, meshmesh, GL_UNSIGNED_INT, (void*)0);
-        
+
         int laneIndexOffset = meshmesh;
         int indicesPerLane = 6;
         for (int i = 0; i < 3; i++) {
@@ -534,41 +519,37 @@ int main() {
         glDrawElements(GL_TRIANGLES, falafel_indices, GL_UNSIGNED_INT, (void*)(envIndexOffset * sizeof(unsigned int)));
         glBindVertexArray(ziro_vao);
 
-        // --- MEMBER 3: DRAW ENEMIES & HEALTH BARS ---
         for (const auto& enemy : g_enemies) {
             if (enemy.isAlive) {
-                // 1. Draw Enemy Body
+
                 if (enemy.type == EASY_UPPER) {
-                    glUniform3f(fizzo, 1.0f, 0.2f, 0.2f); // Red
+                    glUniform3f(fizzo, 1.0f, 0.2f, 0.2f);
                 } else if (enemy.type == MEDIUM_LOWER) {
-                    glUniform3f(fizzo, 1.0f, 0.6f, 0.0f); // Orange
+                    glUniform3f(fizzo, 1.0f, 0.6f, 0.0f);
                 } else if (enemy.type == HARD_MELEE) {
-                    glUniform3f(fizzo, 0.6f, 0.1f, 0.8f); // Purple
+                    glUniform3f(fizzo, 0.6f, 0.1f, 0.8f);
                 }
-                if (enemy.damageTint > 0.0f) glUniform3f(fizzo, 2.0f, 0.2f, 0.2f); // Red flash on hit
+                if (enemy.damageTint > 0.0f) glUniform3f(fizzo, 2.0f, 0.2f, 0.2f);
                 glUniform2f(wizzo, enemy.xPos, enemy.yPos);
                 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
 
-                // 2. Draw Enemy Health Bar (Bright Green Indicator Offset Above Head)
                 glUniform3f(fizzo, 0.0f, 1.0f, 0.2f);
                 glUniform2f(wizzo, enemy.xPos, enemy.yPos + 0.35f);
                 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
             }
         }
-        // --- MEMBER 3: DRAW COLLECTIBLE COINS ON SCREEN ---
+
         for (const auto& coin : g_coins) {
             if (!coin.collected) {
-                // Gold Yellow Tint (R=1.0, G=0.85, B=0.0)
+
                 glUniform3f(fizzo, 1.0f, 0.85f, 0.0f);
 
-                // Send coin X, Y coordinates to translation uniform
                 glUniform2f(wizzo, coin.xPos, coin.yPos);
 
-                // Draw coin shape using the character quad VAO
                 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
             }
         }
-        // --- MEMBER 2: DRAW PLAYER UNITS ---
+
         for (const auto& p : basal) {
             float duckOffset = p.isDucking ? -0.15f : 0.0f;
             float cy = soso.tababa[p.laneId].centerY + p.yOffset + duckOffset;
