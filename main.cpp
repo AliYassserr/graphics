@@ -42,6 +42,10 @@ public:
     }
 };
 
+// Member 4: game state (menus/cutscene are added in later steps)
+enum GameState { STATE_MENU, STATE_CUTSCENE, STATE_PLAYING, STATE_PAUSED, STATE_WIN, STATE_LOSE };
+GameState g_state = STATE_PLAYING; // starts in PLAYING until the main menu exists (step 2)
+
 Koshary soso;
 std::vector<Hawawshy> basal;
 std::vector<bool> tamtam(3, false);
@@ -116,7 +120,11 @@ void el_mouse_dakhal(GLFWwindow* bobo, int dakhal) {
 
 }
 void dos_zrar(GLFWwindow* tabl, int nono, int zaza, int pika, int mizo) {
-    if (nono == GLFW_KEY_ESCAPE && pika == GLFW_PRESS) glfwSetWindowShouldClose(tabl, true);
+    // ESC toggles pause (same key-callback pattern as the lab: key + action == GLFW_PRESS)
+    if (nono == GLFW_KEY_ESCAPE && pika == GLFW_PRESS) {
+        if (g_state == STATE_PLAYING)     g_state = STATE_PAUSED;
+        else if (g_state == STATE_PAUSED) g_state = STATE_PLAYING;
+    }
     if (nono == GLFW_KEY_SPACE && pika == GLFW_PRESS) {
         for (size_t i = 0; i < tamtam.size(); ++i) {
             if (tamtam[i]) {
@@ -370,7 +378,7 @@ int main() {
         if (koko > 0.1f) koko = 0.1f;
 
         // 1. OPEN THE GAME OVER WRAPPER
-        if (!g_gameOver) {
+        if (!g_gameOver && g_state == STATE_PLAYING) {
 
             // Wave Progression
             if (!g_waveInProgress && g_currentWave <= 3) {
