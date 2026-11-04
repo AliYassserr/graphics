@@ -42,6 +42,43 @@ public:
 };
 
 bool isPaused = false;
+bool inMainMenu = true;
+int menuHover = -1;
+
+struct Vec2 { float x, y; };
+
+float triSign(Vec2 p1, Vec2 p2, Vec2 p3) {
+    return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
+}
+
+bool pointInTriangle(Vec2 pt, Vec2 a, Vec2 b, Vec2 c) {
+    float d1 = triSign(pt, a, b);
+    float d2 = triSign(pt, b, c);
+    float d3 = triSign(pt, c, a);
+
+    bool hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+    bool hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+    return !(hasNeg && hasPos);
+}
+
+float menuBtn[3][4] = {
+    { 5.5f, 6.0f, 10.5f, 7.4f },
+    { 5.5f, 4.1f, 10.5f, 5.5f },
+    { 5.5f, 2.2f, 10.5f, 3.6f }
+};
+
+int menuButtonAt(float x, float y) {
+    Vec2 pt = { x, y };
+    for (int i = 0; i < 3; i++) {
+        Vec2 p0 = { menuBtn[i][0], menuBtn[i][1] };
+        Vec2 p1 = { menuBtn[i][2], menuBtn[i][1] };
+        Vec2 p2 = { menuBtn[i][2], menuBtn[i][3] };
+        Vec2 p3 = { menuBtn[i][0], menuBtn[i][3] };
+        if (pointInTriangle(pt, p0, p1, p2) || pointInTriangle(pt, p2, p3, p0)) return i;
+    }
+    return -1;
+}
 
 Koshary soso;
 std::vector<Hawawshy> basal;
@@ -67,7 +104,18 @@ void el_tabkh(float z1, float z2, float z3, float z4, float c1, float c2, float 
     kofta.push_back(bada2 + 0);
 }
 
-const char* kalmita = "#version 330 core\n"
+void el_masla3(float x1, float y1, float x2, float y2, float x3, float y3, float c1, float c2, float c3,
+    std::vector<Beshamel>& batates, std::vector<unsigned int>& kofta) {
+    unsigned int bada2 = (unsigned int)batates.size();
+    batates.push_back({ x1, y1, c1, c2, c3 });
+    batates.push_back({ x2, y2, c1, c2, c3 });
+    batates.push_back({ x3, y3, c1, c2, c3 });
+    kofta.push_back(bada2 + 0);
+    kofta.push_back(bada2 + 1);
+    kofta.push_back(bada2 + 2);
+}
+
+const char* kalmita ="#version 330 core\n"
 "layout (location = 0) in vec2 aPos;\n"
 "layout (location = 1) in vec3 aColor;\n"
 "out vec3 vertexColor;\n"
@@ -82,8 +130,10 @@ const char* shabash = "#version 330 core\n"
 "in vec3 vertexColor;\n"
 "out vec4 FragColor;\n"
 "uniform vec3 uTint;\n"
+"uniform float u_Highlight;\n"
 "void main(){\n"
-"   FragColor = vec4(vertexColor * uTint, 1.0);\n"
+"   vec3 finalColor = mix(vertexColor * uTint, vec3(1.0, 1.0, 0.0), u_Highlight);\n"
+"   FragColor = vec4(finalColor, 1.0);\n"
 "}\n";
 
 void ftesh(unsigned int bombo, std::string no3) {
@@ -113,10 +163,11 @@ void el_shasha_betrg3(GLFWwindow* bobo, int ard, int tool) {
 }
 void el_mouse_dakhal(GLFWwindow* bobo, int dakhal) {
     tot = dakhal;
-    if (!dakhal) ziz = -1;
+    if (!dakhal) { ziz = -1; menuHover = -1; }
 
 }
 void dos_zrar(GLFWwindow* tabl, int nono, int zaza, int pika, int mizo) {
+    if (inMainMenu) return;
 
     if (nono == GLFW_KEY_ESCAPE && pika == GLFW_PRESS)
         isPaused = !isPaused;
@@ -136,6 +187,10 @@ void el_mouse_beteeth(GLFWwindow* tabl, double mash, double mosh) {
     if (winW == 0 || winH == 0) return;
     float wX = (float)mash / winW * 16.0f;
     float wY = (1.0f - (float)mosh / winH) * 10.0f;
+    if (inMainMenu) {
+        menuHover = menuButtonAt(wX, wY);
+        return;
+    }
     if (wX > soso.akhdar) {
         ziz = soso.getLaneFromY(wY);
     }
@@ -153,6 +208,12 @@ void el_mouse_dos(GLFWwindow* tabl, int b, int a, int m) {
     if (winW == 0 || winH == 0) return;
     float wX = (float)mash / winW * 16.0f;
     float wY = (1.0f - (float)mosh / winH) * 10.0f;
+    if (inMainMenu) {
+        int hit = menuButtonAt(wX, wY);
+        if (hit == 0) inMainMenu = false;
+        else if (hit == 2) glfwSetWindowShouldClose(tabl, true);
+        return;
+    }
     if (wX >= soso.asfar && wX <= soso.akhdar) {
         std::cout << "Clicked Gatehouse Home Base!\n";
     }
@@ -341,6 +402,36 @@ int main() {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Beshamel), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
+    std::vector<Beshamel> menuVerts;
+    std::vector<unsigned int> menuInds;
+    el_tabkh(4.9f, 1.7f, 6.2f, 6.3f, 0.18f, 0.20f, 0.28f, menuVerts, menuInds);
+    el_tabkh(menuBtn[0][0], menuBtn[0][1], menuBtn[0][2] - menuBtn[0][0], menuBtn[0][3] - menuBtn[0][1], 0.20f, 0.60f, 0.25f, menuVerts, menuInds);
+    el_tabkh(menuBtn[1][0], menuBtn[1][1], menuBtn[1][2] - menuBtn[1][0], menuBtn[1][3] - menuBtn[1][1], 0.20f, 0.40f, 0.80f, menuVerts, menuInds);
+    el_tabkh(menuBtn[2][0], menuBtn[2][1], menuBtn[2][2] - menuBtn[2][0], menuBtn[2][3] - menuBtn[2][1], 0.75f, 0.20f, 0.20f, menuVerts, menuInds);
+    el_masla3(7.7f, 6.2f, 7.7f, 7.2f, 8.5f, 6.7f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
+    el_tabkh(7.55f, 4.3f, 0.25f, 0.4f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
+    el_tabkh(7.95f, 4.3f, 0.25f, 0.7f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
+    el_tabkh(8.35f, 4.3f, 0.25f, 1.0f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
+    el_masla3(7.6f, 2.4f, 7.85f, 2.4f, 8.4f, 3.4f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
+    el_masla3(8.4f, 3.4f, 8.15f, 3.4f, 7.6f, 2.4f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
+    el_masla3(7.6f, 3.4f, 7.85f, 3.4f, 8.4f, 2.4f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
+    el_masla3(8.4f, 2.4f, 8.15f, 2.4f, 7.6f, 3.4f, 1.0f, 1.0f, 1.0f, menuVerts, menuInds);
+    int menuIconCount = (int)menuInds.size() - 24;
+
+    unsigned int menuVBO, menuVAO, menuEBO;
+    glGenVertexArrays(1, &menuVAO);
+    glGenBuffers(1, &menuVBO);
+    glGenBuffers(1, &menuEBO);
+    glBindVertexArray(menuVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, menuVBO);
+    glBufferData(GL_ARRAY_BUFFER, menuVerts.size() * sizeof(Beshamel), menuVerts.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, menuEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, menuInds.size() * sizeof(unsigned int), menuInds.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Beshamel), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Beshamel), (void*)(2 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
     unsigned int tigers = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(tigers, 1, &kalmita, NULL);
     glCompileShader(tigers);
@@ -360,6 +451,9 @@ int main() {
     int gizmo = glGetUniformLocation(dodo, "uProjection");
     int wizzo = glGetUniformLocation(dodo, "uOffset");
     int fizzo = glGetUniformLocation(dodo, "uTint");
+    int hilo = glGetUniformLocation(dodo, "u_Highlight");
+    glUseProgram(dodo);
+    glUniform1f(hilo, 0.0f);
     double el_wa2t_el_adeem = glfwGetTime();
 
     while (!glfwWindowShouldClose(hamada)) {
@@ -368,7 +462,7 @@ int main() {
         el_wa2t_el_adeem = el_wa2t_el_goded;
         if (koko > 0.1f) koko = 0.1f;
 
-        if (!g_gameOver && !isPaused) {
+        if (!g_gameOver && !isPaused && !inMainMenu) {
 
             if (!g_waveInProgress && g_currentWave <= 3) {
                 spawnWave(g_currentWave, soso);
@@ -495,6 +589,23 @@ int main() {
         };
         glUniformMatrix4fv(gizmo, 1, GL_FALSE, dolly);
         glUniform2f(wizzo, 0.0f, 0.0f);
+
+        if (inMainMenu) {
+            glBindVertexArray(menuVAO);
+            glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
+            glUniform1f(hilo, 0.0f);
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
+            for (int i = 0; i < 3; i++) {
+                glUniform1f(hilo, i == menuHover ? 0.5f : 0.0f);
+                glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)((6 + i * 6) * sizeof(unsigned int)));
+            }
+            glUniform1f(hilo, 0.0f);
+            glDrawElements(GL_TRIANGLES, menuIconCount, GL_UNSIGNED_INT, (void*)(24 * sizeof(unsigned int)));
+            glfwSwapBuffers(hamada);
+            glfwPollEvents();
+            continue;
+        }
+
         glBindVertexArray(biko);
         glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
         glDrawElements(GL_TRIANGLES, meshmesh, GL_UNSIGNED_INT, (void*)0);
