@@ -44,7 +44,11 @@ public:
 
 bool isPaused = false;
 bool inMainMenu = true;
+bool isWin = false;
+bool g_gameOver = false;
 int menuHover = -1;
+
+void restartGame();
 
 float triSign(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3) {
     return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
@@ -148,10 +152,11 @@ void el_mouse_dakhal(GLFWwindow* bobo, int dakhal) {
 
 }
 void dos_zrar(GLFWwindow* tabl, int nono, int zaza, int pika, int mizo) {
-    if (inMainMenu) return;
+    if (inMainMenu || g_gameOver || isWin) return;
 
     if (nono == GLFW_KEY_ESCAPE && pika == GLFW_PRESS)
         isPaused = !isPaused;
+    if (isPaused) return;
     if (nono == GLFW_KEY_SPACE && pika == GLFW_PRESS) {
         for (size_t i = 0; i < tamtam.size(); ++i) {
             if (tamtam[i]) {
@@ -168,7 +173,7 @@ void el_mouse_beteeth(GLFWwindow* tabl, double mash, double mosh) {
     if (winW == 0 || winH == 0) return;
     float wX = (float)mash / winW * 16.0f;
     float wY = (1.0f - (float)mosh / winH) * 10.0f;
-    if (inMainMenu) {
+    if (inMainMenu || isPaused || g_gameOver || isWin) {
         menuHover = menuButtonAt(wX, wY);
         return;
     }
@@ -195,6 +200,19 @@ void el_mouse_dos(GLFWwindow* tabl, int b, int a, int m) {
         else if (hit == 2) glfwSetWindowShouldClose(tabl, true);
         return;
     }
+    if (isWin || g_gameOver) {
+        int hit = menuButtonAt(wX, wY);
+        if (hit == 0) restartGame();
+        else if (hit == 1) { restartGame(); inMainMenu = true; }
+        return;
+    }
+    if (isPaused) {
+        int hit = menuButtonAt(wX, wY);
+        if (hit == 0) isPaused = false;
+        else if (hit == 1) restartGame();
+        else if (hit == 2) { restartGame(); inMainMenu = true; }
+        return;
+    }
     if (wX >= soso.asfar && wX <= soso.akhdar) {
         std::cout << "Clicked Gatehouse Home Base!\n";
     }
@@ -206,7 +224,6 @@ void el_mouse_dos(GLFWwindow* tabl, int b, int a, int m) {
     }
 }
 
-bool g_gameOver = false;
 enum EnemyType { EASY_UPPER, MEDIUM_LOWER, HARD_MELEE };
 
 struct Enemy {
@@ -265,6 +282,20 @@ std::vector<Coin> g_coins;
 int g_currentWave = 1;
 int g_playerCoins = 0;
 bool g_waveInProgress = false;
+
+void restartGame() {
+    g_enemies.clear();
+    g_coins.clear();
+    basal.clear();
+    for (size_t i = 0; i < tamtam.size(); ++i) tamtam[i] = false;
+    g_currentWave = 1;
+    g_playerCoins = 0;
+    g_waveInProgress = false;
+    g_gameOver = false;
+    isWin = false;
+    isPaused = false;
+    menuHover = -1;
+}
 
 void spawnWave(int waveNumber, const Koshary& grid) {
     g_enemies.clear();
@@ -440,7 +471,88 @@ int main() {
         8.40f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
         8.40f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
         8.15f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
-        7.60f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f
+        7.60f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        4.90f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
+        11.10f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
+        11.10f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
+        11.10f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
+        4.90f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
+        4.90f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
+        5.50f, 6.00f, 0.0f,   0.20f, 0.60f, 0.25f,
+        10.50f, 6.00f, 0.0f,   0.20f, 0.60f, 0.25f,
+        10.50f, 7.40f, 0.0f,   0.20f, 0.60f, 0.25f,
+        10.50f, 7.40f, 0.0f,   0.20f, 0.60f, 0.25f,
+        5.50f, 7.40f, 0.0f,   0.20f, 0.60f, 0.25f,
+        5.50f, 6.00f, 0.0f,   0.20f, 0.60f, 0.25f,
+        5.50f, 4.10f, 0.0f,   0.20f, 0.40f, 0.80f,
+        10.50f, 4.10f, 0.0f,   0.20f, 0.40f, 0.80f,
+        10.50f, 5.50f, 0.0f,   0.20f, 0.40f, 0.80f,
+        10.50f, 5.50f, 0.0f,   0.20f, 0.40f, 0.80f,
+        5.50f, 5.50f, 0.0f,   0.20f, 0.40f, 0.80f,
+        5.50f, 4.10f, 0.0f,   0.20f, 0.40f, 0.80f,
+        5.50f, 2.20f, 0.0f,   0.80f, 0.50f, 0.15f,
+        10.50f, 2.20f, 0.0f,   0.80f, 0.50f, 0.15f,
+        10.50f, 3.60f, 0.0f,   0.80f, 0.50f, 0.15f,
+        10.50f, 3.60f, 0.0f,   0.80f, 0.50f, 0.15f,
+        5.50f, 3.60f, 0.0f,   0.80f, 0.50f, 0.15f,
+        5.50f, 2.20f, 0.0f,   0.80f, 0.50f, 0.15f,
+        7.70f, 6.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.70f, 7.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.50f, 6.70f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.95f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.95f, 5.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.45f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.55f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.55f, 5.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.05f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 3.00f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 3.00f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 3.00f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.45f, 3.00f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.55f, 3.00f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.00f, 3.45f, 0.0f,   1.00f, 1.00f, 1.00f,
+        4.90f, 3.80f, 0.0f,   0.12f, 0.45f, 0.20f,
+        11.10f, 3.80f, 0.0f,   0.12f, 0.45f, 0.20f,
+        11.10f, 8.00f, 0.0f,   0.12f, 0.45f, 0.20f,
+        11.10f, 8.00f, 0.0f,   0.12f, 0.45f, 0.20f,
+        4.90f, 8.00f, 0.0f,   0.12f, 0.45f, 0.20f,
+        4.90f, 3.80f, 0.0f,   0.12f, 0.45f, 0.20f,
+        4.90f, 3.80f, 0.0f,   0.50f, 0.12f, 0.12f,
+        11.10f, 3.80f, 0.0f,   0.50f, 0.12f, 0.12f,
+        11.10f, 8.00f, 0.0f,   0.50f, 0.12f, 0.12f,
+        11.10f, 8.00f, 0.0f,   0.50f, 0.12f, 0.12f,
+        4.90f, 8.00f, 0.0f,   0.50f, 0.12f, 0.12f,
+        4.90f, 3.80f, 0.0f,   0.50f, 0.12f, 0.12f,
+        5.50f, 6.00f, 0.0f,   0.20f, 0.40f, 0.80f,
+        10.50f, 6.00f, 0.0f,   0.20f, 0.40f, 0.80f,
+        10.50f, 7.40f, 0.0f,   0.20f, 0.40f, 0.80f,
+        10.50f, 7.40f, 0.0f,   0.20f, 0.40f, 0.80f,
+        5.50f, 7.40f, 0.0f,   0.20f, 0.40f, 0.80f,
+        5.50f, 6.00f, 0.0f,   0.20f, 0.40f, 0.80f,
+        5.50f, 4.10f, 0.0f,   0.80f, 0.50f, 0.15f,
+        10.50f, 4.10f, 0.0f,   0.80f, 0.50f, 0.15f,
+        10.50f, 5.50f, 0.0f,   0.80f, 0.50f, 0.15f,
+        10.50f, 5.50f, 0.0f,   0.80f, 0.50f, 0.15f,
+        5.50f, 5.50f, 0.0f,   0.80f, 0.50f, 0.15f,
+        5.50f, 4.10f, 0.0f,   0.80f, 0.50f, 0.15f,
+        7.95f, 6.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.95f, 7.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.45f, 6.70f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.55f, 6.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.55f, 7.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.05f, 6.70f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 4.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 4.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 4.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.45f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.55f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.00f, 5.25f, 0.0f,   1.00f, 1.00f, 1.00f
     };
     int menuIconStart = 24;
     int menuIconCount = (int)(menuVertices.size() / 6) - menuIconStart;
@@ -484,7 +596,7 @@ int main() {
         el_wa2t_el_adeem = el_wa2t_el_goded;
         if (koko > 0.1f) koko = 0.1f;
 
-        if (!g_gameOver && !isPaused && !inMainMenu) {
+        if (!g_gameOver && !isPaused && !inMainMenu && !isWin) {
 
             if (!g_waveInProgress && g_currentWave <= 3) {
                 spawnWave(g_currentWave, soso);
@@ -592,6 +704,7 @@ int main() {
                 g_waveInProgress = false;
                 g_currentWave++;
                 std::cout << "Wave Cleared! Advancing to Wave " << g_currentWave << std::endl;
+                if (g_currentWave > 3) isWin = true;
             }
 
         }
@@ -690,6 +803,31 @@ int main() {
             if (p.damageTint > 0.0f) glUniform3f(fizzo, 2.0f, 0.2f, 0.2f);
             else glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        }
+        if (isWin || g_gameOver || isPaused) {
+            glBindVertexArray(menuVAO);
+            glUniform2f(wizzo, 0.0f, 0.0f);
+            glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
+            if (isWin || g_gameOver) {
+                glUniform1f(hilo, 0.0f);
+                glDrawArrays(GL_TRIANGLES, isWin ? 99 : 105, 6);
+                for (int i = 0; i < 2; i++) {
+                    glUniform1f(hilo, i == menuHover ? 1.0f : 0.0f);
+                    glDrawArrays(GL_TRIANGLES, 111 + i * 6, 6);
+                }
+                glUniform1f(hilo, 0.0f);
+                glDrawArrays(GL_TRIANGLES, 123, 15);
+            }
+            else {
+                glUniform1f(hilo, 0.0f);
+                glDrawArrays(GL_TRIANGLES, 57, 6);
+                for (int i = 0; i < 3; i++) {
+                    glUniform1f(hilo, i == menuHover ? 1.0f : 0.0f);
+                    glDrawArrays(GL_TRIANGLES, 63 + i * 6, 6);
+                }
+                glUniform1f(hilo, 0.0f);
+                glDrawArrays(GL_TRIANGLES, 81, 18);
+            }
         }
         glfwSwapBuffers(hamada);
         glfwPollEvents();
