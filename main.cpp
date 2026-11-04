@@ -6,20 +6,22 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 struct Mahshy { int id; float yStart, yEnd, centerY; };
 
-// Member 2 Player Unit (with health, jump/duck state & tint timer)
 struct Hawawshy {
     int laneId;
     float xPos;
     float spd;
-    float yOffset;    // Jump height offset
-    bool isJumping;   // Air state
-    bool isDucking;   // Ducking state
-    float jumpTimer;  // Jump duration
-    int health;       // Player unit health
-    float damageTint; // Red flash timer when damaged
+    float yOffset;
+    bool isJumping;
+    bool isDucking;
+    float jumpTimer;
+    int health;
+    float damageTint;
+    int kind;
 };
 
 struct Beshamel {
@@ -41,6 +43,55 @@ public:
         return -1;
     }
 };
+
+bool isPaused = false;
+bool inMainMenu = true;
+bool isWin = false;
+bool g_gameOver = false;
+bool inCutscene = false;
+float cutsceneTime = 0.0f;
+int menuHover = -1;
+int cardHover = -1;
+int g_playerCoins = 30;
+int cardCost[3] = { 10, 20, 30 };
+
+void restartGame();
+
+float triSign(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3) {
+    return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
+}
+
+bool pointInTriangle(glm::vec2 pt, glm::vec2 a, glm::vec2 b, glm::vec2 c) {
+    float d1 = triSign(pt, a, b);
+    float d2 = triSign(pt, b, c);
+    float d3 = triSign(pt, c, a);
+
+    bool hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+    bool hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+    return !(hasNeg && hasPos);
+}
+
+int menuButtonAt(float x, float y) {
+    glm::vec2 pt(x, y);
+    if (pointInTriangle(pt, glm::vec2(5.5f, 6.0f), glm::vec2(10.5f, 6.0f), glm::vec2(10.5f, 7.4f)) ||
+        pointInTriangle(pt, glm::vec2(10.5f, 7.4f), glm::vec2(5.5f, 7.4f), glm::vec2(5.5f, 6.0f))) return 0;
+    if (pointInTriangle(pt, glm::vec2(5.5f, 4.1f), glm::vec2(10.5f, 4.1f), glm::vec2(10.5f, 5.5f)) ||
+        pointInTriangle(pt, glm::vec2(10.5f, 5.5f), glm::vec2(5.5f, 5.5f), glm::vec2(5.5f, 4.1f))) return 1;
+    if (pointInTriangle(pt, glm::vec2(5.5f, 2.2f), glm::vec2(10.5f, 2.2f), glm::vec2(10.5f, 3.6f)) ||
+        pointInTriangle(pt, glm::vec2(10.5f, 3.6f), glm::vec2(5.5f, 3.6f), glm::vec2(5.5f, 2.2f))) return 2;
+    return -1;
+}
+
+int cardAt(float x, float y) {
+    glm::vec2 pt(x, y);
+    for (int i = 0; i < 3; i++) {
+        float x0 = 3.7f + i * 1.15f, y0 = 8.35f, x1 = x0 + 1.05f, y1 = y0 + 1.55f;
+        if (pointInTriangle(pt, glm::vec2(x0, y0), glm::vec2(x1, y0), glm::vec2(x1, y1)) ||
+            pointInTriangle(pt, glm::vec2(x1, y1), glm::vec2(x0, y1), glm::vec2(x0, y0))) return i;
+    }
+    return -1;
+}
 
 Koshary soso;
 std::vector<Hawawshy> basal;
@@ -66,14 +117,15 @@ void el_tabkh(float z1, float z2, float z3, float z4, float c1, float c2, float 
     kofta.push_back(bada2 + 0);
 }
 
-const char* kalmita = "#version 330 core\n"
-"layout (location = 0) in vec2 aPos;\n"
+const char* kalmita ="#version 330 core\n"
+"layout (location = 0) in vec3 aPos;\n"
 "layout (location = 1) in vec3 aColor;\n"
 "out vec3 vertexColor;\n"
 "uniform mat4 uProjection;\n"
+"uniform mat4 model;\n"
 "uniform vec2 uOffset;\n"
 "void main(){\n"
-"   gl_Position = uProjection * vec4(aPos + uOffset, 0.0, 1.0);\n"
+"   gl_Position = uProjection * (model * vec4(aPos, 1.0) + vec4(uOffset, 0.0, 0.0));\n"
 "   vertexColor = aColor;\n"
 "}\n";
 
@@ -81,8 +133,14 @@ const char* shabash = "#version 330 core\n"
 "in vec3 vertexColor;\n"
 "out vec4 FragColor;\n"
 "uniform vec3 uTint;\n"
+"uniform float u_Highlight;\n"
+"uniform float u_Gray;\n"
 "void main(){\n"
-"   FragColor = vec4(vertexColor * uTint, 1.0);\n"
+"   vec3 baseColor = vertexColor * uTint;\n"
+"   float grayValue = dot(baseColor, vec3(0.299, 0.587, 0.114));\n"
+"   baseColor = mix(baseColor, vec3(grayValue), u_Gray);\n"
+"   vec3 finalColor = mix(baseColor, vec3(1.0, 1.0, 0.0), u_Highlight);\n"
+"   FragColor = vec4(finalColor, 1.0);\n"
 "}\n";
 
 void ftesh(unsigned int bombo, std::string no3) {
@@ -116,15 +174,15 @@ void el_mouse_dakhal(GLFWwindow* bobo, int dakhal) {
 
 }
 void dos_zrar(GLFWwindow* tabl, int nono, int zaza, int pika, int mizo) {
-    if (nono == GLFW_KEY_ESCAPE && pika == GLFW_PRESS) glfwSetWindowShouldClose(tabl, true);
-    if (nono == GLFW_KEY_SPACE && pika == GLFW_PRESS) {
-        for (size_t i = 0; i < tamtam.size(); ++i) {
-            if (tamtam[i]) {
-                // laneId, xPos, spd, yOffset, isJumping, isDucking, jumpTimer, health, damageTint
-                basal.push_back({ (int)i, soso.akhdar, 3.5f, 0.0f, false, false, 0.0f, 5, 0.0f });
-            }
-        }
+    if (inCutscene) {
+        if (nono == GLFW_KEY_ESCAPE && pika == GLFW_PRESS) inCutscene = false;
+        return;
     }
+    if (inMainMenu || g_gameOver || isWin) return;
+
+    if (nono == GLFW_KEY_ESCAPE && pika == GLFW_PRESS)
+        isPaused = !isPaused;
+    if (isPaused) return;
 }
 void el_mouse_beteeth(GLFWwindow* tabl, double mash, double mosh) {
     if (!tot || tol_3ard == 0) return;
@@ -133,6 +191,12 @@ void el_mouse_beteeth(GLFWwindow* tabl, double mash, double mosh) {
     if (winW == 0 || winH == 0) return;
     float wX = (float)mash / winW * 16.0f;
     float wY = (1.0f - (float)mosh / winH) * 10.0f;
+    if (inCutscene) return;
+    if (inMainMenu || isPaused || g_gameOver || isWin) {
+        menuHover = menuButtonAt(wX, wY);
+        return;
+    }
+    cardHover = cardAt(wX, wY);
     if (wX > soso.akhdar) {
         ziz = soso.getLaneFromY(wY);
     }
@@ -150,6 +214,39 @@ void el_mouse_dos(GLFWwindow* tabl, int b, int a, int m) {
     if (winW == 0 || winH == 0) return;
     float wX = (float)mash / winW * 16.0f;
     float wY = (1.0f - (float)mosh / winH) * 10.0f;
+    if (inCutscene) {
+        inCutscene = false;
+        return;
+    }
+    if (inMainMenu) {
+        int hit = menuButtonAt(wX, wY);
+        if (hit == 0) { inMainMenu = false; inCutscene = true; cutsceneTime = 0.0f; }
+        else if (hit == 2) glfwSetWindowShouldClose(tabl, true);
+        return;
+    }
+    if (isWin || g_gameOver) {
+        int hit = menuButtonAt(wX, wY);
+        if (hit == 0) restartGame();
+        else if (hit == 1) { restartGame(); inMainMenu = true; }
+        return;
+    }
+    if (isPaused) {
+        int hit = menuButtonAt(wX, wY);
+        if (hit == 0) isPaused = false;
+        else if (hit == 1) restartGame();
+        else if (hit == 2) { restartGame(); inMainMenu = true; }
+        return;
+    }
+    int card = cardAt(wX, wY);
+    if (card != -1) {
+        for (size_t i = 0; i < tamtam.size(); ++i) {
+            if (tamtam[i] && g_playerCoins >= cardCost[card]) {
+                basal.push_back({ (int)i, soso.akhdar, card == 2 ? 0.0f : 3.5f, 0.0f, false, false, 0.0f, card == 2 ? 7 : 5, 0.0f, card });
+                g_playerCoins -= cardCost[card];
+            }
+        }
+        return;
+    }
     if (wX >= soso.asfar && wX <= soso.akhdar) {
         std::cout << "Clicked Gatehouse Home Base!\n";
     }
@@ -160,26 +257,22 @@ void el_mouse_dos(GLFWwindow* tabl, int b, int a, int m) {
         }
     }
 }
-// ==========================================
-// MEMBER 3: ENEMY, WAVE & COLLECTIBLE SYSTEM
-// ==========================================
-bool g_gameOver = false;
+
 enum EnemyType { EASY_UPPER, MEDIUM_LOWER, HARD_MELEE };
 
 struct Enemy {
     int id;
     EnemyType type;
-    int laneId;       // 0 (top), 1 (middle), 2 (bottom)
-    float xPos;       // Moves right-to-left (+X to -X)
-    float yPos;       // Fixed lane Y center
+    int laneId;
+    float xPos;
+    float yPos;
     int health;
     float speed;
     int damage;
     bool isAlive;
-    float damageTint; // Red flash timer when damaged
-    bool blocked;     // True while colliding with a player this frame
+    float damageTint;
+    bool blocked;
 
-    // --- ENEMY CONSTRUCTOR (PDF Spec: Easy=5, Med=5, Hard=7 HP) ---
 Enemy(int enemyId, EnemyType t, int lane, float startX, float laneY) {
     id = enemyId;
     type = t;
@@ -191,23 +284,23 @@ Enemy(int enemyId, EnemyType t, int lane, float startX, float laneY) {
     blocked = false;
 
     if (type == EASY_UPPER) {
-        health = 5;      // PDF Spec: 5 lives
-        speed = 0.8f;    // Balanced speed
+        health = 5;
+        speed = 0.8f;
         damage = 1;
     } else if (type == MEDIUM_LOWER) {
-        health = 5;      // PDF Spec: 5 lives
-        speed = 0.6f;    // Balanced speed
+        health = 5;
+        speed = 0.6f;
         damage = 1;
     } else if (type == HARD_MELEE) {
-        health = 7;      // PDF Spec: 7 lives
-        speed = 0.4f;    // Balanced speed
-        damage = 2;      // PDF Spec: 2 damage
+        health = 7;
+        speed = 0.4f;
+        damage = 2;
     }
 }
 
     void update(float dt) {
         if (isAlive && !blocked) {
-            xPos -= speed * dt; // Move left towards the castle base
+            xPos -= speed * dt;
         }
     }
 };
@@ -218,12 +311,26 @@ struct Coin {
     bool collected;
 };
 
-// Member 3 Global State Variables
 std::vector<Enemy> g_enemies;
 std::vector<Coin> g_coins;
 int g_currentWave = 1;
-int g_playerCoins = 0;
 bool g_waveInProgress = false;
+
+void restartGame() {
+    g_enemies.clear();
+    g_coins.clear();
+    basal.clear();
+    for (size_t i = 0; i < tamtam.size(); ++i) tamtam[i] = false;
+    g_currentWave = 1;
+    g_playerCoins = 30;
+    g_waveInProgress = false;
+    g_gameOver = false;
+    isWin = false;
+    isPaused = false;
+    inCutscene = false;
+    menuHover = -1;
+    cardHover = -1;
+}
 
 void spawnWave(int waveNumber, const Koshary& grid) {
     g_enemies.clear();
@@ -231,7 +338,7 @@ void spawnWave(int waveNumber, const Koshary& grid) {
 
     if (waveNumber == 1) {
         for (int i = 0; i < 3; i++) {
-            int lane = rand() % 3; // Random lane selection
+            int lane = rand() % 3;
             float laneY = grid.tababa[lane].centerY;
             g_enemies.push_back(Enemy(i, EASY_UPPER, lane, startX + (i * 2.5f), laneY));
         }
@@ -252,6 +359,194 @@ void spawnWave(int waveNumber, const Koshary& grid) {
     }
     g_waveInProgress = true;
 }
+
+int locModel = -1, locTint = -1, locOffset = -1, locHighlight = -1, locGray = -1;
+unsigned int uiVAO = 0;
+
+bool sevenSeg[10][7] = {
+    { 1, 1, 1, 1, 1, 1, 0 },
+    { 0, 1, 1, 0, 0, 0, 0 },
+    { 1, 1, 0, 1, 1, 0, 1 },
+    { 1, 1, 1, 1, 0, 0, 1 },
+    { 0, 1, 1, 0, 0, 1, 1 },
+    { 1, 0, 1, 1, 0, 1, 1 },
+    { 1, 0, 1, 1, 1, 1, 1 },
+    { 1, 1, 1, 0, 0, 0, 0 },
+    { 1, 1, 1, 1, 1, 1, 1 },
+    { 1, 1, 1, 1, 0, 1, 1 }
+};
+
+void uiShape(GLenum mode, int first, int count, float x, float y, float w, float h, float r, float g, float b) {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(x, y, 0.0f));
+    model = glm::scale(model, glm::vec3(w, h, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, r, g, b);
+    glDrawArrays(mode, first, count);
+}
+
+void uiRect(float x, float y, float w, float h, float r, float g, float b) { uiShape(GL_TRIANGLES, 0, 6, x, y, w, h, r, g, b); }
+void uiTriUp(float x, float y, float w, float h, float r, float g, float b) { uiShape(GL_TRIANGLES, 6, 3, x, y, w, h, r, g, b); }
+void uiTriRight(float x, float y, float w, float h, float r, float g, float b) { uiShape(GL_TRIANGLES, 9, 3, x, y, w, h, r, g, b); }
+void uiTriDown(float x, float y, float w, float h, float r, float g, float b) { uiShape(GL_TRIANGLES, 12, 3, x, y, w, h, r, g, b); }
+void uiCircle(float cx, float cy, float rad, float r, float g, float b) { uiShape(GL_TRIANGLE_FAN, 15, 34, cx, cy, rad, rad, r, g, b); }
+
+void uiBegin() {
+    glBindVertexArray(uiVAO);
+    glUniform2f(locOffset, 0.0f, 0.0f);
+    glUniform1f(locHighlight, 0.0f);
+    glUniform1f(locGray, 0.0f);
+}
+
+void uiEnd() {
+    glm::mat4 model = glm::mat4(1.0f);
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, 1.0f, 1.0f, 1.0f);
+    glUniform1f(locHighlight, 0.0f);
+    glUniform1f(locGray, 0.0f);
+}
+
+void drawNumber(int value, float x, float y, float w, float h, float gap, float r, float g, float b) {
+    std::string digits = std::to_string(value);
+    float t = w * 0.22f;
+    for (size_t k = 0; k < digits.size(); k++) {
+        int d = digits[k] - '0';
+        float dx = x + k * (w + gap);
+        if (sevenSeg[d][0]) uiRect(dx, y + h - t, w, t, r, g, b);
+        if (sevenSeg[d][1]) uiRect(dx + w - t, y + h / 2, t, h / 2, r, g, b);
+        if (sevenSeg[d][2]) uiRect(dx + w - t, y, t, h / 2, r, g, b);
+        if (sevenSeg[d][3]) uiRect(dx, y, w, t, r, g, b);
+        if (sevenSeg[d][4]) uiRect(dx, y, t, h / 2, r, g, b);
+        if (sevenSeg[d][5]) uiRect(dx, y + h / 2, t, h / 2, r, g, b);
+        if (sevenSeg[d][6]) uiRect(dx, y + h / 2 - t / 2, w, t, r, g, b);
+    }
+}
+
+void drawCoinTracker() {
+    uiRect(12.4f, 8.6f, 3.55f, 1.35f, 0.12f, 0.12f, 0.16f);
+    uiCircle(12.95f, 9.27f, 0.32f, 1.0f, 0.8f, 0.1f);
+    uiCircle(12.95f, 9.27f, 0.2f, 0.9f, 0.62f, 0.05f);
+    drawNumber(g_playerCoins, 13.5f, 8.87f, 0.42f, 0.8f, 0.14f, 1.0f, 0.85f, 0.2f);
+}
+
+void drawCards() {
+    float cardColor[3][3] = { { 0.70f, 0.45f, 0.20f }, { 0.15f, 0.55f, 0.55f }, { 0.45f, 0.50f, 0.60f } };
+    for (int i = 0; i < 3; i++) {
+        float x0 = 3.7f + i * 1.15f, y0 = 8.35f, cx = x0 + 0.525f;
+        bool unlocked = g_playerCoins >= cardCost[i];
+        glUniform1f(locGray, unlocked ? 0.0f : 1.0f);
+        glUniform1f(locHighlight, (unlocked && i == cardHover) ? 1.0f : 0.0f);
+        uiRect(x0, y0, 1.05f, 1.55f, cardColor[i][0], cardColor[i][1], cardColor[i][2]);
+        glUniform1f(locHighlight, 0.0f);
+        uiRect(x0 + 0.06f, y0 + 0.06f, 0.93f, 0.4f, 0.1f, 0.1f, 0.12f);
+        if (i == 0) {
+            uiRect(cx - 0.04f, y0 + 0.55f, 0.08f, 0.17f, 0.45f, 0.28f, 0.12f);
+            uiRect(cx - 0.22f, y0 + 0.72f, 0.44f, 0.08f, 0.85f, 0.75f, 0.3f);
+            uiRect(cx - 0.05f, y0 + 0.8f, 0.1f, 0.55f, 0.9f, 0.9f, 0.95f);
+            uiTriUp(cx - 0.05f, y0 + 1.35f, 0.1f, 0.13f, 0.9f, 0.9f, 0.95f);
+        }
+        else if (i == 1) {
+            uiRect(cx - 0.35f, y0 + 0.98f, 0.5f, 0.06f, 0.75f, 0.55f, 0.3f);
+            uiTriRight(cx + 0.15f, y0 + 0.87f, 0.22f, 0.28f, 0.9f, 0.9f, 0.95f);
+            uiTriUp(cx - 0.42f, y0 + 1.04f, 0.14f, 0.13f, 0.95f, 0.95f, 0.95f);
+            uiTriDown(cx - 0.42f, y0 + 0.85f, 0.14f, 0.13f, 0.95f, 0.95f, 0.95f);
+        }
+        else {
+            uiRect(cx - 0.27f, y0 + 0.95f, 0.54f, 0.45f, 0.9f, 0.9f, 0.95f);
+            uiTriDown(cx - 0.27f, y0 + 0.62f, 0.54f, 0.33f, 0.9f, 0.9f, 0.95f);
+            uiRect(cx - 0.04f, y0 + 0.75f, 0.08f, 0.55f, cardColor[i][0], cardColor[i][1], cardColor[i][2]);
+            uiRect(cx - 0.17f, y0 + 1.08f, 0.34f, 0.08f, cardColor[i][0], cardColor[i][1], cardColor[i][2]);
+        }
+        drawNumber(cardCost[i], x0 + 0.315f, y0 + 0.11f, 0.18f, 0.3f, 0.06f, 1.0f, 0.85f, 0.2f);
+    }
+    glUniform1f(locGray, 0.0f);
+}
+
+void drawHealthBar(float cx, float y, int health, int maxHealth) {
+    float frac = (float)health / (float)maxHealth;
+    if (frac < 0.0f) frac = 0.0f;
+    if (frac > 1.0f) frac = 1.0f;
+    uiRect(cx - 0.32f, y, 0.64f, 0.1f, 0.1f, 0.1f, 0.1f);
+    uiRect(cx - 0.3f, y + 0.02f, 0.6f * frac, 0.06f, 1.0f - frac, frac, 0.1f);
+}
+
+void drawGuard(float x, float y, float lift) {
+    uiRect(x - 0.15f, y - 0.15f, 0.1f, 0.15f, 0.2f, 0.2f, 0.25f);
+    uiRect(x + 0.05f, y - 0.15f, 0.1f, 0.15f, 0.2f, 0.2f, 0.25f);
+    uiRect(x - 0.18f, y, 0.36f, 0.5f, 0.2f, 0.35f, 0.8f);
+    uiRect(x - 0.18f, y + 0.42f, 0.36f, 0.08f, 0.85f, 0.7f, 0.2f);
+    uiCircle(x, y + 0.66f, 0.15f, 0.95f, 0.8f, 0.65f);
+    uiRect(x - 0.17f, y + 0.7f, 0.34f, 0.12f, 0.6f, 0.6f, 0.65f);
+    uiTriUp(x - 0.05f, y + 0.82f, 0.1f, 0.12f, 0.8f, 0.1f, 0.1f);
+    uiRect(x - 0.38f, y + 0.12f, 0.2f, 0.28f, 0.6f, 0.6f, 0.65f);
+    uiTriDown(x - 0.38f, y - 0.02f, 0.2f, 0.14f, 0.6f, 0.6f, 0.65f);
+    uiRect(x + 0.2f, y + 0.25f + lift, 0.06f, 0.5f, 0.85f, 0.85f, 0.9f);
+    uiRect(x + 0.13f, y + 0.22f + lift, 0.2f, 0.05f, 0.5f, 0.35f, 0.15f);
+}
+
+void drawEnemyActor(float x, float y, float lift) {
+    uiRect(x - 0.16f, y - 0.15f, 0.1f, 0.15f, 0.25f, 0.1f, 0.1f);
+    uiRect(x + 0.06f, y - 0.15f, 0.1f, 0.15f, 0.25f, 0.1f, 0.1f);
+    uiRect(x - 0.2f, y, 0.4f, 0.55f, 0.55f, 0.12f, 0.12f);
+    uiCircle(x, y + 0.72f, 0.17f, 0.35f, 0.55f, 0.25f);
+    uiTriUp(x - 0.17f, y + 0.8f, 0.1f, 0.2f, 0.9f, 0.9f, 0.8f);
+    uiTriUp(x + 0.07f, y + 0.8f, 0.1f, 0.2f, 0.9f, 0.9f, 0.8f);
+    uiCircle(x - 0.09f, y + 0.74f, 0.03f, 1.0f, 0.9f, 0.1f);
+    uiCircle(x + 0.01f, y + 0.74f, 0.03f, 1.0f, 0.9f, 0.1f);
+    uiRect(x - 0.36f, y + 0.15f + lift, 0.08f, 0.5f, 0.45f, 0.28f, 0.12f);
+}
+
+void drawBubble(float x, float y, int icon) {
+    uiRect(x, y, 0.9f, 0.6f, 1.0f, 1.0f, 1.0f);
+    uiTriDown(x + 0.2f, y - 0.15f, 0.2f, 0.15f, 1.0f, 1.0f, 1.0f);
+    if (icon == 0) {
+        uiRect(x + 0.29f, y + 0.08f, 0.32f, 0.24f, 0.55f, 0.35f, 0.2f);
+        uiTriUp(x + 0.22f, y + 0.32f, 0.46f, 0.2f, 0.75f, 0.2f, 0.2f);
+    }
+    else if (icon == 1) {
+        uiRect(x + 0.28f, y + 0.07f, 0.05f, 0.46f, 0.2f, 0.2f, 0.2f);
+        uiTriRight(x + 0.33f, y + 0.28f, 0.32f, 0.25f, 0.8f, 0.1f, 0.1f);
+    }
+    else {
+        uiRect(x + 0.41f, y + 0.22f, 0.08f, 0.3f, 0.85f, 0.1f, 0.1f);
+        uiRect(x + 0.41f, y + 0.08f, 0.08f, 0.08f, 0.85f, 0.1f, 0.1f);
+    }
+}
+
+void drawCutscene(float t) {
+    float gy = 3.75f;
+    if (t > 0.5f && t < 4.5f) {
+        float pulse = 0.6f + 0.4f * sin(t * 6.0f);
+        uiRect(0.4f, 0.4f, 3.2f, 0.1f, pulse, pulse, 0.1f);
+        uiRect(0.4f, 8.5f, 3.2f, 0.1f, pulse, pulse, 0.1f);
+        uiRect(0.4f, 0.4f, 0.1f, 8.2f, pulse, pulse, 0.1f);
+        uiRect(3.5f, 0.4f, 0.1f, 8.2f, pulse, pulse, 0.1f);
+    }
+    float guardX = 4.0f;
+    float lift = 0.0f;
+    float enemyX = 16.5f - std::min(t, 4.0f) / 4.0f * 7.5f;
+    if (t > 9.5f) guardX = 4.0f + std::min(t - 9.5f, 1.5f) / 1.5f * 4.2f;
+    if (t > 11.0f && t < 13.5f) {
+        guardX += 0.08f * sin(t * 30.0f);
+        enemyX = 8.9f - 0.08f * sin(t * 30.0f);
+        lift = 0.15f * sin(t * 30.0f);
+        if (((int)(t * 10.0f)) % 2 == 0) uiCircle(8.55f, gy + 0.45f, 0.1f, 1.0f, 0.9f, 0.2f);
+    }
+    else if (t >= 13.5f) {
+        enemyX = 8.9f + (t - 13.5f) * 5.0f;
+    }
+    drawGuard(guardX, gy, lift);
+    if (enemyX < 16.5f) drawEnemyActor(enemyX, gy, -lift);
+    if (t > 0.5f && t < 4.5f) drawBubble(guardX - 0.3f, gy + 1.05f, 0);
+    if (t > 4.5f && t < 7.0f) drawBubble(enemyX - 0.6f, gy + 1.15f, 1);
+    if (t > 7.0f && t < 9.5f) drawBubble(guardX - 0.3f, gy + 1.05f, 2);
+    if (t > 14.5f) {
+        float inX = 17.0f - std::min(t - 14.5f, 1.0f) * 1.7f;
+        for (int l = 0; l < 3; l++) drawEnemyActor(inX, soso.tababa[l].yStart + 0.25f, 0.0f);
+        drawBubble(guardX - 0.3f, gy + 1.05f, 2);
+    }
+}
+
 int main() {
     if (!glfwInit()) return -1;
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -342,6 +637,199 @@ int main() {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Beshamel), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
+    std::vector<float> menuVertices = {
+        4.90f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
+        11.10f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
+        11.10f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
+        11.10f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
+        4.90f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
+        4.90f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
+        5.50f, 6.00f, 0.0f,   0.20f, 0.60f, 0.25f,
+        10.50f, 6.00f, 0.0f,   0.20f, 0.60f, 0.25f,
+        10.50f, 7.40f, 0.0f,   0.20f, 0.60f, 0.25f,
+        10.50f, 7.40f, 0.0f,   0.20f, 0.60f, 0.25f,
+        5.50f, 7.40f, 0.0f,   0.20f, 0.60f, 0.25f,
+        5.50f, 6.00f, 0.0f,   0.20f, 0.60f, 0.25f,
+        5.50f, 4.10f, 0.0f,   0.20f, 0.40f, 0.80f,
+        10.50f, 4.10f, 0.0f,   0.20f, 0.40f, 0.80f,
+        10.50f, 5.50f, 0.0f,   0.20f, 0.40f, 0.80f,
+        10.50f, 5.50f, 0.0f,   0.20f, 0.40f, 0.80f,
+        5.50f, 5.50f, 0.0f,   0.20f, 0.40f, 0.80f,
+        5.50f, 4.10f, 0.0f,   0.20f, 0.40f, 0.80f,
+        5.50f, 2.20f, 0.0f,   0.75f, 0.20f, 0.20f,
+        10.50f, 2.20f, 0.0f,   0.75f, 0.20f, 0.20f,
+        10.50f, 3.60f, 0.0f,   0.75f, 0.20f, 0.20f,
+        10.50f, 3.60f, 0.0f,   0.75f, 0.20f, 0.20f,
+        5.50f, 3.60f, 0.0f,   0.75f, 0.20f, 0.20f,
+        5.50f, 2.20f, 0.0f,   0.75f, 0.20f, 0.20f,
+        7.70f, 6.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.70f, 7.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.50f, 6.70f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.55f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.80f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.80f, 4.70f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.80f, 4.70f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.55f, 4.70f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.55f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.95f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.20f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.20f, 5.00f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.20f, 5.00f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.95f, 5.00f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.95f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.35f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.60f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.60f, 5.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.60f, 5.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.35f, 5.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.35f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.85f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.15f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.85f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.15f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        4.90f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
+        11.10f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
+        11.10f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
+        11.10f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
+        4.90f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
+        4.90f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
+        5.50f, 6.00f, 0.0f,   0.20f, 0.60f, 0.25f,
+        10.50f, 6.00f, 0.0f,   0.20f, 0.60f, 0.25f,
+        10.50f, 7.40f, 0.0f,   0.20f, 0.60f, 0.25f,
+        10.50f, 7.40f, 0.0f,   0.20f, 0.60f, 0.25f,
+        5.50f, 7.40f, 0.0f,   0.20f, 0.60f, 0.25f,
+        5.50f, 6.00f, 0.0f,   0.20f, 0.60f, 0.25f,
+        5.50f, 4.10f, 0.0f,   0.20f, 0.40f, 0.80f,
+        10.50f, 4.10f, 0.0f,   0.20f, 0.40f, 0.80f,
+        10.50f, 5.50f, 0.0f,   0.20f, 0.40f, 0.80f,
+        10.50f, 5.50f, 0.0f,   0.20f, 0.40f, 0.80f,
+        5.50f, 5.50f, 0.0f,   0.20f, 0.40f, 0.80f,
+        5.50f, 4.10f, 0.0f,   0.20f, 0.40f, 0.80f,
+        5.50f, 2.20f, 0.0f,   0.80f, 0.50f, 0.15f,
+        10.50f, 2.20f, 0.0f,   0.80f, 0.50f, 0.15f,
+        10.50f, 3.60f, 0.0f,   0.80f, 0.50f, 0.15f,
+        10.50f, 3.60f, 0.0f,   0.80f, 0.50f, 0.15f,
+        5.50f, 3.60f, 0.0f,   0.80f, 0.50f, 0.15f,
+        5.50f, 2.20f, 0.0f,   0.80f, 0.50f, 0.15f,
+        7.70f, 6.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.70f, 7.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.50f, 6.70f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.95f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.95f, 5.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.45f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.55f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.55f, 5.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.05f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 3.00f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 3.00f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 3.00f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.45f, 3.00f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.55f, 3.00f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.00f, 3.45f, 0.0f,   1.00f, 1.00f, 1.00f,
+        4.90f, 3.80f, 0.0f,   0.12f, 0.45f, 0.20f,
+        11.10f, 3.80f, 0.0f,   0.12f, 0.45f, 0.20f,
+        11.10f, 8.00f, 0.0f,   0.12f, 0.45f, 0.20f,
+        11.10f, 8.00f, 0.0f,   0.12f, 0.45f, 0.20f,
+        4.90f, 8.00f, 0.0f,   0.12f, 0.45f, 0.20f,
+        4.90f, 3.80f, 0.0f,   0.12f, 0.45f, 0.20f,
+        4.90f, 3.80f, 0.0f,   0.50f, 0.12f, 0.12f,
+        11.10f, 3.80f, 0.0f,   0.50f, 0.12f, 0.12f,
+        11.10f, 8.00f, 0.0f,   0.50f, 0.12f, 0.12f,
+        11.10f, 8.00f, 0.0f,   0.50f, 0.12f, 0.12f,
+        4.90f, 8.00f, 0.0f,   0.50f, 0.12f, 0.12f,
+        4.90f, 3.80f, 0.0f,   0.50f, 0.12f, 0.12f,
+        5.50f, 6.00f, 0.0f,   0.20f, 0.40f, 0.80f,
+        10.50f, 6.00f, 0.0f,   0.20f, 0.40f, 0.80f,
+        10.50f, 7.40f, 0.0f,   0.20f, 0.40f, 0.80f,
+        10.50f, 7.40f, 0.0f,   0.20f, 0.40f, 0.80f,
+        5.50f, 7.40f, 0.0f,   0.20f, 0.40f, 0.80f,
+        5.50f, 6.00f, 0.0f,   0.20f, 0.40f, 0.80f,
+        5.50f, 4.10f, 0.0f,   0.80f, 0.50f, 0.15f,
+        10.50f, 4.10f, 0.0f,   0.80f, 0.50f, 0.15f,
+        10.50f, 5.50f, 0.0f,   0.80f, 0.50f, 0.15f,
+        10.50f, 5.50f, 0.0f,   0.80f, 0.50f, 0.15f,
+        5.50f, 5.50f, 0.0f,   0.80f, 0.50f, 0.15f,
+        5.50f, 4.10f, 0.0f,   0.80f, 0.50f, 0.15f,
+        7.95f, 6.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.95f, 7.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.45f, 6.70f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.55f, 6.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.55f, 7.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.05f, 6.70f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 4.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 4.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 4.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.45f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.55f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.00f, 5.25f, 0.0f,   1.00f, 1.00f, 1.00f
+    };
+    int menuIconStart = 24;
+    int menuIconCount = 33;
+
+    unsigned int menuVBO, menuVAO;
+    glGenVertexArrays(1, &menuVAO);
+    glGenBuffers(1, &menuVBO);
+    glBindVertexArray(menuVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, menuVBO);
+    glBufferData(GL_ARRAY_BUFFER, menuVertices.size() * sizeof(float), menuVertices.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    std::vector<float> uiVertices = {
+        0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        1.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        0.0f, 1.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        1.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        0.5f, 1.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        0.0f, 1.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        1.0f, 0.5f, 0.0f,   1.0f, 1.0f, 1.0f,
+        0.0f, 1.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        0.5f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f
+    };
+    for (int i = 0; i <= 32; i++) {
+        float angle = i * 2.0f * 3.14159265f / 32.0f;
+        uiVertices.push_back(cos(angle));
+        uiVertices.push_back(sin(angle));
+        uiVertices.push_back(0.0f);
+        uiVertices.push_back(1.0f);
+        uiVertices.push_back(1.0f);
+        uiVertices.push_back(1.0f);
+    }
+
+    unsigned int uiVBO;
+    glGenVertexArrays(1, &uiVAO);
+    glGenBuffers(1, &uiVBO);
+    glBindVertexArray(uiVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
+    glBufferData(GL_ARRAY_BUFFER, uiVertices.size() * sizeof(float), uiVertices.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
     unsigned int tigers = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(tigers, 1, &kalmita, NULL);
     glCompileShader(tigers);
@@ -361,6 +849,12 @@ int main() {
     int gizmo = glGetUniformLocation(dodo, "uProjection");
     int wizzo = glGetUniformLocation(dodo, "uOffset");
     int fizzo = glGetUniformLocation(dodo, "uTint");
+    int hilo = glGetUniformLocation(dodo, "u_Highlight");
+    locModel = glGetUniformLocation(dodo, "model");
+    locTint = fizzo;
+    locOffset = wizzo;
+    locHighlight = hilo;
+    locGray = glGetUniformLocation(dodo, "u_Gray");
     double el_wa2t_el_adeem = glfwGetTime();
 
     while (!glfwWindowShouldClose(hamada)) {
@@ -369,19 +863,16 @@ int main() {
         el_wa2t_el_adeem = el_wa2t_el_goded;
         if (koko > 0.1f) koko = 0.1f;
 
-        // 1. OPEN THE GAME OVER WRAPPER
-        if (!g_gameOver) {
+        if (!g_gameOver && !isPaused && !inMainMenu && !isWin && !inCutscene) {
 
-            // Wave Progression
             if (!g_waveInProgress && g_currentWave <= 3) {
                 spawnWave(g_currentWave, soso);
             }
 
-            // --- MEMBER 2: Jump & Duck (only players in selected lanes) ---
             bool wPressed = (glfwGetKey(hamada, GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(hamada, GLFW_KEY_UP) == GLFW_PRESS);
             bool sPressed = (glfwGetKey(hamada, GLFW_KEY_S) == GLFW_PRESS || glfwGetKey(hamada, GLFW_KEY_DOWN) == GLFW_PRESS);
             for (auto& p : basal) {
-                bool laneSelected = tamtam[p.laneId];
+                bool laneSelected = tamtam[p.laneId] && p.kind != 2;
                 if (laneSelected && wPressed && !p.isJumping) {
                     p.isJumping = true;
                     p.jumpTimer = 0.0f;
@@ -397,7 +888,6 @@ int main() {
                 }
             }
 
-            // --- MEMBER 2: Collision, Block & Damage Engine (vs Member 3 enemies) ---
             for (auto& enemy : g_enemies) {
                 enemy.blocked = false;
                 if (enemy.damageTint > 0.0f) enemy.damageTint -= koko * 3.0f;
@@ -414,8 +904,8 @@ int main() {
                         enemy.blocked = true;
 
                         bool hit = true;
-                        if (enemy.type == EASY_UPPER && pIt->isDucking) hit = false;   // duck avoids high attacks
-                        if (enemy.type == MEDIUM_LOWER && pIt->isJumping) hit = false; // jump avoids low attacks
+                        if (enemy.type == EASY_UPPER && pIt->isDucking) hit = false;
+                        if (enemy.type == MEDIUM_LOWER && pIt->isJumping) hit = false;
 
                         if (hit && pIt->damageTint <= 0.0f) {
                             pIt->health -= enemy.damage;
@@ -440,34 +930,30 @@ int main() {
                     }
                 }
 
-                pIt->spd = isColliding ? 0.0f : 3.5f;
+                pIt->spd = (isColliding || pIt->kind == 2) ? 0.0f : 3.5f;
 
                 if (playerDestroyed) pIt = basal.erase(pIt);
                 else ++pIt;
             }
 
-            // Player movement
             for (auto it = basal.begin(); it != basal.end();) {
                 it->xPos += it->spd * koko;
                 if (it->xPos > 16.5f) it = basal.erase(it);
                 else ++it;
             }
 
-            // Enemy Updates & Loss Condition
             bool allDefeated = true;
             for (auto& enemy : g_enemies) {
                 if (!enemy.isAlive) continue;
                 enemy.update(koko);
                 allDefeated = false;
 
-                // LOSS CONDITION: Freeze game when enemy hits Home Base (X <= 3.5f)
                 if (enemy.xPos <= 3.5f) {
                     g_gameOver = true;
                     std::cout << "GAME OVER! Enemy breached Home Base!" << std::endl;
                 }
             }
 
-            // Coin pickup: a player in the same lane touching a coin collects it
             for (auto& coin : g_coins) {
                 if (coin.collected) continue;
                 for (const auto& p : basal) {
@@ -481,14 +967,14 @@ int main() {
                 }
             }
 
-            // Clear-Screen Condition
             if (allDefeated && g_waveInProgress) {
                 g_waveInProgress = false;
                 g_currentWave++;
                 std::cout << "Wave Cleared! Advancing to Wave " << g_currentWave << std::endl;
+                if (g_currentWave > 3) isWin = true;
             }
 
-        } // 2. CLOSE THE GAME OVER WRAPPER (JUST ABOVE glClearColor)
+        }
 
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -505,10 +991,28 @@ int main() {
         };
         glUniformMatrix4fv(gizmo, 1, GL_FALSE, dolly);
         glUniform2f(wizzo, 0.0f, 0.0f);
+        uiEnd();
+
+        if (inMainMenu) {
+            glBindVertexArray(menuVAO);
+            glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
+            glUniform1f(hilo, 0.0f);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+            for (int i = 0; i < 3; i++) {
+                glUniform1f(hilo, i == menuHover ? 1.0f : 0.0f);
+                glDrawArrays(GL_TRIANGLES, 6 + i * 6, 6);
+            }
+            glUniform1f(hilo, 0.0f);
+            glDrawArrays(GL_TRIANGLES, menuIconStart, menuIconCount);
+            glfwSwapBuffers(hamada);
+            glfwPollEvents();
+            continue;
+        }
+
         glBindVertexArray(biko);
         glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
         glDrawElements(GL_TRIANGLES, meshmesh, GL_UNSIGNED_INT, (void*)0);
-        
+
         int laneIndexOffset = meshmesh;
         int indicesPerLane = 6;
         for (int i = 0; i < 3; i++) {
@@ -527,50 +1031,93 @@ int main() {
         glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
         int envIndexOffset = meshmesh + (3 * indicesPerLane);
         glDrawElements(GL_TRIANGLES, falafel_indices, GL_UNSIGNED_INT, (void*)(envIndexOffset * sizeof(unsigned int)));
+
+        if (inCutscene) {
+            cutsceneTime += koko;
+            uiBegin();
+            drawCutscene(cutsceneTime);
+            uiEnd();
+            if (cutsceneTime > 16.5f) inCutscene = false;
+            glfwSwapBuffers(hamada);
+            glfwPollEvents();
+            continue;
+        }
         glBindVertexArray(ziro_vao);
 
-        // --- MEMBER 3: DRAW ENEMIES & HEALTH BARS ---
         for (const auto& enemy : g_enemies) {
             if (enemy.isAlive) {
-                // 1. Draw Enemy Body
+
                 if (enemy.type == EASY_UPPER) {
-                    glUniform3f(fizzo, 1.0f, 0.2f, 0.2f); // Red
+                    glUniform3f(fizzo, 1.0f, 0.2f, 0.2f);
                 } else if (enemy.type == MEDIUM_LOWER) {
-                    glUniform3f(fizzo, 1.0f, 0.6f, 0.0f); // Orange
+                    glUniform3f(fizzo, 1.0f, 0.6f, 0.0f);
                 } else if (enemy.type == HARD_MELEE) {
-                    glUniform3f(fizzo, 0.6f, 0.1f, 0.8f); // Purple
+                    glUniform3f(fizzo, 0.6f, 0.1f, 0.8f);
                 }
-                if (enemy.damageTint > 0.0f) glUniform3f(fizzo, 2.0f, 0.2f, 0.2f); // Red flash on hit
+                if (enemy.damageTint > 0.0f) glUniform3f(fizzo, 2.0f, 0.2f, 0.2f);
                 glUniform2f(wizzo, enemy.xPos, enemy.yPos);
                 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
-
-                // 2. Draw Enemy Health Bar (Bright Green Indicator Offset Above Head)
-                glUniform3f(fizzo, 0.0f, 1.0f, 0.2f);
-                glUniform2f(wizzo, enemy.xPos, enemy.yPos + 0.35f);
-                glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
             }
         }
-        // --- MEMBER 3: DRAW COLLECTIBLE COINS ON SCREEN ---
+
         for (const auto& coin : g_coins) {
             if (!coin.collected) {
-                // Gold Yellow Tint (R=1.0, G=0.85, B=0.0)
+
                 glUniform3f(fizzo, 1.0f, 0.85f, 0.0f);
 
-                // Send coin X, Y coordinates to translation uniform
                 glUniform2f(wizzo, coin.xPos, coin.yPos);
 
-                // Draw coin shape using the character quad VAO
                 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
             }
         }
-        // --- MEMBER 2: DRAW PLAYER UNITS ---
+
         for (const auto& p : basal) {
             float duckOffset = p.isDucking ? -0.15f : 0.0f;
             float cy = soso.tababa[p.laneId].centerY + p.yOffset + duckOffset;
             glUniform2f(wizzo, p.xPos, cy);
             if (p.damageTint > 0.0f) glUniform3f(fizzo, 2.0f, 0.2f, 0.2f);
+            else if (p.kind == 1) glUniform3f(fizzo, 0.4f, 1.0f, 1.1f);
+            else if (p.kind == 2) glUniform3f(fizzo, 0.6f, 0.6f, 0.75f);
             else glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        }
+
+        uiBegin();
+        for (const auto& enemy : g_enemies) {
+            if (enemy.isAlive) drawHealthBar(enemy.xPos, enemy.yPos + 0.3f, enemy.health, enemy.type == HARD_MELEE ? 7 : 5);
+        }
+        for (const auto& p : basal) {
+            float duckOffset = p.isDucking ? -0.15f : 0.0f;
+            float cy = soso.tababa[p.laneId].centerY + p.yOffset + duckOffset;
+            drawHealthBar(p.xPos, cy + 0.3f, p.health, p.kind == 2 ? 7 : 5);
+        }
+        drawCoinTracker();
+        drawCards();
+        uiEnd();
+        if (isWin || g_gameOver || isPaused) {
+            glBindVertexArray(menuVAO);
+            glUniform2f(wizzo, 0.0f, 0.0f);
+            glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
+            if (isWin || g_gameOver) {
+                glUniform1f(hilo, 0.0f);
+                glDrawArrays(GL_TRIANGLES, isWin ? 99 : 105, 6);
+                for (int i = 0; i < 2; i++) {
+                    glUniform1f(hilo, i == menuHover ? 1.0f : 0.0f);
+                    glDrawArrays(GL_TRIANGLES, 111 + i * 6, 6);
+                }
+                glUniform1f(hilo, 0.0f);
+                glDrawArrays(GL_TRIANGLES, 123, 15);
+            }
+            else {
+                glUniform1f(hilo, 0.0f);
+                glDrawArrays(GL_TRIANGLES, 57, 6);
+                for (int i = 0; i < 3; i++) {
+                    glUniform1f(hilo, i == menuHover ? 1.0f : 0.0f);
+                    glDrawArrays(GL_TRIANGLES, 63 + i * 6, 6);
+                }
+                glUniform1f(hilo, 0.0f);
+                glDrawArrays(GL_TRIANGLES, 81, 18);
+            }
         }
         glfwSwapBuffers(hamada);
         glfwPollEvents();
