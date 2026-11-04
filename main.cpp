@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 struct Mahshy { int id; float yStart, yEnd, centerY; };
 
@@ -20,6 +21,7 @@ struct Hawawshy {
     float jumpTimer;
     int health;
     float damageTint;
+    int kind;
 };
 
 struct Beshamel {
@@ -46,7 +48,12 @@ bool isPaused = false;
 bool inMainMenu = true;
 bool isWin = false;
 bool g_gameOver = false;
+bool inCutscene = false;
+float cutsceneTime = 0.0f;
 int menuHover = -1;
+int cardHover = -1;
+int g_playerCoins = 30;
+int cardCost[3] = { 10, 20, 30 };
 
 void restartGame();
 
@@ -73,6 +80,16 @@ int menuButtonAt(float x, float y) {
         pointInTriangle(pt, glm::vec2(10.5f, 5.5f), glm::vec2(5.5f, 5.5f), glm::vec2(5.5f, 4.1f))) return 1;
     if (pointInTriangle(pt, glm::vec2(5.5f, 2.2f), glm::vec2(10.5f, 2.2f), glm::vec2(10.5f, 3.6f)) ||
         pointInTriangle(pt, glm::vec2(10.5f, 3.6f), glm::vec2(5.5f, 3.6f), glm::vec2(5.5f, 2.2f))) return 2;
+    return -1;
+}
+
+int cardAt(float x, float y) {
+    glm::vec2 pt(x, y);
+    for (int i = 0; i < 3; i++) {
+        float x0 = 3.7f + i * 1.15f, y0 = 8.35f, x1 = x0 + 1.05f, y1 = y0 + 1.55f;
+        if (pointInTriangle(pt, glm::vec2(x0, y0), glm::vec2(x1, y0), glm::vec2(x1, y1)) ||
+            pointInTriangle(pt, glm::vec2(x1, y1), glm::vec2(x0, y1), glm::vec2(x0, y0))) return i;
+    }
     return -1;
 }
 
@@ -105,9 +122,10 @@ const char* kalmita ="#version 330 core\n"
 "layout (location = 1) in vec3 aColor;\n"
 "out vec3 vertexColor;\n"
 "uniform mat4 uProjection;\n"
+"uniform mat4 model;\n"
 "uniform vec2 uOffset;\n"
 "void main(){\n"
-"   gl_Position = uProjection * vec4(aPos.xy + uOffset, aPos.z, 1.0);\n"
+"   gl_Position = uProjection * (model * vec4(aPos, 1.0) + vec4(uOffset, 0.0, 0.0));\n"
 "   vertexColor = aColor;\n"
 "}\n";
 
@@ -116,8 +134,12 @@ const char* shabash = "#version 330 core\n"
 "out vec4 FragColor;\n"
 "uniform vec3 uTint;\n"
 "uniform float u_Highlight;\n"
+"uniform float u_Gray;\n"
 "void main(){\n"
-"   vec3 finalColor = mix(vertexColor * uTint, vec3(1.0, 1.0, 0.0), u_Highlight);\n"
+"   vec3 baseColor = vertexColor * uTint;\n"
+"   float grayValue = dot(baseColor, vec3(0.299, 0.587, 0.114));\n"
+"   baseColor = mix(baseColor, vec3(grayValue), u_Gray);\n"
+"   vec3 finalColor = mix(baseColor, vec3(1.0, 1.0, 0.0), u_Highlight);\n"
 "   FragColor = vec4(finalColor, 1.0);\n"
 "}\n";
 
@@ -152,19 +174,15 @@ void el_mouse_dakhal(GLFWwindow* bobo, int dakhal) {
 
 }
 void dos_zrar(GLFWwindow* tabl, int nono, int zaza, int pika, int mizo) {
+    if (inCutscene) {
+        if (nono == GLFW_KEY_ESCAPE && pika == GLFW_PRESS) inCutscene = false;
+        return;
+    }
     if (inMainMenu || g_gameOver || isWin) return;
 
     if (nono == GLFW_KEY_ESCAPE && pika == GLFW_PRESS)
         isPaused = !isPaused;
     if (isPaused) return;
-    if (nono == GLFW_KEY_SPACE && pika == GLFW_PRESS) {
-        for (size_t i = 0; i < tamtam.size(); ++i) {
-            if (tamtam[i]) {
-
-                basal.push_back({ (int)i, soso.akhdar, 3.5f, 0.0f, false, false, 0.0f, 5, 0.0f });
-            }
-        }
-    }
 }
 void el_mouse_beteeth(GLFWwindow* tabl, double mash, double mosh) {
     if (!tot || tol_3ard == 0) return;
@@ -173,10 +191,12 @@ void el_mouse_beteeth(GLFWwindow* tabl, double mash, double mosh) {
     if (winW == 0 || winH == 0) return;
     float wX = (float)mash / winW * 16.0f;
     float wY = (1.0f - (float)mosh / winH) * 10.0f;
+    if (inCutscene) return;
     if (inMainMenu || isPaused || g_gameOver || isWin) {
         menuHover = menuButtonAt(wX, wY);
         return;
     }
+    cardHover = cardAt(wX, wY);
     if (wX > soso.akhdar) {
         ziz = soso.getLaneFromY(wY);
     }
@@ -194,9 +214,13 @@ void el_mouse_dos(GLFWwindow* tabl, int b, int a, int m) {
     if (winW == 0 || winH == 0) return;
     float wX = (float)mash / winW * 16.0f;
     float wY = (1.0f - (float)mosh / winH) * 10.0f;
+    if (inCutscene) {
+        inCutscene = false;
+        return;
+    }
     if (inMainMenu) {
         int hit = menuButtonAt(wX, wY);
-        if (hit == 0) inMainMenu = false;
+        if (hit == 0) { inMainMenu = false; inCutscene = true; cutsceneTime = 0.0f; }
         else if (hit == 2) glfwSetWindowShouldClose(tabl, true);
         return;
     }
@@ -211,6 +235,16 @@ void el_mouse_dos(GLFWwindow* tabl, int b, int a, int m) {
         if (hit == 0) isPaused = false;
         else if (hit == 1) restartGame();
         else if (hit == 2) { restartGame(); inMainMenu = true; }
+        return;
+    }
+    int card = cardAt(wX, wY);
+    if (card != -1) {
+        for (size_t i = 0; i < tamtam.size(); ++i) {
+            if (tamtam[i] && g_playerCoins >= cardCost[card]) {
+                basal.push_back({ (int)i, soso.akhdar, card == 2 ? 0.0f : 3.5f, 0.0f, false, false, 0.0f, card == 2 ? 7 : 5, 0.0f, card });
+                g_playerCoins -= cardCost[card];
+            }
+        }
         return;
     }
     if (wX >= soso.asfar && wX <= soso.akhdar) {
@@ -280,7 +314,6 @@ struct Coin {
 std::vector<Enemy> g_enemies;
 std::vector<Coin> g_coins;
 int g_currentWave = 1;
-int g_playerCoins = 0;
 bool g_waveInProgress = false;
 
 void restartGame() {
@@ -289,12 +322,14 @@ void restartGame() {
     basal.clear();
     for (size_t i = 0; i < tamtam.size(); ++i) tamtam[i] = false;
     g_currentWave = 1;
-    g_playerCoins = 0;
+    g_playerCoins = 30;
     g_waveInProgress = false;
     g_gameOver = false;
     isWin = false;
     isPaused = false;
+    inCutscene = false;
     menuHover = -1;
+    cardHover = -1;
 }
 
 void spawnWave(int waveNumber, const Koshary& grid) {
@@ -324,6 +359,194 @@ void spawnWave(int waveNumber, const Koshary& grid) {
     }
     g_waveInProgress = true;
 }
+
+int locModel = -1, locTint = -1, locOffset = -1, locHighlight = -1, locGray = -1;
+unsigned int uiVAO = 0;
+
+bool sevenSeg[10][7] = {
+    { 1, 1, 1, 1, 1, 1, 0 },
+    { 0, 1, 1, 0, 0, 0, 0 },
+    { 1, 1, 0, 1, 1, 0, 1 },
+    { 1, 1, 1, 1, 0, 0, 1 },
+    { 0, 1, 1, 0, 0, 1, 1 },
+    { 1, 0, 1, 1, 0, 1, 1 },
+    { 1, 0, 1, 1, 1, 1, 1 },
+    { 1, 1, 1, 0, 0, 0, 0 },
+    { 1, 1, 1, 1, 1, 1, 1 },
+    { 1, 1, 1, 1, 0, 1, 1 }
+};
+
+void uiShape(GLenum mode, int first, int count, float x, float y, float w, float h, float r, float g, float b) {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(x, y, 0.0f));
+    model = glm::scale(model, glm::vec3(w, h, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, r, g, b);
+    glDrawArrays(mode, first, count);
+}
+
+void uiRect(float x, float y, float w, float h, float r, float g, float b) { uiShape(GL_TRIANGLES, 0, 6, x, y, w, h, r, g, b); }
+void uiTriUp(float x, float y, float w, float h, float r, float g, float b) { uiShape(GL_TRIANGLES, 6, 3, x, y, w, h, r, g, b); }
+void uiTriRight(float x, float y, float w, float h, float r, float g, float b) { uiShape(GL_TRIANGLES, 9, 3, x, y, w, h, r, g, b); }
+void uiTriDown(float x, float y, float w, float h, float r, float g, float b) { uiShape(GL_TRIANGLES, 12, 3, x, y, w, h, r, g, b); }
+void uiCircle(float cx, float cy, float rad, float r, float g, float b) { uiShape(GL_TRIANGLE_FAN, 15, 34, cx, cy, rad, rad, r, g, b); }
+
+void uiBegin() {
+    glBindVertexArray(uiVAO);
+    glUniform2f(locOffset, 0.0f, 0.0f);
+    glUniform1f(locHighlight, 0.0f);
+    glUniform1f(locGray, 0.0f);
+}
+
+void uiEnd() {
+    glm::mat4 model = glm::mat4(1.0f);
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, 1.0f, 1.0f, 1.0f);
+    glUniform1f(locHighlight, 0.0f);
+    glUniform1f(locGray, 0.0f);
+}
+
+void drawNumber(int value, float x, float y, float w, float h, float gap, float r, float g, float b) {
+    std::string digits = std::to_string(value);
+    float t = w * 0.22f;
+    for (size_t k = 0; k < digits.size(); k++) {
+        int d = digits[k] - '0';
+        float dx = x + k * (w + gap);
+        if (sevenSeg[d][0]) uiRect(dx, y + h - t, w, t, r, g, b);
+        if (sevenSeg[d][1]) uiRect(dx + w - t, y + h / 2, t, h / 2, r, g, b);
+        if (sevenSeg[d][2]) uiRect(dx + w - t, y, t, h / 2, r, g, b);
+        if (sevenSeg[d][3]) uiRect(dx, y, w, t, r, g, b);
+        if (sevenSeg[d][4]) uiRect(dx, y, t, h / 2, r, g, b);
+        if (sevenSeg[d][5]) uiRect(dx, y + h / 2, t, h / 2, r, g, b);
+        if (sevenSeg[d][6]) uiRect(dx, y + h / 2 - t / 2, w, t, r, g, b);
+    }
+}
+
+void drawCoinTracker() {
+    uiRect(12.4f, 8.6f, 3.55f, 1.35f, 0.12f, 0.12f, 0.16f);
+    uiCircle(12.95f, 9.27f, 0.32f, 1.0f, 0.8f, 0.1f);
+    uiCircle(12.95f, 9.27f, 0.2f, 0.9f, 0.62f, 0.05f);
+    drawNumber(g_playerCoins, 13.5f, 8.87f, 0.42f, 0.8f, 0.14f, 1.0f, 0.85f, 0.2f);
+}
+
+void drawCards() {
+    float cardColor[3][3] = { { 0.70f, 0.45f, 0.20f }, { 0.15f, 0.55f, 0.55f }, { 0.45f, 0.50f, 0.60f } };
+    for (int i = 0; i < 3; i++) {
+        float x0 = 3.7f + i * 1.15f, y0 = 8.35f, cx = x0 + 0.525f;
+        bool unlocked = g_playerCoins >= cardCost[i];
+        glUniform1f(locGray, unlocked ? 0.0f : 1.0f);
+        glUniform1f(locHighlight, (unlocked && i == cardHover) ? 1.0f : 0.0f);
+        uiRect(x0, y0, 1.05f, 1.55f, cardColor[i][0], cardColor[i][1], cardColor[i][2]);
+        glUniform1f(locHighlight, 0.0f);
+        uiRect(x0 + 0.06f, y0 + 0.06f, 0.93f, 0.4f, 0.1f, 0.1f, 0.12f);
+        if (i == 0) {
+            uiRect(cx - 0.04f, y0 + 0.55f, 0.08f, 0.17f, 0.45f, 0.28f, 0.12f);
+            uiRect(cx - 0.22f, y0 + 0.72f, 0.44f, 0.08f, 0.85f, 0.75f, 0.3f);
+            uiRect(cx - 0.05f, y0 + 0.8f, 0.1f, 0.55f, 0.9f, 0.9f, 0.95f);
+            uiTriUp(cx - 0.05f, y0 + 1.35f, 0.1f, 0.13f, 0.9f, 0.9f, 0.95f);
+        }
+        else if (i == 1) {
+            uiRect(cx - 0.35f, y0 + 0.98f, 0.5f, 0.06f, 0.75f, 0.55f, 0.3f);
+            uiTriRight(cx + 0.15f, y0 + 0.87f, 0.22f, 0.28f, 0.9f, 0.9f, 0.95f);
+            uiTriUp(cx - 0.42f, y0 + 1.04f, 0.14f, 0.13f, 0.95f, 0.95f, 0.95f);
+            uiTriDown(cx - 0.42f, y0 + 0.85f, 0.14f, 0.13f, 0.95f, 0.95f, 0.95f);
+        }
+        else {
+            uiRect(cx - 0.27f, y0 + 0.95f, 0.54f, 0.45f, 0.9f, 0.9f, 0.95f);
+            uiTriDown(cx - 0.27f, y0 + 0.62f, 0.54f, 0.33f, 0.9f, 0.9f, 0.95f);
+            uiRect(cx - 0.04f, y0 + 0.75f, 0.08f, 0.55f, cardColor[i][0], cardColor[i][1], cardColor[i][2]);
+            uiRect(cx - 0.17f, y0 + 1.08f, 0.34f, 0.08f, cardColor[i][0], cardColor[i][1], cardColor[i][2]);
+        }
+        drawNumber(cardCost[i], x0 + 0.315f, y0 + 0.11f, 0.18f, 0.3f, 0.06f, 1.0f, 0.85f, 0.2f);
+    }
+    glUniform1f(locGray, 0.0f);
+}
+
+void drawHealthBar(float cx, float y, int health, int maxHealth) {
+    float frac = (float)health / (float)maxHealth;
+    if (frac < 0.0f) frac = 0.0f;
+    if (frac > 1.0f) frac = 1.0f;
+    uiRect(cx - 0.32f, y, 0.64f, 0.1f, 0.1f, 0.1f, 0.1f);
+    uiRect(cx - 0.3f, y + 0.02f, 0.6f * frac, 0.06f, 1.0f - frac, frac, 0.1f);
+}
+
+void drawGuard(float x, float y, float lift) {
+    uiRect(x - 0.15f, y - 0.15f, 0.1f, 0.15f, 0.2f, 0.2f, 0.25f);
+    uiRect(x + 0.05f, y - 0.15f, 0.1f, 0.15f, 0.2f, 0.2f, 0.25f);
+    uiRect(x - 0.18f, y, 0.36f, 0.5f, 0.2f, 0.35f, 0.8f);
+    uiRect(x - 0.18f, y + 0.42f, 0.36f, 0.08f, 0.85f, 0.7f, 0.2f);
+    uiCircle(x, y + 0.66f, 0.15f, 0.95f, 0.8f, 0.65f);
+    uiRect(x - 0.17f, y + 0.7f, 0.34f, 0.12f, 0.6f, 0.6f, 0.65f);
+    uiTriUp(x - 0.05f, y + 0.82f, 0.1f, 0.12f, 0.8f, 0.1f, 0.1f);
+    uiRect(x - 0.38f, y + 0.12f, 0.2f, 0.28f, 0.6f, 0.6f, 0.65f);
+    uiTriDown(x - 0.38f, y - 0.02f, 0.2f, 0.14f, 0.6f, 0.6f, 0.65f);
+    uiRect(x + 0.2f, y + 0.25f + lift, 0.06f, 0.5f, 0.85f, 0.85f, 0.9f);
+    uiRect(x + 0.13f, y + 0.22f + lift, 0.2f, 0.05f, 0.5f, 0.35f, 0.15f);
+}
+
+void drawEnemyActor(float x, float y, float lift) {
+    uiRect(x - 0.16f, y - 0.15f, 0.1f, 0.15f, 0.25f, 0.1f, 0.1f);
+    uiRect(x + 0.06f, y - 0.15f, 0.1f, 0.15f, 0.25f, 0.1f, 0.1f);
+    uiRect(x - 0.2f, y, 0.4f, 0.55f, 0.55f, 0.12f, 0.12f);
+    uiCircle(x, y + 0.72f, 0.17f, 0.35f, 0.55f, 0.25f);
+    uiTriUp(x - 0.17f, y + 0.8f, 0.1f, 0.2f, 0.9f, 0.9f, 0.8f);
+    uiTriUp(x + 0.07f, y + 0.8f, 0.1f, 0.2f, 0.9f, 0.9f, 0.8f);
+    uiCircle(x - 0.09f, y + 0.74f, 0.03f, 1.0f, 0.9f, 0.1f);
+    uiCircle(x + 0.01f, y + 0.74f, 0.03f, 1.0f, 0.9f, 0.1f);
+    uiRect(x - 0.36f, y + 0.15f + lift, 0.08f, 0.5f, 0.45f, 0.28f, 0.12f);
+}
+
+void drawBubble(float x, float y, int icon) {
+    uiRect(x, y, 0.9f, 0.6f, 1.0f, 1.0f, 1.0f);
+    uiTriDown(x + 0.2f, y - 0.15f, 0.2f, 0.15f, 1.0f, 1.0f, 1.0f);
+    if (icon == 0) {
+        uiRect(x + 0.29f, y + 0.08f, 0.32f, 0.24f, 0.55f, 0.35f, 0.2f);
+        uiTriUp(x + 0.22f, y + 0.32f, 0.46f, 0.2f, 0.75f, 0.2f, 0.2f);
+    }
+    else if (icon == 1) {
+        uiRect(x + 0.28f, y + 0.07f, 0.05f, 0.46f, 0.2f, 0.2f, 0.2f);
+        uiTriRight(x + 0.33f, y + 0.28f, 0.32f, 0.25f, 0.8f, 0.1f, 0.1f);
+    }
+    else {
+        uiRect(x + 0.41f, y + 0.22f, 0.08f, 0.3f, 0.85f, 0.1f, 0.1f);
+        uiRect(x + 0.41f, y + 0.08f, 0.08f, 0.08f, 0.85f, 0.1f, 0.1f);
+    }
+}
+
+void drawCutscene(float t) {
+    float gy = 3.75f;
+    if (t > 0.5f && t < 4.5f) {
+        float pulse = 0.6f + 0.4f * sin(t * 6.0f);
+        uiRect(0.4f, 0.4f, 3.2f, 0.1f, pulse, pulse, 0.1f);
+        uiRect(0.4f, 8.5f, 3.2f, 0.1f, pulse, pulse, 0.1f);
+        uiRect(0.4f, 0.4f, 0.1f, 8.2f, pulse, pulse, 0.1f);
+        uiRect(3.5f, 0.4f, 0.1f, 8.2f, pulse, pulse, 0.1f);
+    }
+    float guardX = 4.0f;
+    float lift = 0.0f;
+    float enemyX = 16.5f - std::min(t, 4.0f) / 4.0f * 7.5f;
+    if (t > 9.5f) guardX = 4.0f + std::min(t - 9.5f, 1.5f) / 1.5f * 4.2f;
+    if (t > 11.0f && t < 13.5f) {
+        guardX += 0.08f * sin(t * 30.0f);
+        enemyX = 8.9f - 0.08f * sin(t * 30.0f);
+        lift = 0.15f * sin(t * 30.0f);
+        if (((int)(t * 10.0f)) % 2 == 0) uiCircle(8.55f, gy + 0.45f, 0.1f, 1.0f, 0.9f, 0.2f);
+    }
+    else if (t >= 13.5f) {
+        enemyX = 8.9f + (t - 13.5f) * 5.0f;
+    }
+    drawGuard(guardX, gy, lift);
+    if (enemyX < 16.5f) drawEnemyActor(enemyX, gy, -lift);
+    if (t > 0.5f && t < 4.5f) drawBubble(guardX - 0.3f, gy + 1.05f, 0);
+    if (t > 4.5f && t < 7.0f) drawBubble(enemyX - 0.6f, gy + 1.15f, 1);
+    if (t > 7.0f && t < 9.5f) drawBubble(guardX - 0.3f, gy + 1.05f, 2);
+    if (t > 14.5f) {
+        float inX = 17.0f - std::min(t - 14.5f, 1.0f) * 1.7f;
+        for (int l = 0; l < 3; l++) drawEnemyActor(inX, soso.tababa[l].yStart + 0.25f, 0.0f);
+        drawBubble(guardX - 0.3f, gy + 1.05f, 2);
+    }
+}
+
 int main() {
     if (!glfwInit()) return -1;
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -555,7 +778,7 @@ int main() {
         8.00f, 5.25f, 0.0f,   1.00f, 1.00f, 1.00f
     };
     int menuIconStart = 24;
-    int menuIconCount = (int)(menuVertices.size() / 6) - menuIconStart;
+    int menuIconCount = 33;
 
     unsigned int menuVBO, menuVAO;
     glGenVertexArrays(1, &menuVAO);
@@ -563,6 +786,45 @@ int main() {
     glBindVertexArray(menuVAO);
     glBindBuffer(GL_ARRAY_BUFFER, menuVBO);
     glBufferData(GL_ARRAY_BUFFER, menuVertices.size() * sizeof(float), menuVertices.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    std::vector<float> uiVertices = {
+        0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        1.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        0.0f, 1.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        1.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        0.5f, 1.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        0.0f, 1.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        1.0f, 0.5f, 0.0f,   1.0f, 1.0f, 1.0f,
+        0.0f, 1.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        0.5f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
+        0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f
+    };
+    for (int i = 0; i <= 32; i++) {
+        float angle = i * 2.0f * 3.14159265f / 32.0f;
+        uiVertices.push_back(cos(angle));
+        uiVertices.push_back(sin(angle));
+        uiVertices.push_back(0.0f);
+        uiVertices.push_back(1.0f);
+        uiVertices.push_back(1.0f);
+        uiVertices.push_back(1.0f);
+    }
+
+    unsigned int uiVBO;
+    glGenVertexArrays(1, &uiVAO);
+    glGenBuffers(1, &uiVBO);
+    glBindVertexArray(uiVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
+    glBufferData(GL_ARRAY_BUFFER, uiVertices.size() * sizeof(float), uiVertices.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
@@ -588,6 +850,11 @@ int main() {
     int wizzo = glGetUniformLocation(dodo, "uOffset");
     int fizzo = glGetUniformLocation(dodo, "uTint");
     int hilo = glGetUniformLocation(dodo, "u_Highlight");
+    locModel = glGetUniformLocation(dodo, "model");
+    locTint = fizzo;
+    locOffset = wizzo;
+    locHighlight = hilo;
+    locGray = glGetUniformLocation(dodo, "u_Gray");
     double el_wa2t_el_adeem = glfwGetTime();
 
     while (!glfwWindowShouldClose(hamada)) {
@@ -596,7 +863,7 @@ int main() {
         el_wa2t_el_adeem = el_wa2t_el_goded;
         if (koko > 0.1f) koko = 0.1f;
 
-        if (!g_gameOver && !isPaused && !inMainMenu && !isWin) {
+        if (!g_gameOver && !isPaused && !inMainMenu && !isWin && !inCutscene) {
 
             if (!g_waveInProgress && g_currentWave <= 3) {
                 spawnWave(g_currentWave, soso);
@@ -605,7 +872,7 @@ int main() {
             bool wPressed = (glfwGetKey(hamada, GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(hamada, GLFW_KEY_UP) == GLFW_PRESS);
             bool sPressed = (glfwGetKey(hamada, GLFW_KEY_S) == GLFW_PRESS || glfwGetKey(hamada, GLFW_KEY_DOWN) == GLFW_PRESS);
             for (auto& p : basal) {
-                bool laneSelected = tamtam[p.laneId];
+                bool laneSelected = tamtam[p.laneId] && p.kind != 2;
                 if (laneSelected && wPressed && !p.isJumping) {
                     p.isJumping = true;
                     p.jumpTimer = 0.0f;
@@ -663,7 +930,7 @@ int main() {
                     }
                 }
 
-                pIt->spd = isColliding ? 0.0f : 3.5f;
+                pIt->spd = (isColliding || pIt->kind == 2) ? 0.0f : 3.5f;
 
                 if (playerDestroyed) pIt = basal.erase(pIt);
                 else ++pIt;
@@ -724,6 +991,7 @@ int main() {
         };
         glUniformMatrix4fv(gizmo, 1, GL_FALSE, dolly);
         glUniform2f(wizzo, 0.0f, 0.0f);
+        uiEnd();
 
         if (inMainMenu) {
             glBindVertexArray(menuVAO);
@@ -763,6 +1031,17 @@ int main() {
         glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
         int envIndexOffset = meshmesh + (3 * indicesPerLane);
         glDrawElements(GL_TRIANGLES, falafel_indices, GL_UNSIGNED_INT, (void*)(envIndexOffset * sizeof(unsigned int)));
+
+        if (inCutscene) {
+            cutsceneTime += koko;
+            uiBegin();
+            drawCutscene(cutsceneTime);
+            uiEnd();
+            if (cutsceneTime > 16.5f) inCutscene = false;
+            glfwSwapBuffers(hamada);
+            glfwPollEvents();
+            continue;
+        }
         glBindVertexArray(ziro_vao);
 
         for (const auto& enemy : g_enemies) {
@@ -777,10 +1056,6 @@ int main() {
                 }
                 if (enemy.damageTint > 0.0f) glUniform3f(fizzo, 2.0f, 0.2f, 0.2f);
                 glUniform2f(wizzo, enemy.xPos, enemy.yPos);
-                glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
-
-                glUniform3f(fizzo, 0.0f, 1.0f, 0.2f);
-                glUniform2f(wizzo, enemy.xPos, enemy.yPos + 0.35f);
                 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
             }
         }
@@ -801,9 +1076,24 @@ int main() {
             float cy = soso.tababa[p.laneId].centerY + p.yOffset + duckOffset;
             glUniform2f(wizzo, p.xPos, cy);
             if (p.damageTint > 0.0f) glUniform3f(fizzo, 2.0f, 0.2f, 0.2f);
+            else if (p.kind == 1) glUniform3f(fizzo, 0.4f, 1.0f, 1.1f);
+            else if (p.kind == 2) glUniform3f(fizzo, 0.6f, 0.6f, 0.75f);
             else glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         }
+
+        uiBegin();
+        for (const auto& enemy : g_enemies) {
+            if (enemy.isAlive) drawHealthBar(enemy.xPos, enemy.yPos + 0.3f, enemy.health, enemy.type == HARD_MELEE ? 7 : 5);
+        }
+        for (const auto& p : basal) {
+            float duckOffset = p.isDucking ? -0.15f : 0.0f;
+            float cy = soso.tababa[p.laneId].centerY + p.yOffset + duckOffset;
+            drawHealthBar(p.xPos, cy + 0.3f, p.health, p.kind == 2 ? 7 : 5);
+        }
+        drawCoinTracker();
+        drawCards();
+        uiEnd();
         if (isWin || g_gameOver || isPaused) {
             glBindVertexArray(menuVAO);
             glUniform2f(wizzo, 0.0f, 0.0f);
