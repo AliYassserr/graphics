@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include "sound.h"
 
 struct Mahshy { int id; float yStart, yEnd, centerY; };
 
@@ -169,8 +170,10 @@ void dos_zrar(GLFWwindow* tabl, int nono, int zaza, int pika, int mizo) {
     }
     if (inMainMenu || g_gameOver || isWin) return;
 
-    if (nono == GLFW_KEY_ESCAPE && pika == GLFW_PRESS)
+    if (nono == GLFW_KEY_ESCAPE && pika == GLFW_PRESS) {
         isPaused = !isPaused;
+        playSound(SND_CLICK);
+    }
     if (isPaused) return;
 }
 void el_mouse_beteeth(GLFWwindow* tabl, double mash, double mosh) {
@@ -209,18 +212,21 @@ void el_mouse_dos(GLFWwindow* tabl, int b, int a, int m) {
     }
     if (inMainMenu) {
         int hit = menuButtonAt(wX, wY);
+        if (hit != -1) playSound(SND_CLICK);
         if (hit == 0) { inMainMenu = false; inCutscene = true; cutsceneTime = 0.0f; }
         else if (hit == 2) glfwSetWindowShouldClose(tabl, true);
         return;
     }
     if (isWin || g_gameOver) {
         int hit = menuButtonAt(wX, wY);
+        if (hit == 0 || hit == 1) playSound(SND_CLICK);
         if (hit == 0) restartGame();
         else if (hit == 1) { restartGame(); inMainMenu = true; }
         return;
     }
     if (isPaused) {
         int hit = menuButtonAt(wX, wY);
+        if (hit != -1) playSound(SND_CLICK);
         if (hit == 0) isPaused = false;
         else if (hit == 1) restartGame();
         else if (hit == 2) { restartGame(); inMainMenu = true; }
@@ -228,18 +234,22 @@ void el_mouse_dos(GLFWwindow* tabl, int b, int a, int m) {
     }
     int card = cardAt(wX, wY);
     if (card != -1) {
+        bool placed = false;
         for (size_t i = 0; i < tamtam.size(); ++i) {
             if (tamtam[i] && g_playerCoins >= cardCost[card]) {
                 basal.push_back({ (int)i, soso.akhdar, card == 2 ? 0.0f : g_playerSpeed, 0.0f, false, false, 0.0f, card == 2 ? 7 : 5, 0.0f, card, 0.0f });
                 g_playerCoins -= cardCost[card];
+                placed = true;
             }
         }
+        if (placed) playSound(SND_PLACE);
         return;
     }
     if (!(wX >= soso.asfar && wX <= soso.akhdar)) {
         int nawwar = soso.getLaneFromY(wY);
         if (nawwar != -1) {
             tamtam[nawwar] = !tamtam[nawwar];
+            playSound(SND_CLICK);
         }
     }
 }
@@ -382,6 +392,10 @@ void hurtEnemy(Enemy& e, int dmg) {
         drop.yPos = e.yPos;
         drop.collected = false;
         g_coins.push_back(drop);
+        playSound(SND_DEATH);
+    }
+    else {
+        playSound(SND_HIT);
     }
 }
 
@@ -400,6 +414,7 @@ void updateCombat(float dt) {
         if (p.kind == 1 && p.attackTimer <= 0.0f) {
             g_projectiles.push_back({ p.laneId, p.xPos + 0.2f, 0.42f, 6.0f, true, 2, -100.0f, -100.0f });
             p.attackTimer = 1.2f;
+            playSound(SND_SHOOT);
         }
     }
     for (auto& e : g_enemies) {
@@ -407,6 +422,7 @@ void updateCombat(float dt) {
         bool high = (e.type == EASY_UPPER);
         g_projectiles.push_back({ e.laneId, e.xPos - 0.2f, high ? 0.8f : 0.15f, -5.0f, false, high ? 0 : 1, -100.0f, -100.0f });
         e.attackTimer = high ? 2.0f : 2.4f;
+        playSound(SND_ENEMY_SHOOT);
     }
 
     for (auto it = g_projectiles.begin(); it != g_projectiles.end();) {
@@ -440,6 +456,7 @@ void updateCombat(float dt) {
                     }
                     p.health -= 1;
                     p.damageTint = 0.5f;
+                    playSound(SND_HURT);
                     remove = true;
                     break;
                 }
@@ -464,6 +481,7 @@ void updateCombat(float dt) {
             if (e.type == HARD_MELEE && e.attackTimer <= 0.0f) {
                 p.health -= e.damage;
                 p.damageTint = 0.5f;
+                playSound(SND_HURT);
                 e.attackTimer = 0.6f;
             }
         }
@@ -471,7 +489,10 @@ void updateCombat(float dt) {
     }
 
     for (auto it = basal.begin(); it != basal.end();) {
-        if (it->health <= 0) it = basal.erase(it);
+        if (it->health <= 0) {
+            playSound(SND_DEATH);
+            it = basal.erase(it);
+        }
         else ++it;
     }
 }
@@ -884,6 +905,7 @@ int main() {
     glfwSetCursorPosCallback(hamada, el_mouse_beteeth);
     glfwSetKeyCallback(hamada, dos_zrar);
     glfwSetMouseButtonCallback(hamada, el_mouse_dos);
+    sfxInit();
     std::vector<float> vertices = {
         0.5f, 0.5f, 0.0f,   0.32f, 0.35f, 0.42f,
         3.5f, 0.5f, 0.0f,   0.32f, 0.35f, 0.42f,
@@ -1282,6 +1304,7 @@ int main() {
                 if (laneSelected && wPressed && !p.isJumping) {
                     p.isJumping = true;
                     p.jumpTimer = 0.0f;
+                    playSound(SND_JUMP);
                 }
                 p.isDucking = laneSelected && sPressed;
                 if (p.isJumping) {
@@ -1310,6 +1333,7 @@ int main() {
                 allDefeated = false;
 
                 if (enemy.xPos <= 3.5f) {
+                    if (!g_gameOver) playSound(SND_LOSE);
                     g_gameOver = true;
                 }
             }
@@ -1320,6 +1344,7 @@ int main() {
                     float py = soso.tababa[p.laneId].centerY;
                     if (std::abs(coin.xPos - p.xPos) < 0.6f && std::abs(coin.yPos - py) < 0.6f) {
                         coin.collected = true;
+                        playSound(SND_COIN);
                         g_playerCoins += 10;
                         break;
                     }
@@ -1331,7 +1356,10 @@ int main() {
             if (allDefeated && g_waveInProgress) {
                 g_waveInProgress = false;
                 g_currentWave++;
-                if (g_currentWave > 3) isWin = true;
+                if (g_currentWave > 3) {
+                    isWin = true;
+                    playSound(SND_WIN);
+                }
             }
 
         }
@@ -1459,6 +1487,7 @@ int main() {
         glfwSwapBuffers(hamada);
         glfwPollEvents();
     }
+    sfxShutdown();
     glfwTerminate();
     return 0;
 }
