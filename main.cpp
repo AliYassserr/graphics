@@ -59,7 +59,6 @@ float g_animTime = 0.0f;
 int cardCost[3] = { 10, 20, 30 };
 
 void restartGame();
-void debugJumpToWave3();
 
 float triSign(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3) {
     return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
@@ -187,7 +186,6 @@ void dos_zrar(GLFWwindow* tabl, int nono, int zaza, int pika, int mizo) {
     if (nono == GLFW_KEY_ESCAPE && pika == GLFW_PRESS)
         isPaused = !isPaused;
     if (isPaused) return;
-    if (nono == GLFW_KEY_3 && pika == GLFW_PRESS) debugJumpToWave3();
 }
 void el_mouse_beteeth(GLFWwindow* tabl, double mash, double mosh) {
     if (!tot || tol_3ard == 0) return;
@@ -389,15 +387,6 @@ void updateSpawner(float dt) {
     int lane = rand() % (int)soso.tababa.size();
     g_enemies.push_back(Enemy(g_nextEnemyId++, type, lane, 16.0f, soso.tababa[lane].centerY));
     g_spawnTimer = g_spawnInterval;
-}
-
-void debugJumpToWave3() {
-    g_enemies.clear();
-    g_projectiles.clear();
-    g_spawnQueue.clear();
-    g_currentWave = 3;
-    g_waveInProgress = false;
-    if (g_playerCoins < 90) g_playerCoins = 90;
 }
 
 void hurtEnemy(Enemy& e, int dmg) {
