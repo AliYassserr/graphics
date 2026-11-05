@@ -501,19 +501,6 @@ int locModel = -1, locTint = -1, locOffset = -1, locHighlight = -1, locGray = -1
 unsigned int uiVAO = 0;
 float g_uiRed = 0.0f;
 
-bool sevenSeg[10][7] = {
-    { 1, 1, 1, 1, 1, 1, 0 },
-    { 0, 1, 1, 0, 0, 0, 0 },
-    { 1, 1, 0, 1, 1, 0, 1 },
-    { 1, 1, 1, 1, 0, 0, 1 },
-    { 0, 1, 1, 0, 0, 1, 1 },
-    { 1, 0, 1, 1, 0, 1, 1 },
-    { 1, 0, 1, 1, 1, 1, 1 },
-    { 1, 1, 1, 0, 0, 0, 0 },
-    { 1, 1, 1, 1, 1, 1, 1 },
-    { 1, 1, 1, 1, 0, 1, 1 }
-};
-
 void uiShape(GLenum mode, int first, int count, float x, float y, float w, float h, float r, float g, float b) {
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(x, y, 0.0f));
@@ -544,27 +531,16 @@ void uiEnd() {
     glUniform1f(locGray, 0.0f);
 }
 
-void drawNumber(int value, float x, float y, float w, float h, float gap, float r, float g, float b) {
-    std::string digits = std::to_string(value);
-    float t = w * 0.22f;
-    for (size_t k = 0; k < digits.size(); k++) {
-        int d = digits[k] - '0';
-        float dx = x + k * (w + gap);
-        if (sevenSeg[d][0]) uiRect(dx, y + h - t, w, t, r, g, b);
-        if (sevenSeg[d][1]) uiRect(dx + w - t, y + h / 2, t, h / 2, r, g, b);
-        if (sevenSeg[d][2]) uiRect(dx + w - t, y, t, h / 2, r, g, b);
-        if (sevenSeg[d][3]) uiRect(dx, y, w, t, r, g, b);
-        if (sevenSeg[d][4]) uiRect(dx, y, t, h / 2, r, g, b);
-        if (sevenSeg[d][5]) uiRect(dx, y + h / 2, t, h / 2, r, g, b);
-        if (sevenSeg[d][6]) uiRect(dx, y + h / 2 - t / 2, w, t, r, g, b);
-    }
-}
-
 void drawCoinTracker() {
     uiRect(12.4f, 8.6f, 3.55f, 1.35f, 0.12f, 0.12f, 0.16f);
-    uiCircle(12.95f, 9.27f, 0.32f, 1.0f, 0.8f, 0.1f);
-    uiCircle(12.95f, 9.27f, 0.2f, 0.9f, 0.62f, 0.05f);
-    drawNumber(g_playerCoins, 13.5f, 8.87f, 0.42f, 0.8f, 0.14f, 1.0f, 0.85f, 0.2f);
+    int shown = g_playerCoins / 10;
+    for (int i = 0; i < 8; i++) uiCircle(12.75f + i * 0.4f, 9.65f, 0.14f, 0.2f, 0.2f, 0.24f);
+    for (int i = 0; i < shown && i < 24; i++) {
+        float cx = 12.75f + (i % 8) * 0.4f;
+        float cy = 9.65f - (i / 8) * 0.38f;
+        uiCircle(cx, cy, 0.14f, 1.0f, 0.8f, 0.1f);
+        uiCircle(cx, cy, 0.085f, 0.9f, 0.62f, 0.05f);
+    }
 }
 
 void drawCards() {
@@ -595,7 +571,12 @@ void drawCards() {
             uiRect(cx - 0.04f, y0 + 0.75f, 0.08f, 0.55f, cardColor[i][0], cardColor[i][1], cardColor[i][2]);
             uiRect(cx - 0.17f, y0 + 1.08f, 0.34f, 0.08f, cardColor[i][0], cardColor[i][1], cardColor[i][2]);
         }
-        drawNumber(cardCost[i], x0 + 0.315f, y0 + 0.11f, 0.18f, 0.3f, 0.06f, 1.0f, 0.85f, 0.2f);
+        int pips = cardCost[i] / 10;
+        for (int k = 0; k < pips; k++) {
+            float px = x0 + 0.525f + (k - (pips - 1) / 2.0f) * 0.28f;
+            uiCircle(px, y0 + 0.26f, 0.1f, 1.0f, 0.8f, 0.1f);
+            uiCircle(px, y0 + 0.26f, 0.06f, 0.9f, 0.62f, 0.05f);
+        }
     }
     glUniform1f(locGray, 0.0f);
 }
@@ -729,8 +710,10 @@ void drawBubble(float x, float y, int icon) {
         uiTriRight(x + 0.33f, y + 0.28f, 0.32f, 0.25f, 0.8f, 0.1f, 0.1f);
     }
     else {
-        uiRect(x + 0.41f, y + 0.22f, 0.08f, 0.3f, 0.85f, 0.1f, 0.1f);
-        uiRect(x + 0.41f, y + 0.08f, 0.08f, 0.08f, 0.85f, 0.1f, 0.1f);
+        uiRect(x + 0.42f, y + 0.2f, 0.06f, 0.28f, 0.45f, 0.47f, 0.55f);
+        uiTriUp(x + 0.4f, y + 0.48f, 0.1f, 0.08f, 0.45f, 0.47f, 0.55f);
+        uiRect(x + 0.33f, y + 0.16f, 0.24f, 0.05f, 0.5f, 0.32f, 0.12f);
+        uiRect(x + 0.43f, y + 0.07f, 0.04f, 0.09f, 0.5f, 0.32f, 0.12f);
     }
 }
 
@@ -1062,18 +1045,27 @@ int main() {
         8.60f, 5.30f, 0.0f,   1.00f, 1.00f, 1.00f,
         8.35f, 5.30f, 0.0f,   1.00f, 1.00f, 1.00f,
         8.35f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
-        7.60f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
-        7.85f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
-        8.40f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f,
-        8.40f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f,
-        8.15f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f,
-        7.60f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
-        7.60f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f,
-        7.85f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f,
-        8.40f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
-        8.40f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
-        8.15f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
-        7.60f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.25f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.80f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.80f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.80f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.25f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.25f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.33f, 2.48f, 0.0f,   0.75f, 0.20f, 0.20f,
+        7.72f, 2.48f, 0.0f,   0.75f, 0.20f, 0.20f,
+        7.72f, 3.32f, 0.0f,   0.75f, 0.20f, 0.20f,
+        7.72f, 3.32f, 0.0f,   0.75f, 0.20f, 0.20f,
+        7.33f, 3.32f, 0.0f,   0.75f, 0.20f, 0.20f,
+        7.33f, 2.48f, 0.0f,   0.75f, 0.20f, 0.20f,
+        7.95f, 2.82f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 2.82f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 2.98f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 2.98f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.95f, 2.98f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.95f, 2.82f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 2.70f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 3.10f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.75f, 2.90f, 0.0f,   1.00f, 1.00f, 1.00f,
         4.90f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
         11.10f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
         11.10f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
@@ -1158,7 +1150,7 @@ int main() {
     };
 
     int menuIconStart = 24;
-    int menuIconCount = 33;
+    int menuIconCount = 42;
 
     unsigned int menuVBO, menuVAO;
     glGenVertexArrays(1, &menuVAO);
@@ -1411,23 +1403,23 @@ int main() {
             glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
             if (isWin || g_gameOver) {
                 glUniform1f(hilo, 0.0f);
-                glDrawArrays(GL_TRIANGLES, isWin ? 99 : 105, 6);
+                glDrawArrays(GL_TRIANGLES, isWin ? 108 : 114, 6);
                 for (int i = 0; i < 2; i++) {
                     glUniform1f(hilo, i == menuHover ? 1.0f : 0.0f);
-                    glDrawArrays(GL_TRIANGLES, 111 + i * 6, 6);
+                    glDrawArrays(GL_TRIANGLES, 120 + i * 6, 6);
                 }
                 glUniform1f(hilo, 0.0f);
-                glDrawArrays(GL_TRIANGLES, 123, 15);
+                glDrawArrays(GL_TRIANGLES, 132, 15);
             }
             else {
                 glUniform1f(hilo, 0.0f);
-                glDrawArrays(GL_TRIANGLES, 57, 6);
+                glDrawArrays(GL_TRIANGLES, 66, 6);
                 for (int i = 0; i < 3; i++) {
                     glUniform1f(hilo, i == menuHover ? 1.0f : 0.0f);
-                    glDrawArrays(GL_TRIANGLES, 63 + i * 6, 6);
+                    glDrawArrays(GL_TRIANGLES, 72 + i * 6, 6);
                 }
                 glUniform1f(hilo, 0.0f);
-                glDrawArrays(GL_TRIANGLES, 81, 18);
+                glDrawArrays(GL_TRIANGLES, 90, 18);
             }
         }
         glfwSwapBuffers(hamada);
