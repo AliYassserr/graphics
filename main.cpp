@@ -22,6 +22,7 @@ struct Hawawshy {
     int health;
     float damageTint;
     int kind;
+    float attackTimer;
 };
 
 struct Beshamel {
@@ -242,7 +243,7 @@ void el_mouse_dos(GLFWwindow* tabl, int b, int a, int m) {
     if (card != -1) {
         for (size_t i = 0; i < tamtam.size(); ++i) {
             if (tamtam[i] && g_playerCoins >= cardCost[card]) {
-                basal.push_back({ (int)i, soso.akhdar, card == 2 ? 0.0f : g_playerSpeed, 0.0f, false, false, 0.0f, card == 2 ? 7 : 5, 0.0f, card });
+                basal.push_back({ (int)i, soso.akhdar, card == 2 ? 0.0f : g_playerSpeed, 0.0f, false, false, 0.0f, card == 2 ? 7 : 5, 0.0f, card, 0.0f });
                 g_playerCoins -= cardCost[card];
             }
         }
@@ -273,6 +274,7 @@ struct Enemy {
     bool isAlive;
     float damageTint;
     bool blocked;
+    float attackTimer;
 
 Enemy(int enemyId, EnemyType t, int lane, float startX, float laneY) {
     id = enemyId;
@@ -283,6 +285,7 @@ Enemy(int enemyId, EnemyType t, int lane, float startX, float laneY) {
     isAlive = true;
     damageTint = 0.0f;
     blocked = false;
+    attackTimer = 0.0f;
 
     if (type == EASY_UPPER) {
         health = 5;
@@ -314,12 +317,26 @@ struct Coin {
 
 std::vector<Enemy> g_enemies;
 std::vector<Coin> g_coins;
+
+struct Projectile {
+    int laneId;
+    float xPos;
+    float height;
+    float spd;
+    bool fromPlayer;
+    int attackType;
+    float ignoreMinX;
+    float ignoreMaxX;
+};
+
+std::vector<Projectile> g_projectiles;
 int g_currentWave = 1;
 bool g_waveInProgress = false;
 
 void restartGame() {
     g_enemies.clear();
     g_coins.clear();
+    g_projectiles.clear();
     basal.clear();
     for (size_t i = 0; i < tamtam.size(); ++i) tamtam[i] = false;
     g_currentWave = 1;
@@ -359,6 +376,111 @@ void spawnWave(int waveNumber, const Koshary& grid) {
         }
     }
     g_waveInProgress = true;
+}
+
+void hurtEnemy(Enemy& e, int dmg) {
+    e.health -= dmg;
+    e.damageTint = 0.5f;
+    if (e.health <= 0 && e.isAlive) {
+        e.isAlive = false;
+        Coin drop;
+        drop.xPos = e.xPos;
+        drop.yPos = e.yPos;
+        drop.collected = false;
+        g_coins.push_back(drop);
+        std::cout << "Enemy Defeated! Gold Coin Dropped!" << std::endl;
+    }
+}
+
+void updateCombat(float dt) {
+    for (auto& e : g_enemies) {
+        e.blocked = false;
+        if (e.damageTint > 0.0f) e.damageTint -= dt * 3.0f;
+        if (e.attackTimer > 0.0f) e.attackTimer -= dt;
+    }
+    for (auto& p : basal) {
+        if (p.damageTint > 0.0f) p.damageTint -= dt * 3.0f;
+        if (p.attackTimer > 0.0f) p.attackTimer -= dt;
+    }
+
+    for (auto& p : basal) {
+        if (p.kind == 1 && p.attackTimer <= 0.0f) {
+            g_projectiles.push_back({ p.laneId, p.xPos + 0.2f, 0.42f, 6.0f, true, 2, -100.0f, -100.0f });
+            p.attackTimer = 1.2f;
+        }
+    }
+    for (auto& e : g_enemies) {
+        if (!e.isAlive || e.type == HARD_MELEE || e.xPos > 15.5f || e.attackTimer > 0.0f) continue;
+        bool high = (e.type == EASY_UPPER);
+        g_projectiles.push_back({ e.laneId, e.xPos - 0.2f, high ? 0.8f : 0.15f, -5.0f, false, high ? 0 : 1, -100.0f, -100.0f });
+        e.attackTimer = high ? 2.0f : 2.4f;
+    }
+
+    for (auto it = g_projectiles.begin(); it != g_projectiles.end();) {
+        it->xPos += it->spd * dt;
+        bool remove = false;
+        if (it->fromPlayer) {
+            for (auto& e : g_enemies) {
+                if (!e.isAlive || e.laneId != it->laneId || e.xPos > 16.0f) continue;
+                if (std::abs(it->xPos - e.xPos) < 0.35f) {
+                    hurtEnemy(e, 1);
+                    remove = true;
+                    break;
+                }
+            }
+            if (it->xPos > 16.5f) remove = true;
+        }
+        else {
+            for (auto& p : basal) {
+                if (p.laneId != it->laneId) continue;
+                if (it->xPos >= it->ignoreMinX && it->xPos <= it->ignoreMaxX) continue;
+                if (std::abs(it->xPos - p.xPos) < 0.3f) {
+                    bool dodged = false;
+                    if (p.kind != 2) {
+                        if (it->attackType == 0 && p.isDucking) dodged = true;
+                        if (it->attackType == 1 && p.isJumping) dodged = true;
+                    }
+                    if (dodged) {
+                        it->ignoreMinX = p.xPos - 0.3f;
+                        it->ignoreMaxX = p.xPos + 0.3f;
+                        continue;
+                    }
+                    p.health -= 1;
+                    p.damageTint = 0.5f;
+                    remove = true;
+                    break;
+                }
+            }
+            if (it->xPos < soso.akhdar) remove = true;
+        }
+        if (remove) it = g_projectiles.erase(it);
+        else ++it;
+    }
+
+    for (auto& p : basal) {
+        bool isColliding = false;
+        for (auto& e : g_enemies) {
+            if (!e.isAlive || e.laneId != p.laneId) continue;
+            if (std::abs(p.xPos - e.xPos) >= 0.6f) continue;
+            isColliding = true;
+            e.blocked = true;
+            if (p.kind == 0 && p.attackTimer <= 0.0f) {
+                hurtEnemy(e, 1);
+                p.attackTimer = 0.5f;
+            }
+            if (e.type == HARD_MELEE && e.attackTimer <= 0.0f) {
+                p.health -= e.damage;
+                p.damageTint = 0.5f;
+                e.attackTimer = 0.6f;
+            }
+        }
+        p.spd = (isColliding || p.kind == 2) ? 0.0f : g_playerSpeed;
+    }
+
+    for (auto it = basal.begin(); it != basal.end();) {
+        if (it->health <= 0) it = basal.erase(it);
+        else ++it;
+    }
 }
 
 int locModel = -1, locTint = -1, locOffset = -1, locHighlight = -1, locGray = -1;
@@ -589,6 +711,21 @@ void drawEnemyActor(float x, float y, float lift, int variant = 2) {
         uiRect(x - 0.36f, y + 0.15f + lift, 0.08f, 0.5f, 0.45f, 0.28f, 0.12f);
         uiTriUp(x - 0.3f, y + 0.5f, 0.12f, 0.16f, 0.75f, 0.75f, 0.8f);
         uiTriUp(x + 0.1f, y + 0.5f, 0.12f, 0.16f, 0.75f, 0.75f, 0.8f);
+    }
+}
+
+void drawProjectile(const Projectile& pr) {
+    float base = soso.tababa[pr.laneId].centerY - 0.55f;
+    float y = base + pr.height;
+    if (pr.fromPlayer) {
+        uiRect(pr.xPos - 0.3f, y - 0.02f, 0.5f, 0.04f, 0.85f, 0.85f, 0.8f);
+        uiTriRight(pr.xPos + 0.2f, y - 0.08f, 0.16f, 0.16f, 0.95f, 0.95f, 1.0f);
+        uiRect(pr.xPos - 0.34f, y - 0.07f, 0.07f, 0.14f, 0.2f, 0.7f, 0.3f);
+    }
+    else {
+        uiRect(pr.xPos - 0.2f, y - 0.02f, 0.5f, 0.04f, 0.55f, 0.3f, 0.15f);
+        uiTriRight(pr.xPos - 0.2f, y - 0.08f, -0.16f, 0.16f, 0.95f, 0.15f, 0.1f);
+        uiRect(pr.xPos + 0.3f, y - 0.07f, 0.07f, 0.14f, 0.95f, 0.55f, 0.1f);
     }
 }
 
@@ -977,53 +1114,7 @@ int main() {
                 }
             }
 
-            for (auto& enemy : g_enemies) {
-                enemy.blocked = false;
-                if (enemy.damageTint > 0.0f) enemy.damageTint -= koko * 3.0f;
-            }
-            for (auto pIt = basal.begin(); pIt != basal.end();) {
-                bool playerDestroyed = false;
-                bool isColliding = false;
-                if (pIt->damageTint > 0.0f) pIt->damageTint -= koko * 3.0f;
-
-                for (auto& enemy : g_enemies) {
-                    if (!enemy.isAlive || enemy.laneId != pIt->laneId) continue;
-                    if (std::abs(pIt->xPos - enemy.xPos) < 0.6f) {
-                        isColliding = true;
-                        enemy.blocked = true;
-
-                        bool hit = true;
-                        if (enemy.type == EASY_UPPER && pIt->isDucking) hit = false;
-                        if (enemy.type == MEDIUM_LOWER && pIt->isJumping) hit = false;
-
-                        if (hit && pIt->damageTint <= 0.0f) {
-                            pIt->health -= enemy.damage;
-                            pIt->damageTint = 0.5f;
-                            enemy.health -= 1;
-                            enemy.damageTint = 0.5f;
-
-                            if (enemy.health <= 0) {
-                                enemy.isAlive = false;
-                                Coin drop;
-                                drop.xPos = enemy.xPos;
-                                drop.yPos = enemy.yPos;
-                                drop.collected = false;
-                                g_coins.push_back(drop);
-                                std::cout << "Enemy Defeated! Gold Coin Dropped!" << std::endl;
-                            }
-                            if (pIt->health <= 0) {
-                                playerDestroyed = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                pIt->spd = (isColliding || pIt->kind == 2) ? 0.0f : g_playerSpeed;
-
-                if (playerDestroyed) pIt = basal.erase(pIt);
-                else ++pIt;
-            }
+            updateCombat(koko);
 
             for (auto it = basal.begin(); it != basal.end();) {
                 it->xPos += it->spd * koko;
@@ -1152,6 +1243,9 @@ int main() {
         }
         for (const auto& p : basal) {
             drawPlayerUnit(p);
+        }
+        for (const auto& pr : g_projectiles) {
+            drawProjectile(pr);
         }
         drawCoinTracker();
         drawCards();
