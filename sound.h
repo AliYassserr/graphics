@@ -51,6 +51,7 @@ std::vector<SfxVoice> g_voices;
 std::mutex g_voiceLock;
 std::chrono::steady_clock::time_point g_sfxLast[SND_COUNT];
 bool g_sfxReady = false;
+bool g_muted = false;
 ma_device g_sfxDevice;
 #ifdef SFX_TEST_NULL_BACKEND
 ma_context g_sfxContext;
@@ -144,7 +145,7 @@ void sfxShutdown() {
 }
 
 void playSound(int id) {
-    if (!g_sfxReady) return;
+    if (!g_sfxReady || g_muted) return;
     std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
     if (std::chrono::duration<float>(now - g_sfxLast[id]).count() < 0.06f) return;
     g_sfxLast[id] = now;
