@@ -843,138 +843,6 @@ void drawBubble(float x, float y, int icon) {
     }
 }
 
-float pattern(int n) {
-    return (float)((n * 37 + 11) % 17) / 17.0f;
-}
-
-void drawOak(float x, float y, float s) {
-    uiRect(x - 0.13f * s, y, 0.26f * s, 0.85f * s, 0.38f, 0.25f, 0.13f);
-    uiRect(x - 0.13f * s, y, 0.07f * s, 0.85f * s, 0.30f, 0.19f, 0.10f);
-    uiCircle(x - 0.38f * s, y + 1.0f * s, 0.36f * s, 0.14f, 0.40f, 0.16f);
-    uiCircle(x + 0.38f * s, y + 1.0f * s, 0.36f * s, 0.14f, 0.40f, 0.16f);
-    uiCircle(x, y + 1.25f * s, 0.5f * s, 0.20f, 0.52f, 0.20f);
-    uiCircle(x - 0.2f * s, y + 1.4f * s, 0.25f * s, 0.30f, 0.66f, 0.28f);
-    uiCircle(x + 0.3f * s, y + 1.05f * s, 0.06f * s, 0.85f, 0.15f, 0.12f);
-    uiCircle(x - 0.45f * s, y + 0.95f * s, 0.06f * s, 0.85f, 0.15f, 0.12f);
-}
-
-void drawPine(float x, float y, float s) {
-    uiRect(x - 0.07f * s, y, 0.14f * s, 0.45f * s, 0.36f, 0.24f, 0.12f);
-    uiTriUp(x - 0.5f * s, y + 0.3f * s, 1.0f * s, 0.7f * s, 0.08f, 0.34f, 0.16f);
-    uiTriUp(x - 0.4f * s, y + 0.7f * s, 0.8f * s, 0.6f * s, 0.10f, 0.42f, 0.18f);
-    uiTriUp(x - 0.28f * s, y + 1.1f * s, 0.56f * s, 0.5f * s, 0.14f, 0.5f, 0.22f);
-}
-
-void drawHedge(float y) {
-    for (int i = 0; i < 36; i++) {
-        float x = 3.75f + i * 0.33f;
-        float dy = (pattern(i) - 0.5f) * 0.08f;
-        bool dark = (i % 2 == 0);
-        uiCircle(x, y + dy, 0.27f, dark ? 0.10f : 0.16f, dark ? 0.38f : 0.48f, dark ? 0.14f : 0.19f);
-    }
-    for (int i = 0; i < 36; i += 3) {
-        float x = 3.75f + i * 0.33f + 0.1f;
-        int c = i % 4;
-        float r = c == 0 ? 0.95f : (c == 1 ? 0.98f : (c == 2 ? 1.0f : 0.9f));
-        float g = c == 0 ? 0.5f : (c == 1 ? 0.88f : (c == 2 ? 1.0f : 0.3f));
-        float b = c == 0 ? 0.7f : (c == 1 ? 0.3f : (c == 2 ? 1.0f : 0.4f));
-        uiCircle(x, y + 0.14f + pattern(i + 5) * 0.08f, 0.045f, r, g, b);
-    }
-}
-
-void drawRampart(float x0, float x1) {
-    uiRect(x0, 0.0f, x1 - x0, 0.5f, 0.46f, 0.48f, 0.56f);
-    uiRect(x0, 0.22f, x1 - x0, 0.03f, 0.34f, 0.36f, 0.44f);
-    for (float x = x0 + 0.05f; x < x1 - 0.2f; x += 0.45f) {
-        uiRect(x, 0.5f, 0.28f, 0.26f, 0.5f, 0.52f, 0.6f);
-        uiRect(x + 0.12f, 0.0f, 0.03f, 0.22f, 0.34f, 0.36f, 0.44f);
-        uiRect(x + 0.26f, 0.25f, 0.03f, 0.25f, 0.34f, 0.36f, 0.44f);
-    }
-    uiRect(x0, 0.47f, x1 - x0, 0.04f, 0.38f, 0.40f, 0.48f);
-}
-
-void drawFence(float x0, float x1) {
-    uiRect(x0, 0.18f, x1 - x0, 0.07f, 0.45f, 0.30f, 0.14f);
-    uiRect(x0, 0.42f, x1 - x0, 0.07f, 0.45f, 0.30f, 0.14f);
-    for (float x = x0; x < x1 - 0.1f; x += 0.4f) {
-        uiRect(x, 0.0f, 0.1f, 0.6f, 0.52f, 0.35f, 0.17f);
-        uiTriUp(x, 0.6f, 0.1f, 0.12f, 0.52f, 0.35f, 0.17f);
-    }
-}
-
-void drawBarrel(float x, float y) {
-    uiRect(x - 0.17f, y, 0.34f, 0.5f, 0.5f, 0.33f, 0.15f);
-    uiRect(x - 0.05f, y, 0.02f, 0.5f, 0.38f, 0.24f, 0.10f);
-    uiRect(x + 0.04f, y, 0.02f, 0.5f, 0.38f, 0.24f, 0.10f);
-    uiRect(x - 0.19f, y + 0.1f, 0.38f, 0.05f, 0.25f, 0.25f, 0.28f);
-    uiRect(x - 0.19f, y + 0.33f, 0.38f, 0.05f, 0.25f, 0.25f, 0.28f);
-    uiRect(x - 0.15f, y + 0.5f, 0.3f, 0.04f, 0.62f, 0.44f, 0.22f);
-}
-
-void drawCrate(float x, float y) {
-    uiRect(x, y, 0.45f, 0.45f, 0.58f, 0.42f, 0.2f);
-    uiRect(x, y, 0.45f, 0.05f, 0.40f, 0.28f, 0.12f);
-    uiRect(x, y + 0.4f, 0.45f, 0.05f, 0.40f, 0.28f, 0.12f);
-    uiRect(x, y, 0.05f, 0.45f, 0.40f, 0.28f, 0.12f);
-    uiRect(x + 0.4f, y, 0.05f, 0.45f, 0.40f, 0.28f, 0.12f);
-    uiRect(x + 0.05f, y + 0.2f, 0.35f, 0.05f, 0.40f, 0.28f, 0.12f);
-}
-
-void drawBackground() {
-    uiRect(0.0f, 8.2f, 16.0f, 0.5f, 0.55f, 0.68f, 0.85f);
-    uiRect(0.0f, 8.7f, 16.0f, 0.5f, 0.45f, 0.60f, 0.82f);
-    uiRect(0.0f, 9.2f, 16.0f, 0.4f, 0.38f, 0.54f, 0.80f);
-    uiRect(0.0f, 9.6f, 16.0f, 0.4f, 0.30f, 0.46f, 0.76f);
-    uiCircle(11.9f, 9.45f, 0.5f, 0.75f, 0.8f, 0.9f);
-    uiCircle(11.9f, 9.45f, 0.34f, 1.0f, 0.95f, 0.6f);
-    float clouds[3][2] = { { 8.4f, 9.45f }, { 14.4f, 9.1f }, { 6.2f, 9.2f } };
-    for (int i = 0; i < 3; i++) {
-        uiCircle(clouds[i][0], clouds[i][1], 0.28f, 0.93f, 0.95f, 1.0f);
-        uiCircle(clouds[i][0] + 0.3f, clouds[i][1] - 0.05f, 0.22f, 0.93f, 0.95f, 1.0f);
-        uiCircle(clouds[i][0] - 0.3f, clouds[i][1] - 0.05f, 0.2f, 0.93f, 0.95f, 1.0f);
-    }
-    float peaks[5][3] = { { 3.4f, 3.0f, 1.5f }, { 6.0f, 3.4f, 1.8f }, { 9.0f, 3.2f, 1.3f }, { 11.8f, 3.6f, 1.7f }, { 14.4f, 3.0f, 1.4f } };
-    for (int i = 0; i < 5; i++) {
-        uiTriUp(peaks[i][0], 8.2f, peaks[i][1], peaks[i][2], 0.40f, 0.44f, 0.60f);
-        uiTriUp(peaks[i][0] + peaks[i][1] * 0.5f - 0.2f, 8.2f + peaks[i][2] - 0.35f, 0.4f, 0.35f, 0.95f, 0.96f, 1.0f);
-    }
-    uiCircle(6.0f, 7.3f, 1.5f, 0.20f, 0.45f, 0.20f);
-    uiCircle(10.4f, 7.1f, 1.2f, 0.24f, 0.50f, 0.22f);
-    uiCircle(14.6f, 7.4f, 1.5f, 0.20f, 0.45f, 0.20f);
-    uiCircle(3.2f, 7.2f, 1.0f, 0.24f, 0.50f, 0.22f);
-    uiRect(0.0f, 0.0f, 16.0f, 8.2f, 0.28f, 0.52f, 0.22f);
-}
-
-void drawScenery() {
-    drawOak(7.9f, 8.25f, 1.0f);
-    drawPine(9.3f, 8.25f, 1.0f);
-    drawOak(10.9f, 8.25f, 0.9f);
-    drawHedge(5.85f);
-    drawHedge(3.15f);
-    drawRampart(3.5f, 9.0f);
-    drawFence(9.0f, 12.2f);
-    drawRampart(12.2f, 15.5f);
-    drawCrate(10.0f, 0.0f);
-    drawBarrel(10.8f, 0.0f);
-    drawBarrel(11.3f, 0.0f);
-}
-
-void drawLaneDetails() {
-    float bottoms[3] = { 6.2f, 3.5f, 0.8f };
-    for (int l = 0; l < 3; l++) {
-        float y0 = bottoms[l];
-        uiRect(3.5f, y0, 12.0f, 0.06f, 0.36f, 0.27f, 0.17f);
-        uiRect(3.5f, y0 + 1.94f, 12.0f, 0.06f, 0.36f, 0.27f, 0.17f);
-        for (int i = 0; i < 40; i++) {
-            float x = 3.7f + i * 0.29f + pattern(i + l * 7) * 0.2f;
-            float y = y0 + 0.2f + pattern(i * 3 + l) * 1.6f;
-            uiCircle(x, y, 0.025f + pattern(i + 9) * 0.03f, 0.44f, 0.34f, 0.23f);
-        }
-        uiRect(15.15f, y0 + 0.1f, 0.05f, 1.2f, 0.12f, 0.1f, 0.1f);
-        uiTriRight(15.15f, y0 + 0.85f, -0.45f, 0.35f, 0.5f, 0.08f, 0.08f);
-    }
-}
-
 void drawSubtitle(float t) {
     const char* line = 0;
     float r = 1.0f, g = 1.0f, b = 1.0f;
@@ -1056,9 +924,30 @@ int main() {
     el_tabkh(2.1f, 8.5f, 0.6f, 0.4f, 0.22f, 0.25f, 0.30f, batates, kofta);
     el_tabkh(2.9f, 8.5f, 0.6f, 0.4f, 0.22f, 0.25f, 0.30f, batates, kofta);
     int meshmesh = (int)kofta.size();
-    el_tabkh(3.5f, 6.2f, 12.0f, 2.0f, 0.56f, 0.44f, 0.30f, batates, kofta);
-    el_tabkh(3.5f, 3.5f, 12.0f, 2.0f, 0.56f, 0.44f, 0.30f, batates, kofta);
-    el_tabkh(3.5f, 0.8f, 12.0f, 2.0f, 0.56f, 0.44f, 0.30f, batates, kofta);
+    el_tabkh(3.5f, 6.2f, 12.0f, 2.0f, 0.2f, 0.6f, 0.9f, batates, kofta);
+    el_tabkh(3.5f, 3.5f, 12.0f, 2.0f, 0.2f, 0.6f, 0.9f, batates, kofta);
+    el_tabkh(3.5f, 0.8f, 12.0f, 2.0f, 0.2f, 0.6f, 0.9f, batates, kofta);
+    int foul_indices = (int)kofta.size() - meshmesh;
+    el_tabkh(5.5f, 8.2f, 0.4f, 1.2f, 0.45f, 0.30f, 0.15f, batates, kofta);
+    el_tabkh(5.0f, 9.0f, 1.4f, 0.8f, 0.15f, 0.55f, 0.20f, batates, kofta);
+    el_tabkh(5.2f, 9.6f, 1.0f, 0.6f, 0.18f, 0.65f, 0.22f, batates, kofta);
+    el_tabkh(8.0f, 8.2f, 0.2f, 1.6f, 0.30f, 0.30f, 0.30f, batates, kofta);
+    el_tabkh(7.0f, 9.0f, 1.0f, 0.7f, 0.75f, 0.15f, 0.15f, batates, kofta);
+    el_tabkh(7.3f, 9.2f, 0.3f, 0.3f, 0.95f, 0.85f, 0.20f, batates, kofta);
+    el_tabkh(11.0f, 8.2f, 0.2f, 1.0f, 0.35f, 0.25f, 0.15f, batates, kofta);
+    el_tabkh(10.8f, 9.1f, 0.6f, 0.3f, 0.25f, 0.25f, 0.28f, batates, kofta);
+    el_tabkh(10.95f, 9.4f, 0.3f, 0.5f, 0.95f, 0.50f, 0.10f, batates, kofta);
+    el_tabkh(11.05f, 9.5f, 0.15f, 0.3f, 0.95f, 0.90f, 0.20f, batates, kofta);
+    el_tabkh(13.5f, 8.2f, 1.8f, 1.5f, 0.40f, 0.43f, 0.52f, batates, kofta);
+    el_tabkh(13.5f, 9.7f, 0.4f, 0.3f, 0.28f, 0.30f, 0.38f, batates, kofta);
+    el_tabkh(14.2f, 9.7f, 0.4f, 0.3f, 0.28f, 0.30f, 0.38f, batates, kofta);
+    el_tabkh(14.9f, 9.7f, 0.4f, 0.3f, 0.28f, 0.30f, 0.38f, batates, kofta);
+    el_tabkh(14.2f, 8.8f, 0.4f, 0.6f, 0.18f, 0.20f, 0.25f, batates, kofta);
+    el_tabkh(3.5f, 0.0f, 12.0f, 0.8f, 0.35f, 0.38f, 0.45f, batates, kofta);
+    for (float wx = 4.0f; wx < 15.0f; wx += 1.2f) {
+        el_tabkh(wx, 0.8f, 0.6f, 0.4f, 0.28f, 0.30f, 0.38f, batates, kofta);
+    }
+    int falafel_indices = (int)kofta.size() - meshmesh - foul_indices;
 
     unsigned int shiko, biko, fiko;
     glGenVertexArrays(1, &biko);
@@ -1358,15 +1247,10 @@ int main() {
             continue;
         }
 
-        uiBegin();
-        drawBackground();
-        drawScenery();
-        uiEnd();
-
         glBindVertexArray(biko);
         glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
         glDrawElements(GL_TRIANGLES, meshmesh, GL_UNSIGNED_INT, (void*)0);
-
+        
         int laneIndexOffset = meshmesh;
         int indicesPerLane = 6;
         for (int i = 0; i < 3; i++) {
@@ -1383,9 +1267,8 @@ int main() {
         }
 
         glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
-        uiBegin();
-        drawLaneDetails();
-        uiEnd();
+        int envIndexOffset = meshmesh + (3 * indicesPerLane);
+        glDrawElements(GL_TRIANGLES, falafel_indices, GL_UNSIGNED_INT, (void*)(envIndexOffset * sizeof(unsigned int)));
 
         if (inCutscene) {
             cutsceneTime += koko;
