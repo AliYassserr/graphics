@@ -55,9 +55,11 @@ int menuHover = -1;
 int cardHover = -1;
 int g_playerCoins = 30;
 float g_playerSpeed = 1.5f;
+float g_animTime = 0.0f;
 int cardCost[3] = { 10, 20, 30 };
 
 void restartGame();
+void debugJumpToWave3();
 
 float triSign(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3) {
     return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
@@ -185,6 +187,7 @@ void dos_zrar(GLFWwindow* tabl, int nono, int zaza, int pika, int mizo) {
     if (nono == GLFW_KEY_ESCAPE && pika == GLFW_PRESS)
         isPaused = !isPaused;
     if (isPaused) return;
+    if (nono == GLFW_KEY_3 && pika == GLFW_PRESS) debugJumpToWave3();
 }
 void el_mouse_beteeth(GLFWwindow* tabl, double mash, double mosh) {
     if (!tot || tol_3ard == 0) return;
@@ -297,7 +300,7 @@ Enemy(int enemyId, EnemyType t, int lane, float startX, float laneY) {
         damage = 1;
     } else if (type == HARD_MELEE) {
         health = 7;
-        speed = 0.4f;
+        speed = 1.4f;
         damage = 2;
     }
 }
@@ -330,6 +333,11 @@ struct Projectile {
 };
 
 std::vector<Projectile> g_projectiles;
+
+std::vector<EnemyType> g_spawnQueue;
+float g_spawnTimer = 0.0f;
+float g_spawnInterval = 3.0f;
+int g_nextEnemyId = 0;
 int g_currentWave = 1;
 bool g_waveInProgress = false;
 
@@ -337,6 +345,10 @@ void restartGame() {
     g_enemies.clear();
     g_coins.clear();
     g_projectiles.clear();
+    g_spawnQueue.clear();
+    g_spawnTimer = 0.0f;
+    g_nextEnemyId = 0;
+    g_animTime = 0.0f;
     basal.clear();
     for (size_t i = 0; i < tamtam.size(); ++i) tamtam[i] = false;
     g_currentWave = 1;
@@ -352,30 +364,40 @@ void restartGame() {
 
 void spawnWave(int waveNumber, const Koshary& grid) {
     g_enemies.clear();
-    float startX = 16.0f;
+    g_spawnQueue.clear();
 
     if (waveNumber == 1) {
-        for (int i = 0; i < 3; i++) {
-            int lane = rand() % 3;
-            float laneY = grid.tababa[lane].centerY;
-            g_enemies.push_back(Enemy(i, EASY_UPPER, lane, startX + (i * 2.5f), laneY));
-        }
+        for (int i = 0; i < 3; i++) g_spawnQueue.push_back(EASY_UPPER);
+        g_spawnInterval = 3.5f;
     } else if (waveNumber == 2) {
-        for (int i = 0; i < 5; i++) {
-            EnemyType type = (i % 2 == 0) ? EASY_UPPER : MEDIUM_LOWER;
-            int lane = rand() % 3;
-            float laneY = grid.tababa[lane].centerY;
-            g_enemies.push_back(Enemy(i, type, lane, startX + (i * 2.5f), laneY));
-        }
+        for (int i = 0; i < 5; i++) g_spawnQueue.push_back((i % 2 == 0) ? EASY_UPPER : MEDIUM_LOWER);
+        g_spawnInterval = 3.0f;
     } else if (waveNumber == 3) {
-        for (int i = 0; i < 10; i++) {
-            EnemyType type = (i % 3 == 0) ? EASY_UPPER : ((i % 3 == 1) ? MEDIUM_LOWER : HARD_MELEE);
-            int lane = rand() % 3;
-            float laneY = grid.tababa[lane].centerY;
-            g_enemies.push_back(Enemy(i, type, lane, startX + (i * 2.5f), laneY));
-        }
+        for (int i = 0; i < 10; i++) g_spawnQueue.push_back((i % 3 == 0) ? EASY_UPPER : ((i % 3 == 1) ? MEDIUM_LOWER : HARD_MELEE));
+        g_spawnInterval = 2.2f;
     }
+    g_spawnTimer = 0.0f;
     g_waveInProgress = true;
+}
+
+void updateSpawner(float dt) {
+    if (g_spawnQueue.empty()) return;
+    g_spawnTimer -= dt;
+    if (g_spawnTimer > 0.0f) return;
+    EnemyType type = g_spawnQueue.front();
+    g_spawnQueue.erase(g_spawnQueue.begin());
+    int lane = rand() % (int)soso.tababa.size();
+    g_enemies.push_back(Enemy(g_nextEnemyId++, type, lane, 16.0f, soso.tababa[lane].centerY));
+    g_spawnTimer = g_spawnInterval;
+}
+
+void debugJumpToWave3() {
+    g_enemies.clear();
+    g_projectiles.clear();
+    g_spawnQueue.clear();
+    g_currentWave = 3;
+    g_waveInProgress = false;
+    if (g_playerCoins < 90) g_playerCoins = 90;
 }
 
 void hurtEnemy(Enemy& e, int dmg) {
@@ -740,7 +762,9 @@ void drawPlayerUnit(const Hawawshy& p) {
     int maxHp = p.kind == 2 ? 7 : 5;
     float duck = p.isDucking ? -0.12f : 0.0f;
     float base = soso.tababa[p.laneId].centerY - 0.55f + p.yOffset + duck;
-    float swing = (p.kind != 2 && p.spd == 0.0f) ? 0.15f * sin((float)glfwGetTime() * 30.0f) : 0.0f;
+    float swing = 0.0f;
+    if (p.kind == 0) swing = 0.15f * sin(g_animTime * (p.spd == 0.0f ? 30.0f : 12.0f));
+    else if (p.kind == 1 && p.spd == 0.0f) swing = 0.15f * sin(g_animTime * 30.0f);
     g_uiRed = redFor(p.health, maxHp, p.damageTint);
     drawGuard(p.xPos, base, swing, p.kind);
     g_uiRed = 0.0f;
@@ -750,7 +774,9 @@ void drawPlayerUnit(const Hawawshy& p) {
 void drawEnemyUnit(const Enemy& e) {
     int maxHp = e.type == HARD_MELEE ? 7 : 5;
     float base = e.yPos - 0.55f;
-    float swing = e.blocked ? -0.15f * sin((float)glfwGetTime() * 30.0f) : 0.0f;
+    float swing = 0.0f;
+    if (e.type == HARD_MELEE) swing = -0.15f * sin(g_animTime * (e.blocked ? 30.0f : 14.0f));
+    else if (e.blocked) swing = -0.15f * sin(g_animTime * 30.0f);
     g_uiRed = redFor(e.health, maxHp, e.damageTint);
     drawEnemyActor(e.xPos, base, swing, (int)e.type);
     g_uiRed = 0.0f;
@@ -1090,6 +1116,7 @@ int main() {
         if (koko > 0.1f) koko = 0.1f;
 
         if (!g_gameOver && !isPaused && !inMainMenu && !isWin && !inCutscene) {
+            g_animTime += koko;
 
             if (!g_waveInProgress && g_currentWave <= 3) {
                 spawnWave(g_currentWave, soso);
@@ -1114,6 +1141,7 @@ int main() {
                 }
             }
 
+            updateSpawner(koko);
             updateCombat(koko);
 
             for (auto it = basal.begin(); it != basal.end();) {
@@ -1146,6 +1174,8 @@ int main() {
                     }
                 }
             }
+
+            if (!g_spawnQueue.empty()) allDefeated = false;
 
             if (allDefeated && g_waveInProgress) {
                 g_waveInProgress = false;
