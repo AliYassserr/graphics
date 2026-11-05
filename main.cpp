@@ -81,6 +81,8 @@ int menuButtonAt(float x, float y) {
         pointInTriangle(pt, glm::vec2(10.5f, 5.5f), glm::vec2(5.5f, 5.5f), glm::vec2(5.5f, 4.1f))) return 1;
     if (pointInTriangle(pt, glm::vec2(5.5f, 2.2f), glm::vec2(10.5f, 2.2f), glm::vec2(10.5f, 3.6f)) ||
         pointInTriangle(pt, glm::vec2(10.5f, 3.6f), glm::vec2(5.5f, 3.6f), glm::vec2(5.5f, 2.2f))) return 2;
+    if (pointInTriangle(pt, glm::vec2(0.4f, 0.4f), glm::vec2(1.4f, 0.4f), glm::vec2(1.4f, 1.4f)) ||
+        pointInTriangle(pt, glm::vec2(1.4f, 1.4f), glm::vec2(0.4f, 1.4f), glm::vec2(0.4f, 0.4f))) return 3;
     return -1;
 }
 
@@ -163,7 +165,12 @@ void el_mouse_dakhal(GLFWwindow* bobo, int dakhal) {
     if (!dakhal) ziz = -1;
 
 }
+void toggleMute() {
+    g_muted = !g_muted;
+    playSound(SND_CLICK);
+}
 void dos_zrar(GLFWwindow* tabl, int nono, int zaza, int pika, int mizo) {
+    if (nono == GLFW_KEY_M && pika == GLFW_PRESS) toggleMute();
     if (inCutscene) {
         if (nono == GLFW_KEY_ESCAPE && pika == GLFW_PRESS) inCutscene = false;
         return;
@@ -212,6 +219,7 @@ void el_mouse_dos(GLFWwindow* tabl, int b, int a, int m) {
     }
     if (inMainMenu) {
         int hit = menuButtonAt(wX, wY);
+        if (hit == 1 || hit == 3) { toggleMute(); return; }
         if (hit != -1) playSound(SND_CLICK);
         if (hit == 0) { inMainMenu = false; inCutscene = true; cutsceneTime = 0.0f; }
         else if (hit == 2) glfwSetWindowShouldClose(tabl, true);
@@ -219,6 +227,7 @@ void el_mouse_dos(GLFWwindow* tabl, int b, int a, int m) {
     }
     if (isWin || g_gameOver) {
         int hit = menuButtonAt(wX, wY);
+        if (hit == 3) { toggleMute(); return; }
         if (hit == 0 || hit == 1) playSound(SND_CLICK);
         if (hit == 0) restartGame();
         else if (hit == 1) { restartGame(); inMainMenu = true; }
@@ -226,6 +235,7 @@ void el_mouse_dos(GLFWwindow* tabl, int b, int a, int m) {
     }
     if (isPaused) {
         int hit = menuButtonAt(wX, wY);
+        if (hit == 3) { toggleMute(); return; }
         if (hit != -1) playSound(SND_CLICK);
         if (hit == 0) isPaused = false;
         else if (hit == 1) restartGame();
@@ -523,7 +533,7 @@ std::string cardsLine() {
 void updateWindowTitle(GLFWwindow* window) {
     std::string title = "Tower Defense Engine";
     if (inMainMenu) {
-        title += " | Main menu: Start (green), Sound (blue, coming soon), End (red)";
+        title += " | Main menu: Start (green), Sound (blue) or M turns sound on/off, End (red)";
     }
     else if (inCutscene) {
         title += " | Intro";
@@ -546,6 +556,7 @@ void updateWindowTitle(GLFWwindow* window) {
         title += " | Wave " + std::to_string(wave) + " of 3";
         title += " | " + cardsLine();
     }
+    title += g_muted ? " | Sound OFF (M or speaker button)" : " | Sound ON (M or speaker button)";
     if (title != g_lastTitle) {
         glfwSetWindowTitle(window, title.c_str());
         g_lastTitle = title;
@@ -584,6 +595,18 @@ void uiEnd() {
     glUniform3f(locTint, 1.0f, 1.0f, 1.0f);
     glUniform1f(locHighlight, 0.0f);
     glUniform1f(locGray, 0.0f);
+}
+
+void drawMuteButton() {
+    uiBegin();
+    glUniform1f(locHighlight, menuHover == 3 ? 1.0f : 0.0f);
+    uiCircle(0.9f, 0.9f, 0.5f, g_muted ? 0.3f : 0.15f, g_muted ? 0.3f : 0.6f, g_muted ? 0.33f : 0.25f);
+    float shade = g_muted ? 0.55f : 1.0f;
+    uiRect(0.62f, 0.7f, 0.1f, 0.2f, shade, shade, shade);
+    uiRect(0.82f, 0.7f, 0.1f, 0.4f, shade, shade, shade);
+    uiRect(1.02f, 0.7f, 0.1f, 0.6f, shade, shade, shade);
+    if (g_muted) uiRect(0.5f, 0.84f, 0.8f, 0.1f, 0.9f, 0.1f, 0.1f);
+    uiEnd();
 }
 
 void drawCoinTracker() {
@@ -1390,6 +1413,7 @@ int main() {
             }
             glUniform1f(hilo, 0.0f);
             glDrawArrays(GL_TRIANGLES, menuIconStart, menuIconCount);
+            drawMuteButton();
             glfwSwapBuffers(hamada);
             glfwPollEvents();
             continue;
@@ -1478,6 +1502,7 @@ int main() {
                 glUniform1f(hilo, 0.0f);
                 glDrawArrays(GL_TRIANGLES, 90, 18);
             }
+            drawMuteButton();
         }
         glfwSwapBuffers(hamada);
         glfwPollEvents();
