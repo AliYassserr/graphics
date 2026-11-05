@@ -9,6 +9,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "sound.h"
+#include <map>
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
 // ========================================================================
 // SHARED DATA: types and state used by several members, grouped by owner
@@ -22,6 +25,18 @@ unsigned int uiVAO = 0, biko = 0, ziro_vao = 0, menuVAO = 0;
 int meshmesh = 0, falafel_indices = 0;
 int menuIconStart = 24, menuIconCount = 42;
 float g_uiRed = 0.0f;
+
+struct Character {
+    unsigned int TextureID;
+    glm::ivec2   Size;
+    glm::ivec2   Bearing;
+    unsigned int Advance;
+};
+
+std::map<char, Character> Characters;
+unsigned int textVAO = 0, textVBO = 0, textProgram = 0;
+bool g_textReady = false;
+unsigned int g_mainProgram = 0;
 
 // ---- Member 2 data: lanes, players and input state ----
 struct Mahshy { int id; float yStart, yEnd, centerY; };
@@ -548,6 +563,182 @@ void drawEnvironment() {
     glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
     int envIndexOffset = meshmesh + (3 * indicesPerLane);
     glDrawElements(GL_TRIANGLES, falafel_indices, GL_UNSIGNED_INT, (void*)(envIndexOffset * sizeof(unsigned int)));
+}
+
+// ---- text engine: FreeType glyph bitmaps drawn on quads (LearnOpenGL "Text Rendering") ----
+const char* textVertexSrc = "#version 330 core\n"
+"layout (location = 0) in vec4 vertex;\n"
+"out vec2 TexCoords;\n"
+"uniform mat4 projection;\n"
+"void main()\n"
+"{\n"
+"    gl_Position = projection * vec4(vertex.xy, 0.0, 1.0);\n"
+"    TexCoords = vertex.zw;\n"
+"}\n";
+
+const char* textFragmentSrc = "#version 330 core\n"
+"in vec2 TexCoords;\n"
+"out vec4 color;\n"
+"uniform sampler2D text;\n"
+"uniform vec3 textColor;\n"
+"void main()\n"
+"{\n"
+"    vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r);\n"
+"    color = vec4(textColor, 1.0) * sampled;\n"
+"}\n";
+
+bool initText() {
+    FT_Library ft;
+    if (FT_Init_FreeType(&ft))
+    {
+        std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
+        return false;
+    }
+
+    const char* fontPaths[] = {
+        "fonts/DejaVuSans.ttf",
+        "../fonts/DejaVuSans.ttf",
+        "../Template/fonts/DejaVuSans.ttf",
+        "C:/Windows/Fonts/arial.ttf",
+        "/System/Library/Fonts/Supplemental/Arial.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+    };
+    FT_Face face;
+    bool loaded = false;
+    for (const char* path : fontPaths) {
+        if (!FT_New_Face(ft, path, 0, &face)) { loaded = true; break; }
+    }
+    if (!loaded)
+    {
+        std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
+        FT_Done_FreeType(ft);
+        return false;
+    }
+
+    FT_Set_Pixel_Sizes(face, 0, 48);
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    for (unsigned char c = 0; c < 128; c++)
+    {
+        if (FT_Load_Char(face, c, FT_LOAD_RENDER))
+        {
+            std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
+            continue;
+        }
+        unsigned int texture;
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            GL_RED,
+            face->glyph->bitmap.width,
+            face->glyph->bitmap.rows,
+            0,
+            GL_RED,
+            GL_UNSIGNED_BYTE,
+            face->glyph->bitmap.buffer
+        );
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        Character character = {
+            texture,
+            glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+            glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
+            (unsigned int)face->glyph->advance.x
+        };
+        Characters.insert(std::pair<char, Character>(c, character));
+    }
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    FT_Done_Face(face);
+    FT_Done_FreeType(ft);
+
+    unsigned int tv = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(tv, 1, &textVertexSrc, NULL);
+    glCompileShader(tv);
+    ftesh(tv, "VERTEX");
+    unsigned int tf = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(tf, 1, &textFragmentSrc, NULL);
+    glCompileShader(tf);
+    ftesh(tf, "FRAGMENT");
+    textProgram = glCreateProgram();
+    glAttachShader(textProgram, tv);
+    glAttachShader(textProgram, tf);
+    glLinkProgram(textProgram);
+    ftesh(textProgram, "PROGRAM");
+    glDeleteShader(tv);
+    glDeleteShader(tf);
+
+    glm::mat4 projection = glm::ortho(0.0f, 16.0f, 0.0f, 10.0f);
+    glUseProgram(textProgram);
+    glUniformMatrix4fv(glGetUniformLocation(textProgram, "projection"), 1, GL_FALSE, &projection[0][0]);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glGenVertexArrays(1, &textVAO);
+    glGenBuffers(1, &textVBO);
+    glBindVertexArray(textVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, textVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    return true;
+}
+
+void RenderText(std::string text, float x, float y, float scale, glm::vec3 color)
+{
+    glUseProgram(textProgram);
+    glUniform3f(glGetUniformLocation(textProgram, "textColor"), color.x, color.y, color.z);
+    glActiveTexture(GL_TEXTURE0);
+    glBindVertexArray(textVAO);
+
+    std::string::const_iterator c;
+    for (c = text.begin(); c != text.end(); c++)
+    {
+        Character ch = Characters[*c];
+
+        float xpos = x + ch.Bearing.x * scale;
+        float ypos = y - (ch.Size.y - ch.Bearing.y) * scale;
+
+        float w = ch.Size.x * scale;
+        float h = ch.Size.y * scale;
+        float vertices[6][4] = {
+            { xpos,     ypos + h,   0.0f, 0.0f },
+            { xpos,     ypos,       0.0f, 1.0f },
+            { xpos + w, ypos,       1.0f, 1.0f },
+
+            { xpos,     ypos + h,   0.0f, 0.0f },
+            { xpos + w, ypos,       1.0f, 1.0f },
+            { xpos + w, ypos + h,   1.0f, 0.0f }
+        };
+        glBindTexture(GL_TEXTURE_2D, ch.TextureID);
+        glBindBuffer(GL_ARRAY_BUFFER, textVBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        x += (ch.Advance >> 6) * scale;
+    }
+    glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glUseProgram(g_mainProgram);
+}
+
+float textWidth(const std::string& text, float scale) {
+    float w = 0.0f;
+    for (size_t i = 0; i < text.size(); i++) w += (Characters[text[i]].Advance >> 6) * scale;
+    return w;
+}
+
+void drawText(const std::string& text, float cx, float y, float em, glm::vec3 color) {
+    float scale = em / 48.0f;
+    RenderText(text, cx - textWidth(text, scale) / 2.0f, y, scale, color);
 }
 
 // ========================================================================
@@ -1362,6 +1553,47 @@ void buildUiMesh() {
     glEnableVertexAttribArray(1);
 }
 
+// ---- text shown on screen: menu labels, HUD numbers, cutscene subtitles ----
+void drawMenuLabels(const char* title, const char* a, const char* b, const char* c) {
+    glm::vec3 white(1.0f, 1.0f, 1.0f);
+    drawText(title, 8.0f, 7.58f, 0.5f, glm::vec3(1.0f, 0.85f, 0.3f));
+    drawText(a, 8.0f, 6.5f, 0.55f, white);
+    drawText(b, 8.0f, 4.6f, 0.55f, white);
+    if (c) drawText(c, 8.0f, 2.7f, 0.55f, white);
+    drawText(g_muted ? "SOUND OFF (M)" : "SOUND ON (M)", 3.1f, 0.78f, 0.32f, white);
+}
+
+void drawMainMenuText() {
+    if (!g_textReady) return;
+    drawMenuLabels("TOWER DEFENSE", "START", g_muted ? "SOUND: OFF" : "SOUND: ON", "END");
+}
+
+void drawEndOrPauseText() {
+    if (!g_textReady) return;
+    if (isWin) drawMenuLabels("VICTORY!", "RESTART", "MAIN MENU", nullptr);
+    else if (g_gameOver) drawMenuLabels("DEFEAT!", "RESTART", "MAIN MENU", nullptr);
+    else drawMenuLabels("PAUSED", "CONTINUE", "RESTART", "MAIN MENU");
+}
+
+void drawHudText() {
+    if (!g_textReady) return;
+    int wave = g_currentWave > 3 ? 3 : g_currentWave;
+    drawText("COINS " + std::to_string(g_playerCoins), 10.95f, 9.3f, 0.42f, glm::vec3(1.0f, 0.85f, 0.2f));
+    drawText("WAVE " + std::to_string(wave) + " OF 3", 10.95f, 8.75f, 0.34f, glm::vec3(0.9f, 0.9f, 0.95f));
+    for (int i = 0; i < 3; i++) {
+        bool unlocked = g_playerCoins >= cardCost[i];
+        float cx = 3.7f + i * 1.15f + 0.525f;
+        glm::vec3 col = unlocked ? glm::vec3(1.0f, 0.85f, 0.2f) : glm::vec3(0.6f, 0.6f, 0.6f);
+        drawText(std::to_string(cardCost[i]), cx, 8.48f, 0.34f, col);
+    }
+}
+
+void drawCutsceneText(float t) {
+    if (!g_textReady) return;
+    std::string line = cutsceneLine(t);
+    if (!line.empty()) drawText(line, 8.0f, 0.27f, 0.4f, glm::vec3(1.0f, 1.0f, 1.0f));
+}
+
 void drawMuteButton() {
     uiBegin();
     glUniform1f(locHighlight, menuHover == 3 ? 1.0f : 0.0f);
@@ -1375,6 +1607,7 @@ void drawMuteButton() {
 }
 
 void drawCoinTracker() {
+    if (g_textReady) uiRect(9.6f, 8.6f, 2.7f, 1.35f, 0.12f, 0.12f, 0.16f);
     uiRect(12.4f, 8.6f, 3.55f, 1.35f, 0.12f, 0.12f, 0.16f);
     int shown = g_playerCoins / 10;
     for (int i = 0; i < 8; i++) uiCircle(12.75f + i * 0.4f, 9.65f, 0.14f, 0.2f, 0.2f, 0.24f);
@@ -1414,7 +1647,7 @@ void drawCards() {
             uiRect(cx - 0.04f, y0 + 0.75f, 0.08f, 0.55f, cardColor[i][0], cardColor[i][1], cardColor[i][2]);
             uiRect(cx - 0.17f, y0 + 1.08f, 0.34f, 0.08f, cardColor[i][0], cardColor[i][1], cardColor[i][2]);
         }
-        int pips = cardCost[i] / 10;
+        int pips = g_textReady ? 0 : cardCost[i] / 10;
         for (int k = 0; k < pips; k++) {
             float px = x0 + 0.525f + (k - (pips - 1) / 2.0f) * 0.28f;
             uiCircle(px, y0 + 0.26f, 0.1f, 1.0f, 0.8f, 0.1f);
@@ -1453,6 +1686,7 @@ void drawBubble(float x, float y, int icon) {
 
 void drawCutscene(float t) {
     float gy = 3.75f;
+    if (g_textReady) uiRect(0.3f, 0.05f, 15.4f, 0.65f, 0.1f, 0.1f, 0.14f);
     if (t > 0.5f && t < 4.5f) {
         float pulse = 0.6f + 0.4f * sin(t * 6.0f);
         uiRect(0.4f, 0.4f, 3.2f, 0.1f, pulse, pulse, 0.1f);
@@ -1495,7 +1729,7 @@ void drawMainMenu() {
         glDrawArrays(GL_TRIANGLES, 6 + i * 6, 6);
     }
     glUniform1f(hilo, 0.0f);
-    glDrawArrays(GL_TRIANGLES, menuIconStart, menuIconCount);
+    if (!g_textReady) glDrawArrays(GL_TRIANGLES, menuIconStart, menuIconCount);
 }
 
 void drawEndOrPauseMenu() {
@@ -1510,7 +1744,7 @@ void drawEndOrPauseMenu() {
             glDrawArrays(GL_TRIANGLES, 120 + i * 6, 6);
         }
         glUniform1f(hilo, 0.0f);
-        glDrawArrays(GL_TRIANGLES, 132, 15);
+        if (!g_textReady) glDrawArrays(GL_TRIANGLES, 132, 15);
     }
     else {
         glUniform1f(hilo, 0.0f);
@@ -1520,7 +1754,7 @@ void drawEndOrPauseMenu() {
             glDrawArrays(GL_TRIANGLES, 72 + i * 6, 6);
         }
         glUniform1f(hilo, 0.0f);
-        glDrawArrays(GL_TRIANGLES, 90, 18);
+        if (!g_textReady) glDrawArrays(GL_TRIANGLES, 90, 18);
     }
 }
 
@@ -1552,6 +1786,9 @@ int main() {
     buildMenuMesh();
     buildUiMesh();
     unsigned int dodo = buildShaderProgram();
+    g_mainProgram = dodo;
+    g_textReady = initText();
+    glUseProgram(dodo);
     double el_wa2t_el_adeem = glfwGetTime();
 
     while (!glfwWindowShouldClose(hamada)) {
@@ -1568,6 +1805,7 @@ int main() {
         if (inMainMenu) {
             drawMainMenu();
             drawMuteButton();
+            drawMainMenuText();
             glfwSwapBuffers(hamada);
             glfwPollEvents();
             continue;
@@ -1580,6 +1818,7 @@ int main() {
             uiBegin();
             drawCutscene(cutsceneTime);
             uiEnd();
+            drawCutsceneText(cutsceneTime);
             if (cutsceneTime > 16.5f) inCutscene = false;
             glfwSwapBuffers(hamada);
             glfwPollEvents();
@@ -1601,9 +1840,11 @@ int main() {
         drawCoinTracker();
         drawCards();
         uiEnd();
+        drawHudText();
         if (isWin || g_gameOver || isPaused) {
             drawEndOrPauseMenu();
             drawMuteButton();
+            drawEndOrPauseText();
         }
         glfwSwapBuffers(hamada);
         glfwPollEvents();
