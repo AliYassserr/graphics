@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include "sound.h"
 
 struct Mahshy { int id; float yStart, yEnd, centerY; };
 
@@ -169,8 +170,10 @@ void dos_zrar(GLFWwindow* tabl, int nono, int zaza, int pika, int mizo) {
     }
     if (inMainMenu || g_gameOver || isWin) return;
 
-    if (nono == GLFW_KEY_ESCAPE && pika == GLFW_PRESS)
+    if (nono == GLFW_KEY_ESCAPE && pika == GLFW_PRESS) {
         isPaused = !isPaused;
+        playSound(SND_CLICK);
+    }
     if (isPaused) return;
 }
 void el_mouse_beteeth(GLFWwindow* tabl, double mash, double mosh) {
@@ -209,18 +212,21 @@ void el_mouse_dos(GLFWwindow* tabl, int b, int a, int m) {
     }
     if (inMainMenu) {
         int hit = menuButtonAt(wX, wY);
+        if (hit != -1) playSound(SND_CLICK);
         if (hit == 0) { inMainMenu = false; inCutscene = true; cutsceneTime = 0.0f; }
         else if (hit == 2) glfwSetWindowShouldClose(tabl, true);
         return;
     }
     if (isWin || g_gameOver) {
         int hit = menuButtonAt(wX, wY);
+        if (hit == 0 || hit == 1) playSound(SND_CLICK);
         if (hit == 0) restartGame();
         else if (hit == 1) { restartGame(); inMainMenu = true; }
         return;
     }
     if (isPaused) {
         int hit = menuButtonAt(wX, wY);
+        if (hit != -1) playSound(SND_CLICK);
         if (hit == 0) isPaused = false;
         else if (hit == 1) restartGame();
         else if (hit == 2) { restartGame(); inMainMenu = true; }
@@ -228,18 +234,22 @@ void el_mouse_dos(GLFWwindow* tabl, int b, int a, int m) {
     }
     int card = cardAt(wX, wY);
     if (card != -1) {
+        bool placed = false;
         for (size_t i = 0; i < tamtam.size(); ++i) {
             if (tamtam[i] && g_playerCoins >= cardCost[card]) {
                 basal.push_back({ (int)i, soso.akhdar, card == 2 ? 0.0f : g_playerSpeed, 0.0f, false, false, 0.0f, card == 2 ? 7 : 5, 0.0f, card, 0.0f });
                 g_playerCoins -= cardCost[card];
+                placed = true;
             }
         }
+        if (placed) playSound(SND_PLACE);
         return;
     }
     if (!(wX >= soso.asfar && wX <= soso.akhdar)) {
         int nawwar = soso.getLaneFromY(wY);
         if (nawwar != -1) {
             tamtam[nawwar] = !tamtam[nawwar];
+            playSound(SND_CLICK);
         }
     }
 }
@@ -382,6 +392,10 @@ void hurtEnemy(Enemy& e, int dmg) {
         drop.yPos = e.yPos;
         drop.collected = false;
         g_coins.push_back(drop);
+        playSound(SND_DEATH);
+    }
+    else {
+        playSound(SND_HIT);
     }
 }
 
@@ -400,6 +414,7 @@ void updateCombat(float dt) {
         if (p.kind == 1 && p.attackTimer <= 0.0f) {
             g_projectiles.push_back({ p.laneId, p.xPos + 0.2f, 0.42f, 6.0f, true, 2, -100.0f, -100.0f });
             p.attackTimer = 1.2f;
+            playSound(SND_SHOOT);
         }
     }
     for (auto& e : g_enemies) {
@@ -407,6 +422,7 @@ void updateCombat(float dt) {
         bool high = (e.type == EASY_UPPER);
         g_projectiles.push_back({ e.laneId, e.xPos - 0.2f, high ? 0.8f : 0.15f, -5.0f, false, high ? 0 : 1, -100.0f, -100.0f });
         e.attackTimer = high ? 2.0f : 2.4f;
+        playSound(SND_ENEMY_SHOOT);
     }
 
     for (auto it = g_projectiles.begin(); it != g_projectiles.end();) {
@@ -440,6 +456,7 @@ void updateCombat(float dt) {
                     }
                     p.health -= 1;
                     p.damageTint = 0.5f;
+                    playSound(SND_HURT);
                     remove = true;
                     break;
                 }
@@ -464,6 +481,7 @@ void updateCombat(float dt) {
             if (e.type == HARD_MELEE && e.attackTimer <= 0.0f) {
                 p.health -= e.damage;
                 p.damageTint = 0.5f;
+                playSound(SND_HURT);
                 e.attackTimer = 0.6f;
             }
         }
@@ -471,27 +489,72 @@ void updateCombat(float dt) {
     }
 
     for (auto it = basal.begin(); it != basal.end();) {
-        if (it->health <= 0) it = basal.erase(it);
+        if (it->health <= 0) {
+            playSound(SND_DEATH);
+            it = basal.erase(it);
+        }
         else ++it;
+    }
+}
+
+std::string g_lastTitle;
+
+std::string cutsceneLine(float t) {
+    if (t >= 0.5f && t < 4.5f) return "Guard: This gate is our home. We must protect it!";
+    if (t >= 4.5f && t < 7.0f) return "Raider: We will take your gate!";
+    if (t >= 7.0f && t < 9.5f) return "Guard: Not while I stand!";
+    if (t >= 9.5f && t < 13.5f) return "The battle for the gate begins!";
+    if (t >= 13.5f) return "Guard: More are coming. Hold the line!";
+    return "";
+}
+
+std::string cardsLine() {
+    const char* names[3] = { "Melee", "Ranged", "Defense" };
+    std::string line = "Cards: ";
+    for (int i = 0; i < 3; i++) {
+        if (i > 0) line += ", ";
+        line += names[i];
+        line += " " + std::to_string(cardCost[i]);
+        line += g_playerCoins >= cardCost[i] ? " ready" : " locked";
+    }
+    return line;
+}
+
+void updateWindowTitle(GLFWwindow* window) {
+    std::string title = "Tower Defense Engine";
+    if (inMainMenu) {
+        title += " | Main menu: Start (green), Sound (blue, coming soon), End (red)";
+    }
+    else if (inCutscene) {
+        title += " | Intro";
+        std::string line = cutsceneLine(cutsceneTime);
+        if (!line.empty()) title += ": " + line;
+        title += " (click or ESC to skip)";
+    }
+    else if (isWin) {
+        title += " | VICTORY! All three waves are cleared. Restart (rewind icon) or Main menu (house icon)";
+    }
+    else if (g_gameOver) {
+        title += " | DEFEAT! An enemy reached the Home Base. Restart (rewind icon) or Main menu (house icon)";
+    }
+    else if (isPaused) {
+        title += " | PAUSED: Continue (green), Restart (blue), Main menu (orange)";
+    }
+    else {
+        int wave = g_currentWave > 3 ? 3 : g_currentWave;
+        title += " | Coins " + std::to_string(g_playerCoins);
+        title += " | Wave " + std::to_string(wave) + " of 3";
+        title += " | " + cardsLine();
+    }
+    if (title != g_lastTitle) {
+        glfwSetWindowTitle(window, title.c_str());
+        g_lastTitle = title;
     }
 }
 
 int locModel = -1, locTint = -1, locOffset = -1, locHighlight = -1, locGray = -1;
 unsigned int uiVAO = 0;
 float g_uiRed = 0.0f;
-
-bool sevenSeg[10][7] = {
-    { 1, 1, 1, 1, 1, 1, 0 },
-    { 0, 1, 1, 0, 0, 0, 0 },
-    { 1, 1, 0, 1, 1, 0, 1 },
-    { 1, 1, 1, 1, 0, 0, 1 },
-    { 0, 1, 1, 0, 0, 1, 1 },
-    { 1, 0, 1, 1, 0, 1, 1 },
-    { 1, 0, 1, 1, 1, 1, 1 },
-    { 1, 1, 1, 0, 0, 0, 0 },
-    { 1, 1, 1, 1, 1, 1, 1 },
-    { 1, 1, 1, 1, 0, 1, 1 }
-};
 
 void uiShape(GLenum mode, int first, int count, float x, float y, float w, float h, float r, float g, float b) {
     glm::mat4 model = glm::mat4(1.0f);
@@ -523,128 +586,16 @@ void uiEnd() {
     glUniform1f(locGray, 0.0f);
 }
 
-void drawNumber(int value, float x, float y, float w, float h, float gap, float r, float g, float b) {
-    std::string digits = std::to_string(value);
-    float t = w * 0.22f;
-    for (size_t k = 0; k < digits.size(); k++) {
-        int d = digits[k] - '0';
-        float dx = x + k * (w + gap);
-        if (sevenSeg[d][0]) uiRect(dx, y + h - t, w, t, r, g, b);
-        if (sevenSeg[d][1]) uiRect(dx + w - t, y + h / 2, t, h / 2, r, g, b);
-        if (sevenSeg[d][2]) uiRect(dx + w - t, y, t, h / 2, r, g, b);
-        if (sevenSeg[d][3]) uiRect(dx, y, w, t, r, g, b);
-        if (sevenSeg[d][4]) uiRect(dx, y, t, h / 2, r, g, b);
-        if (sevenSeg[d][5]) uiRect(dx, y + h / 2, t, h / 2, r, g, b);
-        if (sevenSeg[d][6]) uiRect(dx, y + h / 2 - t / 2, w, t, r, g, b);
-    }
-}
-
-const char* font5x7[26][7] = {
-    { "01110", "10001", "10001", "11111", "10001", "10001", "10001" },
-    { "11110", "10001", "10001", "11110", "10001", "10001", "11110" },
-    { "01110", "10001", "10000", "10000", "10000", "10001", "01110" },
-    { "11110", "10001", "10001", "10001", "10001", "10001", "11110" },
-    { "11111", "10000", "10000", "11110", "10000", "10000", "11111" },
-    { "11111", "10000", "10000", "11110", "10000", "10000", "10000" },
-    { "01110", "10001", "10000", "10111", "10001", "10001", "01111" },
-    { "10001", "10001", "10001", "11111", "10001", "10001", "10001" },
-    { "01110", "00100", "00100", "00100", "00100", "00100", "01110" },
-    { "00111", "00010", "00010", "00010", "00010", "10010", "01100" },
-    { "10001", "10010", "10100", "11000", "10100", "10010", "10001" },
-    { "10000", "10000", "10000", "10000", "10000", "10000", "11111" },
-    { "10001", "11011", "10101", "10101", "10001", "10001", "10001" },
-    { "10001", "11001", "10101", "10011", "10001", "10001", "10001" },
-    { "01110", "10001", "10001", "10001", "10001", "10001", "01110" },
-    { "11110", "10001", "10001", "11110", "10000", "10000", "10000" },
-    { "01110", "10001", "10001", "10001", "10101", "10010", "01101" },
-    { "11110", "10001", "10001", "11110", "10100", "10010", "10001" },
-    { "01111", "10000", "10000", "01110", "00001", "00001", "11110" },
-    { "11111", "00100", "00100", "00100", "00100", "00100", "00100" },
-    { "10001", "10001", "10001", "10001", "10001", "10001", "01110" },
-    { "10001", "10001", "10001", "10001", "10001", "01010", "00100" },
-    { "10001", "10001", "10001", "10101", "10101", "10101", "01010" },
-    { "10001", "10001", "01010", "00100", "01010", "10001", "10001" },
-    { "10001", "10001", "01010", "00100", "00100", "00100", "00100" },
-    { "11111", "00001", "00010", "00100", "01000", "10000", "11111" }
-};
-
-const char* fontPunct[6][7] = {
-    { "00000", "00000", "00000", "00000", "00000", "01100", "01100" },
-    { "00000", "00000", "00000", "00000", "01100", "00100", "01000" },
-    { "00100", "00100", "00100", "00100", "00100", "00000", "00100" },
-    { "01110", "10001", "00001", "00010", "00100", "00000", "00100" },
-    { "00000", "01100", "01100", "00000", "01100", "01100", "00000" },
-    { "00000", "00000", "00000", "11111", "00000", "00000", "00000" }
-};
-
-const char* const* glyphFor(char c) {
-    if (c >= 'A' && c <= 'Z') return font5x7[c - 'A'];
-    const char* punct = ".,!?:-";
-    for (int i = 0; punct[i]; i++) {
-        if (punct[i] == c) return fontPunct[i];
-    }
-    return 0;
-}
-
-float fitScale(const char* text, float maxScale, float maxWidth) {
-    int n = 0;
-    while (text[n]) n++;
-    float fit = maxWidth / (n * 6 - 1);
-    return fit < maxScale ? fit : maxScale;
-}
-
-void drawText(const char* text, float cx, float y, float s, float r, float g, float b) {
-    int n = 0;
-    while (text[n]) n++;
-    float x0 = cx - (n * 6 - 1) * s / 2.0f;
-    for (int k = 0; k < n; k++) {
-        const char* const* glyph = glyphFor(text[k]);
-        if (!glyph) continue;
-        for (int row = 0; row < 7; row++) {
-            for (int col = 0; col < 5; col++) {
-                if (glyph[row][col] == '1')
-                    uiRect(x0 + k * 6 * s + col * s, y + (6 - row) * s, s, s, r, g, b);
-            }
-        }
-    }
-}
-
-void drawButtonLabels(int count, const char** labels, const char** notes) {
-    float bottoms[3] = { 6.0f, 4.1f, 2.2f };
-    for (int i = 0; i < count; i++) {
-        bool hovered = (i == menuHover);
-        float main = hovered ? 0.1f : 1.0f;
-        float sub = hovered ? 0.15f : 0.85f;
-        drawText(labels[i], 8.0f, bottoms[i] + 0.55f, fitScale(labels[i], 0.1f, 4.6f), main, main, main);
-        drawText(notes[i], 8.0f, bottoms[i] + 0.15f, fitScale(notes[i], 0.035f, 4.7f), sub, sub, sub);
-    }
-}
-
-void drawMenuLabels() {
-    const char* labels[3] = { "START", "SOUND", "END" };
-    const char* notes[3] = { "WATCH INTRO THEN PLAY", "OPTIONS COMING SOON", "CLOSE THE GAME" };
-    drawButtonLabels(3, labels, notes);
-}
-
-void drawPauseLabels() {
-    const char* labels[3] = { "CONTINUE", "RESTART", "MAIN MENU" };
-    const char* notes[3] = { "BACK TO THE BATTLE", "START A NEW BATTLE", "LEAVE THE BATTLE" };
-    drawText("PAUSED", 8.0f, 7.7f, 0.1f, 1.0f, 1.0f, 1.0f);
-    drawButtonLabels(3, labels, notes);
-}
-
-void drawEndLabels(bool win) {
-    const char* labels[2] = { "RESTART", "MAIN MENU" };
-    const char* notes[2] = { "PLAY AGAIN FROM START", "BACK TO START SCREEN" };
-    drawText(win ? "VICTORY" : "DEFEAT", 8.0f, 7.7f, 0.1f, 1.0f, 1.0f, 1.0f);
-    drawButtonLabels(2, labels, notes);
-}
-
 void drawCoinTracker() {
     uiRect(12.4f, 8.6f, 3.55f, 1.35f, 0.12f, 0.12f, 0.16f);
-    uiCircle(12.95f, 9.27f, 0.32f, 1.0f, 0.8f, 0.1f);
-    uiCircle(12.95f, 9.27f, 0.2f, 0.9f, 0.62f, 0.05f);
-    drawNumber(g_playerCoins, 13.5f, 8.87f, 0.42f, 0.8f, 0.14f, 1.0f, 0.85f, 0.2f);
+    int shown = g_playerCoins / 10;
+    for (int i = 0; i < 8; i++) uiCircle(12.75f + i * 0.4f, 9.65f, 0.14f, 0.2f, 0.2f, 0.24f);
+    for (int i = 0; i < shown && i < 24; i++) {
+        float cx = 12.75f + (i % 8) * 0.4f;
+        float cy = 9.65f - (i / 8) * 0.38f;
+        uiCircle(cx, cy, 0.14f, 1.0f, 0.8f, 0.1f);
+        uiCircle(cx, cy, 0.085f, 0.9f, 0.62f, 0.05f);
+    }
 }
 
 void drawCards() {
@@ -675,7 +626,12 @@ void drawCards() {
             uiRect(cx - 0.04f, y0 + 0.75f, 0.08f, 0.55f, cardColor[i][0], cardColor[i][1], cardColor[i][2]);
             uiRect(cx - 0.17f, y0 + 1.08f, 0.34f, 0.08f, cardColor[i][0], cardColor[i][1], cardColor[i][2]);
         }
-        drawNumber(cardCost[i], x0 + 0.315f, y0 + 0.11f, 0.18f, 0.3f, 0.06f, 1.0f, 0.85f, 0.2f);
+        int pips = cardCost[i] / 10;
+        for (int k = 0; k < pips; k++) {
+            float px = x0 + 0.525f + (k - (pips - 1) / 2.0f) * 0.28f;
+            uiCircle(px, y0 + 0.26f, 0.1f, 1.0f, 0.8f, 0.1f);
+            uiCircle(px, y0 + 0.26f, 0.06f, 0.9f, 0.62f, 0.05f);
+        }
     }
     glUniform1f(locGray, 0.0f);
 }
@@ -809,28 +765,14 @@ void drawBubble(float x, float y, int icon) {
         uiTriRight(x + 0.33f, y + 0.28f, 0.32f, 0.25f, 0.8f, 0.1f, 0.1f);
     }
     else {
-        uiRect(x + 0.41f, y + 0.22f, 0.08f, 0.3f, 0.85f, 0.1f, 0.1f);
-        uiRect(x + 0.41f, y + 0.08f, 0.08f, 0.08f, 0.85f, 0.1f, 0.1f);
+        uiRect(x + 0.42f, y + 0.2f, 0.06f, 0.28f, 0.45f, 0.47f, 0.55f);
+        uiTriUp(x + 0.4f, y + 0.48f, 0.1f, 0.08f, 0.45f, 0.47f, 0.55f);
+        uiRect(x + 0.33f, y + 0.16f, 0.24f, 0.05f, 0.5f, 0.32f, 0.12f);
+        uiRect(x + 0.43f, y + 0.07f, 0.04f, 0.09f, 0.5f, 0.32f, 0.12f);
     }
 }
 
-void drawSubtitle(float t) {
-    const char* line = 0;
-    float r = 1.0f, g = 1.0f, b = 1.0f;
-    if (t >= 0.5f && t < 4.5f) { line = "GUARD: THIS GATE IS OUR HOME. WE MUST PROTECT IT!"; r = 0.6f; g = 0.8f; b = 1.0f; }
-    else if (t >= 4.5f && t < 7.0f) { line = "RAIDER: WE WILL TAKE YOUR GATE!"; r = 1.0f; g = 0.55f; b = 0.5f; }
-    else if (t >= 7.0f && t < 9.5f) { line = "GUARD: NOT WHILE I STAND!"; r = 0.6f; g = 0.8f; b = 1.0f; }
-    else if (t >= 9.5f && t < 13.5f) { line = "THE BATTLE FOR THE GATE BEGINS!"; }
-    else if (t >= 13.5f) { line = "GUARD: MORE ARE COMING. HOLD THE LINE!"; r = 0.6f; g = 0.8f; b = 1.0f; }
-    if (!line) return;
-    uiRect(0.3f, 0.35f, 15.4f, 0.75f, 0.03f, 0.03f, 0.06f);
-    drawText(line, 8.0f, 0.55f, fitScale(line, 0.055f, 14.2f), r, g, b);
-}
-
 void drawCutscene(float t) {
-    uiRect(11.4f, 9.35f, 4.5f, 0.5f, 0.03f, 0.03f, 0.06f);
-    drawText("CLICK OR ESC TO SKIP", 13.6f, 9.45f, 0.035f, 0.8f, 0.8f, 0.8f);
-    drawSubtitle(t);
     float gy = 3.75f;
     if (t > 0.5f && t < 4.5f) {
         float pulse = 0.6f + 0.4f * sin(t * 6.0f);
@@ -884,6 +826,7 @@ int main() {
     glfwSetCursorPosCallback(hamada, el_mouse_beteeth);
     glfwSetKeyCallback(hamada, dos_zrar);
     glfwSetMouseButtonCallback(hamada, el_mouse_dos);
+    sfxInit();
     std::vector<float> vertices = {
         0.5f, 0.5f, 0.0f,   0.32f, 0.35f, 0.42f,
         3.5f, 0.5f, 0.0f,   0.32f, 0.35f, 0.42f,
@@ -1136,11 +1079,53 @@ int main() {
         10.50f, 3.60f, 0.0f,   0.75f, 0.20f, 0.20f,
         5.50f, 3.60f, 0.0f,   0.75f, 0.20f, 0.20f,
         5.50f, 2.20f, 0.0f,   0.75f, 0.20f, 0.20f,
+        7.70f, 6.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.70f, 7.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.50f, 6.70f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.55f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.80f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.80f, 4.70f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.80f, 4.70f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.55f, 4.70f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.55f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.95f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.20f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.20f, 5.00f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.20f, 5.00f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.95f, 5.00f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.95f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.35f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.60f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.60f, 5.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.60f, 5.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.35f, 5.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.35f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.25f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.80f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.80f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.80f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.25f, 3.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.25f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.33f, 2.48f, 0.0f,   0.75f, 0.20f, 0.20f,
+        7.72f, 2.48f, 0.0f,   0.75f, 0.20f, 0.20f,
+        7.72f, 3.32f, 0.0f,   0.75f, 0.20f, 0.20f,
+        7.72f, 3.32f, 0.0f,   0.75f, 0.20f, 0.20f,
+        7.33f, 3.32f, 0.0f,   0.75f, 0.20f, 0.20f,
+        7.33f, 2.48f, 0.0f,   0.75f, 0.20f, 0.20f,
+        7.95f, 2.82f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 2.82f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 2.98f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 2.98f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.95f, 2.98f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.95f, 2.82f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 2.70f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 3.10f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.75f, 2.90f, 0.0f,   1.00f, 1.00f, 1.00f,
         4.90f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
         11.10f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
-        11.10f, 8.60f, 0.0f,   0.18f, 0.20f, 0.28f,
-        11.10f, 8.60f, 0.0f,   0.18f, 0.20f, 0.28f,
-        4.90f, 8.60f, 0.0f,   0.18f, 0.20f, 0.28f,
+        11.10f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
+        11.10f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
+        4.90f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
         4.90f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
         5.50f, 6.00f, 0.0f,   0.20f, 0.60f, 0.25f,
         10.50f, 6.00f, 0.0f,   0.20f, 0.60f, 0.25f,
@@ -1160,17 +1145,35 @@ int main() {
         10.50f, 3.60f, 0.0f,   0.80f, 0.50f, 0.15f,
         5.50f, 3.60f, 0.0f,   0.80f, 0.50f, 0.15f,
         5.50f, 2.20f, 0.0f,   0.80f, 0.50f, 0.15f,
+        7.70f, 6.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.70f, 7.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.50f, 6.70f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.95f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.95f, 5.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.45f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.55f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.55f, 5.30f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.05f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 3.00f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 3.00f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 3.00f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.45f, 3.00f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.55f, 3.00f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.00f, 3.45f, 0.0f,   1.00f, 1.00f, 1.00f,
         4.90f, 3.80f, 0.0f,   0.12f, 0.45f, 0.20f,
         11.10f, 3.80f, 0.0f,   0.12f, 0.45f, 0.20f,
-        11.10f, 8.60f, 0.0f,   0.12f, 0.45f, 0.20f,
-        11.10f, 8.60f, 0.0f,   0.12f, 0.45f, 0.20f,
-        4.90f, 8.60f, 0.0f,   0.12f, 0.45f, 0.20f,
+        11.10f, 8.00f, 0.0f,   0.12f, 0.45f, 0.20f,
+        11.10f, 8.00f, 0.0f,   0.12f, 0.45f, 0.20f,
+        4.90f, 8.00f, 0.0f,   0.12f, 0.45f, 0.20f,
         4.90f, 3.80f, 0.0f,   0.12f, 0.45f, 0.20f,
         4.90f, 3.80f, 0.0f,   0.50f, 0.12f, 0.12f,
         11.10f, 3.80f, 0.0f,   0.50f, 0.12f, 0.12f,
-        11.10f, 8.60f, 0.0f,   0.50f, 0.12f, 0.12f,
-        11.10f, 8.60f, 0.0f,   0.50f, 0.12f, 0.12f,
-        4.90f, 8.60f, 0.0f,   0.50f, 0.12f, 0.12f,
+        11.10f, 8.00f, 0.0f,   0.50f, 0.12f, 0.12f,
+        11.10f, 8.00f, 0.0f,   0.50f, 0.12f, 0.12f,
+        4.90f, 8.00f, 0.0f,   0.50f, 0.12f, 0.12f,
         4.90f, 3.80f, 0.0f,   0.50f, 0.12f, 0.12f,
         5.50f, 6.00f, 0.0f,   0.20f, 0.40f, 0.80f,
         10.50f, 6.00f, 0.0f,   0.20f, 0.40f, 0.80f,
@@ -1183,8 +1186,26 @@ int main() {
         10.50f, 5.50f, 0.0f,   0.80f, 0.50f, 0.15f,
         10.50f, 5.50f, 0.0f,   0.80f, 0.50f, 0.15f,
         5.50f, 5.50f, 0.0f,   0.80f, 0.50f, 0.15f,
-        5.50f, 4.10f, 0.0f,   0.80f, 0.50f, 0.15f
+        5.50f, 4.10f, 0.0f,   0.80f, 0.50f, 0.15f,
+        7.95f, 6.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.95f, 7.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.45f, 6.70f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.55f, 6.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.55f, 7.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.05f, 6.70f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 4.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 4.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.40f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.60f, 4.20f, 0.0f,   1.00f, 1.00f, 1.00f,
+        7.45f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.55f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
+        8.00f, 5.25f, 0.0f,   1.00f, 1.00f, 1.00f
     };
+
+    int menuIconStart = 24;
+    int menuIconCount = 42;
 
     unsigned int menuVBO, menuVAO;
     glGenVertexArrays(1, &menuVAO);
@@ -1282,6 +1303,7 @@ int main() {
                 if (laneSelected && wPressed && !p.isJumping) {
                     p.isJumping = true;
                     p.jumpTimer = 0.0f;
+                    playSound(SND_JUMP);
                 }
                 p.isDucking = laneSelected && sPressed;
                 if (p.isJumping) {
@@ -1310,6 +1332,7 @@ int main() {
                 allDefeated = false;
 
                 if (enemy.xPos <= 3.5f) {
+                    if (!g_gameOver) playSound(SND_LOSE);
                     g_gameOver = true;
                 }
             }
@@ -1320,6 +1343,7 @@ int main() {
                     float py = soso.tababa[p.laneId].centerY;
                     if (std::abs(coin.xPos - p.xPos) < 0.6f && std::abs(coin.yPos - py) < 0.6f) {
                         coin.collected = true;
+                        playSound(SND_COIN);
                         g_playerCoins += 10;
                         break;
                     }
@@ -1331,10 +1355,15 @@ int main() {
             if (allDefeated && g_waveInProgress) {
                 g_waveInProgress = false;
                 g_currentWave++;
-                if (g_currentWave > 3) isWin = true;
+                if (g_currentWave > 3) {
+                    isWin = true;
+                    playSound(SND_WIN);
+                }
             }
 
         }
+
+        updateWindowTitle(hamada);
 
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -1360,9 +1389,7 @@ int main() {
                 glDrawArrays(GL_TRIANGLES, 6 + i * 6, 6);
             }
             glUniform1f(hilo, 0.0f);
-            uiBegin();
-            drawMenuLabels();
-            uiEnd();
+            glDrawArrays(GL_TRIANGLES, menuIconStart, menuIconCount);
             glfwSwapBuffers(hamada);
             glfwPollEvents();
             continue;
@@ -1433,32 +1460,29 @@ int main() {
             glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
             if (isWin || g_gameOver) {
                 glUniform1f(hilo, 0.0f);
-                glDrawArrays(GL_TRIANGLES, isWin ? 48 : 54, 6);
+                glDrawArrays(GL_TRIANGLES, isWin ? 108 : 114, 6);
                 for (int i = 0; i < 2; i++) {
                     glUniform1f(hilo, i == menuHover ? 1.0f : 0.0f);
-                    glDrawArrays(GL_TRIANGLES, 60 + i * 6, 6);
+                    glDrawArrays(GL_TRIANGLES, 120 + i * 6, 6);
                 }
                 glUniform1f(hilo, 0.0f);
-                uiBegin();
-                drawEndLabels(isWin);
-                uiEnd();
+                glDrawArrays(GL_TRIANGLES, 132, 15);
             }
             else {
                 glUniform1f(hilo, 0.0f);
-                glDrawArrays(GL_TRIANGLES, 24, 6);
+                glDrawArrays(GL_TRIANGLES, 66, 6);
                 for (int i = 0; i < 3; i++) {
                     glUniform1f(hilo, i == menuHover ? 1.0f : 0.0f);
-                    glDrawArrays(GL_TRIANGLES, 30 + i * 6, 6);
+                    glDrawArrays(GL_TRIANGLES, 72 + i * 6, 6);
                 }
                 glUniform1f(hilo, 0.0f);
-                uiBegin();
-                drawPauseLabels();
-                uiEnd();
+                glDrawArrays(GL_TRIANGLES, 90, 18);
             }
         }
         glfwSwapBuffers(hamada);
         glfwPollEvents();
     }
+    sfxShutdown();
     glfwTerminate();
     return 0;
 }
