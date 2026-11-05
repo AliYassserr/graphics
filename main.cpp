@@ -497,6 +497,61 @@ void updateCombat(float dt) {
     }
 }
 
+std::string g_lastTitle;
+
+std::string cutsceneLine(float t) {
+    if (t >= 0.5f && t < 4.5f) return "Guard: This gate is our home. We must protect it!";
+    if (t >= 4.5f && t < 7.0f) return "Raider: We will take your gate!";
+    if (t >= 7.0f && t < 9.5f) return "Guard: Not while I stand!";
+    if (t >= 9.5f && t < 13.5f) return "The battle for the gate begins!";
+    if (t >= 13.5f) return "Guard: More are coming. Hold the line!";
+    return "";
+}
+
+std::string cardsLine() {
+    const char* names[3] = { "Melee", "Ranged", "Defense" };
+    std::string line = "Cards: ";
+    for (int i = 0; i < 3; i++) {
+        if (i > 0) line += ", ";
+        line += names[i];
+        line += " " + std::to_string(cardCost[i]);
+        line += g_playerCoins >= cardCost[i] ? " ready" : " locked";
+    }
+    return line;
+}
+
+void updateWindowTitle(GLFWwindow* window) {
+    std::string title = "Tower Defense Engine";
+    if (inMainMenu) {
+        title += " | Main menu: Start (green), Sound (blue, coming soon), End (red)";
+    }
+    else if (inCutscene) {
+        title += " | Intro";
+        std::string line = cutsceneLine(cutsceneTime);
+        if (!line.empty()) title += ": " + line;
+        title += " (click or ESC to skip)";
+    }
+    else if (isWin) {
+        title += " | VICTORY! All three waves are cleared. Restart (rewind icon) or Main menu (house icon)";
+    }
+    else if (g_gameOver) {
+        title += " | DEFEAT! An enemy reached the Home Base. Restart (rewind icon) or Main menu (house icon)";
+    }
+    else if (isPaused) {
+        title += " | PAUSED: Continue (green), Restart (blue), Main menu (orange)";
+    }
+    else {
+        int wave = g_currentWave > 3 ? 3 : g_currentWave;
+        title += " | Coins " + std::to_string(g_playerCoins);
+        title += " | Wave " + std::to_string(wave) + " of 3";
+        title += " | " + cardsLine();
+    }
+    if (title != g_lastTitle) {
+        glfwSetWindowTitle(window, title.c_str());
+        g_lastTitle = title;
+    }
+}
+
 int locModel = -1, locTint = -1, locOffset = -1, locHighlight = -1, locGray = -1;
 unsigned int uiVAO = 0;
 float g_uiRed = 0.0f;
@@ -1307,6 +1362,8 @@ int main() {
             }
 
         }
+
+        updateWindowTitle(hamada);
 
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
