@@ -53,6 +53,7 @@ float cutsceneTime = 0.0f;
 int menuHover = -1;
 int cardHover = -1;
 int g_playerCoins = 30;
+float g_playerSpeed = 1.5f;
 int cardCost[3] = { 10, 20, 30 };
 
 void restartGame();
@@ -241,7 +242,7 @@ void el_mouse_dos(GLFWwindow* tabl, int b, int a, int m) {
     if (card != -1) {
         for (size_t i = 0; i < tamtam.size(); ++i) {
             if (tamtam[i] && g_playerCoins >= cardCost[card]) {
-                basal.push_back({ (int)i, soso.akhdar, card == 2 ? 0.0f : 3.5f, 0.0f, false, false, 0.0f, card == 2 ? 7 : 5, 0.0f, card });
+                basal.push_back({ (int)i, soso.akhdar, card == 2 ? 0.0f : g_playerSpeed, 0.0f, false, false, 0.0f, card == 2 ? 7 : 5, 0.0f, card });
                 g_playerCoins -= cardCost[card];
             }
         }
@@ -1018,7 +1019,7 @@ int main() {
                     }
                 }
 
-                pIt->spd = (isColliding || pIt->kind == 2) ? 0.0f : 3.5f;
+                pIt->spd = (isColliding || pIt->kind == 2) ? 0.0f : g_playerSpeed;
 
                 if (playerDestroyed) pIt = basal.erase(pIt);
                 else ++pIt;
