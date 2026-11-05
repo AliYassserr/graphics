@@ -597,33 +597,76 @@ const char* font5x7[26][7] = {
     { "11111", "00001", "00010", "00100", "01000", "10000", "11111" }
 };
 
+const char* fontPunct[6][7] = {
+    { "00000", "00000", "00000", "00000", "00000", "01100", "01100" },
+    { "00000", "00000", "00000", "00000", "01100", "00100", "01000" },
+    { "00100", "00100", "00100", "00100", "00100", "00000", "00100" },
+    { "01110", "10001", "00001", "00010", "00100", "00000", "00100" },
+    { "00000", "01100", "01100", "00000", "01100", "01100", "00000" },
+    { "00000", "00000", "00000", "11111", "00000", "00000", "00000" }
+};
+
+const char* const* glyphFor(char c) {
+    if (c >= 'A' && c <= 'Z') return font5x7[c - 'A'];
+    const char* punct = ".,!?:-";
+    for (int i = 0; punct[i]; i++) {
+        if (punct[i] == c) return fontPunct[i];
+    }
+    return 0;
+}
+
+float fitScale(const char* text, float maxScale, float maxWidth) {
+    int n = 0;
+    while (text[n]) n++;
+    float fit = maxWidth / (n * 6 - 1);
+    return fit < maxScale ? fit : maxScale;
+}
+
 void drawText(const char* text, float cx, float y, float s, float r, float g, float b) {
     int n = 0;
     while (text[n]) n++;
     float x0 = cx - (n * 6 - 1) * s / 2.0f;
     for (int k = 0; k < n; k++) {
-        char c = text[k];
-        if (c < 'A' || c > 'Z') continue;
+        const char* const* glyph = glyphFor(text[k]);
+        if (!glyph) continue;
         for (int row = 0; row < 7; row++) {
             for (int col = 0; col < 5; col++) {
-                if (font5x7[c - 'A'][row][col] == '1')
+                if (glyph[row][col] == '1')
                     uiRect(x0 + k * 6 * s + col * s, y + (6 - row) * s, s, s, r, g, b);
             }
         }
     }
 }
 
-void drawMenuLabels() {
-    const char* labels[3] = { "START", "SOUND", "END" };
-    const char* notes[3] = { "WATCH INTRO THEN PLAY", "OPTIONS COMING SOON", "CLOSE THE GAME" };
+void drawButtonLabels(int count, const char** labels, const char** notes) {
     float bottoms[3] = { 6.0f, 4.1f, 2.2f };
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < count; i++) {
         bool hovered = (i == menuHover);
         float main = hovered ? 0.1f : 1.0f;
         float sub = hovered ? 0.15f : 0.85f;
-        drawText(labels[i], 8.0f, bottoms[i] + 0.55f, 0.1f, main, main, main);
-        drawText(notes[i], 8.0f, bottoms[i] + 0.15f, 0.035f, sub, sub, sub);
+        drawText(labels[i], 8.0f, bottoms[i] + 0.55f, fitScale(labels[i], 0.1f, 4.6f), main, main, main);
+        drawText(notes[i], 8.0f, bottoms[i] + 0.15f, fitScale(notes[i], 0.035f, 4.7f), sub, sub, sub);
     }
+}
+
+void drawMenuLabels() {
+    const char* labels[3] = { "START", "SOUND", "END" };
+    const char* notes[3] = { "WATCH INTRO THEN PLAY", "OPTIONS COMING SOON", "CLOSE THE GAME" };
+    drawButtonLabels(3, labels, notes);
+}
+
+void drawPauseLabels() {
+    const char* labels[3] = { "CONTINUE", "RESTART", "MAIN MENU" };
+    const char* notes[3] = { "BACK TO THE BATTLE", "START A NEW BATTLE", "LEAVE THE BATTLE" };
+    drawText("PAUSED", 8.0f, 7.7f, 0.1f, 1.0f, 1.0f, 1.0f);
+    drawButtonLabels(3, labels, notes);
+}
+
+void drawEndLabels(bool win) {
+    const char* labels[2] = { "RESTART", "MAIN MENU" };
+    const char* notes[2] = { "PLAY AGAIN FROM START", "BACK TO START SCREEN" };
+    drawText(win ? "VICTORY" : "DEFEAT", 8.0f, 7.7f, 0.1f, 1.0f, 1.0f, 1.0f);
+    drawButtonLabels(2, labels, notes);
 }
 
 void drawCoinTracker() {
@@ -800,7 +843,22 @@ void drawBubble(float x, float y, int icon) {
     }
 }
 
+void drawSubtitle(float t) {
+    const char* line = 0;
+    float r = 1.0f, g = 1.0f, b = 1.0f;
+    if (t >= 0.5f && t < 4.5f) { line = "GUARD: THIS GATE IS OUR HOME. WE MUST PROTECT IT!"; r = 0.6f; g = 0.8f; b = 1.0f; }
+    else if (t >= 4.5f && t < 7.0f) { line = "RAIDER: WE WILL TAKE YOUR GATE!"; r = 1.0f; g = 0.55f; b = 0.5f; }
+    else if (t >= 7.0f && t < 9.5f) { line = "GUARD: NOT WHILE I STAND!"; r = 0.6f; g = 0.8f; b = 1.0f; }
+    else if (t >= 9.5f && t < 13.5f) { line = "THE BATTLE FOR THE GATE BEGINS!"; }
+    else if (t >= 13.5f) { line = "GUARD: MORE ARE COMING. HOLD THE LINE!"; r = 0.6f; g = 0.8f; b = 1.0f; }
+    if (!line) return;
+    uiRect(0.3f, 0.35f, 15.4f, 0.75f, 0.03f, 0.03f, 0.06f);
+    drawText(line, 8.0f, 0.55f, fitScale(line, 0.055f, 14.2f), r, g, b);
+}
+
 void drawCutscene(float t) {
+    drawText("CLICK OR ESC TO SKIP", 13.6f, 9.45f, 0.035f, 0.8f, 0.8f, 0.8f);
+    drawSubtitle(t);
     float gy = 3.75f;
     if (t > 0.5f && t < 4.5f) {
         float pulse = 0.6f + 0.4f * sin(t * 6.0f);
@@ -951,9 +1009,9 @@ int main() {
         5.50f, 2.20f, 0.0f,   0.75f, 0.20f, 0.20f,
         4.90f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
         11.10f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
-        11.10f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
-        11.10f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
-        4.90f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
+        11.10f, 8.60f, 0.0f,   0.18f, 0.20f, 0.28f,
+        11.10f, 8.60f, 0.0f,   0.18f, 0.20f, 0.28f,
+        4.90f, 8.60f, 0.0f,   0.18f, 0.20f, 0.28f,
         4.90f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
         5.50f, 6.00f, 0.0f,   0.20f, 0.60f, 0.25f,
         10.50f, 6.00f, 0.0f,   0.20f, 0.60f, 0.25f,
@@ -973,35 +1031,17 @@ int main() {
         10.50f, 3.60f, 0.0f,   0.80f, 0.50f, 0.15f,
         5.50f, 3.60f, 0.0f,   0.80f, 0.50f, 0.15f,
         5.50f, 2.20f, 0.0f,   0.80f, 0.50f, 0.15f,
-        7.70f, 6.20f, 0.0f,   1.00f, 1.00f, 1.00f,
-        7.70f, 7.20f, 0.0f,   1.00f, 1.00f, 1.00f,
-        8.50f, 6.70f, 0.0f,   1.00f, 1.00f, 1.00f,
-        7.95f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
-        7.95f, 5.30f, 0.0f,   1.00f, 1.00f, 1.00f,
-        7.45f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
-        8.55f, 4.30f, 0.0f,   1.00f, 1.00f, 1.00f,
-        8.55f, 5.30f, 0.0f,   1.00f, 1.00f, 1.00f,
-        8.05f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
-        7.60f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
-        8.40f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
-        8.40f, 3.00f, 0.0f,   1.00f, 1.00f, 1.00f,
-        8.40f, 3.00f, 0.0f,   1.00f, 1.00f, 1.00f,
-        7.60f, 3.00f, 0.0f,   1.00f, 1.00f, 1.00f,
-        7.60f, 2.40f, 0.0f,   1.00f, 1.00f, 1.00f,
-        7.45f, 3.00f, 0.0f,   1.00f, 1.00f, 1.00f,
-        8.55f, 3.00f, 0.0f,   1.00f, 1.00f, 1.00f,
-        8.00f, 3.45f, 0.0f,   1.00f, 1.00f, 1.00f,
         4.90f, 3.80f, 0.0f,   0.12f, 0.45f, 0.20f,
         11.10f, 3.80f, 0.0f,   0.12f, 0.45f, 0.20f,
-        11.10f, 8.00f, 0.0f,   0.12f, 0.45f, 0.20f,
-        11.10f, 8.00f, 0.0f,   0.12f, 0.45f, 0.20f,
-        4.90f, 8.00f, 0.0f,   0.12f, 0.45f, 0.20f,
+        11.10f, 8.60f, 0.0f,   0.12f, 0.45f, 0.20f,
+        11.10f, 8.60f, 0.0f,   0.12f, 0.45f, 0.20f,
+        4.90f, 8.60f, 0.0f,   0.12f, 0.45f, 0.20f,
         4.90f, 3.80f, 0.0f,   0.12f, 0.45f, 0.20f,
         4.90f, 3.80f, 0.0f,   0.50f, 0.12f, 0.12f,
         11.10f, 3.80f, 0.0f,   0.50f, 0.12f, 0.12f,
-        11.10f, 8.00f, 0.0f,   0.50f, 0.12f, 0.12f,
-        11.10f, 8.00f, 0.0f,   0.50f, 0.12f, 0.12f,
-        4.90f, 8.00f, 0.0f,   0.50f, 0.12f, 0.12f,
+        11.10f, 8.60f, 0.0f,   0.50f, 0.12f, 0.12f,
+        11.10f, 8.60f, 0.0f,   0.50f, 0.12f, 0.12f,
+        4.90f, 8.60f, 0.0f,   0.50f, 0.12f, 0.12f,
         4.90f, 3.80f, 0.0f,   0.50f, 0.12f, 0.12f,
         5.50f, 6.00f, 0.0f,   0.20f, 0.40f, 0.80f,
         10.50f, 6.00f, 0.0f,   0.20f, 0.40f, 0.80f,
@@ -1014,22 +1054,7 @@ int main() {
         10.50f, 5.50f, 0.0f,   0.80f, 0.50f, 0.15f,
         10.50f, 5.50f, 0.0f,   0.80f, 0.50f, 0.15f,
         5.50f, 5.50f, 0.0f,   0.80f, 0.50f, 0.15f,
-        5.50f, 4.10f, 0.0f,   0.80f, 0.50f, 0.15f,
-        7.95f, 6.20f, 0.0f,   1.00f, 1.00f, 1.00f,
-        7.95f, 7.20f, 0.0f,   1.00f, 1.00f, 1.00f,
-        7.45f, 6.70f, 0.0f,   1.00f, 1.00f, 1.00f,
-        8.55f, 6.20f, 0.0f,   1.00f, 1.00f, 1.00f,
-        8.55f, 7.20f, 0.0f,   1.00f, 1.00f, 1.00f,
-        8.05f, 6.70f, 0.0f,   1.00f, 1.00f, 1.00f,
-        7.60f, 4.20f, 0.0f,   1.00f, 1.00f, 1.00f,
-        8.40f, 4.20f, 0.0f,   1.00f, 1.00f, 1.00f,
-        8.40f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
-        8.40f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
-        7.60f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
-        7.60f, 4.20f, 0.0f,   1.00f, 1.00f, 1.00f,
-        7.45f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
-        8.55f, 4.80f, 0.0f,   1.00f, 1.00f, 1.00f,
-        8.00f, 5.25f, 0.0f,   1.00f, 1.00f, 1.00f
+        5.50f, 4.10f, 0.0f,   0.80f, 0.50f, 0.15f
     };
 
     unsigned int menuVBO, menuVAO;
@@ -1286,13 +1311,15 @@ int main() {
             glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
             if (isWin || g_gameOver) {
                 glUniform1f(hilo, 0.0f);
-                glDrawArrays(GL_TRIANGLES, isWin ? 66 : 72, 6);
+                glDrawArrays(GL_TRIANGLES, isWin ? 48 : 54, 6);
                 for (int i = 0; i < 2; i++) {
                     glUniform1f(hilo, i == menuHover ? 1.0f : 0.0f);
-                    glDrawArrays(GL_TRIANGLES, 78 + i * 6, 6);
+                    glDrawArrays(GL_TRIANGLES, 60 + i * 6, 6);
                 }
                 glUniform1f(hilo, 0.0f);
-                glDrawArrays(GL_TRIANGLES, 90, 15);
+                uiBegin();
+                drawEndLabels(isWin);
+                uiEnd();
             }
             else {
                 glUniform1f(hilo, 0.0f);
@@ -1302,7 +1329,9 @@ int main() {
                     glDrawArrays(GL_TRIANGLES, 30 + i * 6, 6);
                 }
                 glUniform1f(hilo, 0.0f);
-                glDrawArrays(GL_TRIANGLES, 48, 18);
+                uiBegin();
+                drawPauseLabels();
+                uiEnd();
             }
         }
         glfwSwapBuffers(hamada);
