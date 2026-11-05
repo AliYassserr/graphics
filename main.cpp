@@ -25,11 +25,6 @@ struct Hawawshy {
     float attackTimer;
 };
 
-struct Beshamel {
-    float x, y;
-    float r, g, b;
-};
-
 class Koshary {
 public:
     std::vector<Mahshy> tababa;
@@ -46,6 +41,8 @@ public:
 };
 
 bool isPaused = false;
+bool wPressed = false;
+bool sPressed = false;
 bool inMainMenu = true;
 bool isWin = false;
 bool g_gameOver = false;
@@ -104,22 +101,6 @@ bool tot = true;
 
 int ard_3ard = 1280, tol_3ard = 720;
 
-void el_tabkh(float z1, float z2, float z3, float z4, float c1, float c2, float c3,
-    std::vector<Beshamel>& batates, std::vector<unsigned int>& kofta) {
-    unsigned int bada2 = (unsigned int)batates.size();
-    batates.push_back({ z1,     z2,     c1, c2, c3 });
-    batates.push_back({ z1 + z3, z2,     c1, c2, c3 });
-    batates.push_back({ z1 + z3, z2 + z4, c1, c2, c3 });
-    batates.push_back({ z1,     z2 + z4, c1, c2, c3 });
-
-    kofta.push_back(bada2 + 0);
-    kofta.push_back(bada2 + 1);
-    kofta.push_back(bada2 + 2);
-    kofta.push_back(bada2 + 2);
-    kofta.push_back(bada2 + 3);
-    kofta.push_back(bada2 + 0);
-}
-
 const char* kalmita ="#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
 "layout (location = 1) in vec3 aColor;\n"
@@ -163,6 +144,11 @@ void ftesh(unsigned int bombo, std::string no3) {
             std::cout << "ERROR::PROGRAM_LINKING_ERROR\n" << faza3 << "\n";
         }
     }
+}
+
+void processInput(GLFWwindow* window) {
+    wPressed = (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS);
+    sPressed = (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS);
 }
 
 void el_shasha_betrg3(GLFWwindow* bobo, int ard, int tool) {
@@ -898,41 +884,198 @@ int main() {
     glfwSetCursorPosCallback(hamada, el_mouse_beteeth);
     glfwSetKeyCallback(hamada, dos_zrar);
     glfwSetMouseButtonCallback(hamada, el_mouse_dos);
-    std::vector<Beshamel> batates;
-    std::vector<unsigned int> kofta;
-    el_tabkh(0.5f, 0.5f, 3.0f, 8.0f, 0.32f, 0.35f, 0.42f, batates, kofta);
-    el_tabkh(1.6f, 0.5f, 0.8f, 2.2f, 0.15f, 0.15f, 0.18f, batates, kofta);
-    el_tabkh(1.2f, 6.5f, 0.4f, 0.8f, 0.20f, 0.22f, 0.28f, batates, kofta);
-    el_tabkh(2.4f, 6.5f, 0.4f, 0.8f, 0.20f, 0.22f, 0.28f, batates, kofta);
-    el_tabkh(0.5f, 8.5f, 0.6f, 0.4f, 0.22f, 0.25f, 0.30f, batates, kofta);
-    el_tabkh(1.3f, 8.5f, 0.6f, 0.4f, 0.22f, 0.25f, 0.30f, batates, kofta);
-    el_tabkh(2.1f, 8.5f, 0.6f, 0.4f, 0.22f, 0.25f, 0.30f, batates, kofta);
-    el_tabkh(2.9f, 8.5f, 0.6f, 0.4f, 0.22f, 0.25f, 0.30f, batates, kofta);
-    int meshmesh = (int)kofta.size();
-    el_tabkh(3.5f, 6.2f, 12.0f, 2.0f, 0.2f, 0.6f, 0.9f, batates, kofta);
-    el_tabkh(3.5f, 3.5f, 12.0f, 2.0f, 0.2f, 0.6f, 0.9f, batates, kofta);
-    el_tabkh(3.5f, 0.8f, 12.0f, 2.0f, 0.2f, 0.6f, 0.9f, batates, kofta);
-    int foul_indices = (int)kofta.size() - meshmesh;
-    el_tabkh(5.5f, 8.2f, 0.4f, 1.2f, 0.45f, 0.30f, 0.15f, batates, kofta);
-    el_tabkh(5.0f, 9.0f, 1.4f, 0.8f, 0.15f, 0.55f, 0.20f, batates, kofta);
-    el_tabkh(5.2f, 9.6f, 1.0f, 0.6f, 0.18f, 0.65f, 0.22f, batates, kofta);
-    el_tabkh(8.0f, 8.2f, 0.2f, 1.6f, 0.30f, 0.30f, 0.30f, batates, kofta);
-    el_tabkh(7.0f, 9.0f, 1.0f, 0.7f, 0.75f, 0.15f, 0.15f, batates, kofta);
-    el_tabkh(7.3f, 9.2f, 0.3f, 0.3f, 0.95f, 0.85f, 0.20f, batates, kofta);
-    el_tabkh(11.0f, 8.2f, 0.2f, 1.0f, 0.35f, 0.25f, 0.15f, batates, kofta);
-    el_tabkh(10.8f, 9.1f, 0.6f, 0.3f, 0.25f, 0.25f, 0.28f, batates, kofta);
-    el_tabkh(10.95f, 9.4f, 0.3f, 0.5f, 0.95f, 0.50f, 0.10f, batates, kofta);
-    el_tabkh(11.05f, 9.5f, 0.15f, 0.3f, 0.95f, 0.90f, 0.20f, batates, kofta);
-    el_tabkh(13.5f, 8.2f, 1.8f, 1.5f, 0.40f, 0.43f, 0.52f, batates, kofta);
-    el_tabkh(13.5f, 9.7f, 0.4f, 0.3f, 0.28f, 0.30f, 0.38f, batates, kofta);
-    el_tabkh(14.2f, 9.7f, 0.4f, 0.3f, 0.28f, 0.30f, 0.38f, batates, kofta);
-    el_tabkh(14.9f, 9.7f, 0.4f, 0.3f, 0.28f, 0.30f, 0.38f, batates, kofta);
-    el_tabkh(14.2f, 8.8f, 0.4f, 0.6f, 0.18f, 0.20f, 0.25f, batates, kofta);
-    el_tabkh(3.5f, 0.0f, 12.0f, 0.8f, 0.35f, 0.38f, 0.45f, batates, kofta);
-    for (float wx = 4.0f; wx < 15.0f; wx += 1.2f) {
-        el_tabkh(wx, 0.8f, 0.6f, 0.4f, 0.28f, 0.30f, 0.38f, batates, kofta);
-    }
-    int falafel_indices = (int)kofta.size() - meshmesh - foul_indices;
+    std::vector<float> vertices = {
+        0.5f, 0.5f, 0.0f,   0.32f, 0.35f, 0.42f,
+        3.5f, 0.5f, 0.0f,   0.32f, 0.35f, 0.42f,
+        3.5f, 8.5f, 0.0f,   0.32f, 0.35f, 0.42f,
+        0.5f, 8.5f, 0.0f,   0.32f, 0.35f, 0.42f,
+        1.6f, 0.5f, 0.0f,   0.15f, 0.15f, 0.18f,
+        2.4f, 0.5f, 0.0f,   0.15f, 0.15f, 0.18f,
+        2.4f, 2.7f, 0.0f,   0.15f, 0.15f, 0.18f,
+        1.6f, 2.7f, 0.0f,   0.15f, 0.15f, 0.18f,
+        1.2f, 6.5f, 0.0f,   0.2f, 0.22f, 0.28f,
+        1.6f, 6.5f, 0.0f,   0.2f, 0.22f, 0.28f,
+        1.6f, 7.3f, 0.0f,   0.2f, 0.22f, 0.28f,
+        1.2f, 7.3f, 0.0f,   0.2f, 0.22f, 0.28f,
+        2.4f, 6.5f, 0.0f,   0.2f, 0.22f, 0.28f,
+        2.8000002f, 6.5f, 0.0f,   0.2f, 0.22f, 0.28f,
+        2.8000002f, 7.3f, 0.0f,   0.2f, 0.22f, 0.28f,
+        2.4f, 7.3f, 0.0f,   0.2f, 0.22f, 0.28f,
+        0.5f, 8.5f, 0.0f,   0.22f, 0.25f, 0.3f,
+        1.1f, 8.5f, 0.0f,   0.22f, 0.25f, 0.3f,
+        1.1f, 8.9f, 0.0f,   0.22f, 0.25f, 0.3f,
+        0.5f, 8.9f, 0.0f,   0.22f, 0.25f, 0.3f,
+        1.3f, 8.5f, 0.0f,   0.22f, 0.25f, 0.3f,
+        1.9f, 8.5f, 0.0f,   0.22f, 0.25f, 0.3f,
+        1.9f, 8.9f, 0.0f,   0.22f, 0.25f, 0.3f,
+        1.3f, 8.9f, 0.0f,   0.22f, 0.25f, 0.3f,
+        2.1f, 8.5f, 0.0f,   0.22f, 0.25f, 0.3f,
+        2.6999998f, 8.5f, 0.0f,   0.22f, 0.25f, 0.3f,
+        2.6999998f, 8.9f, 0.0f,   0.22f, 0.25f, 0.3f,
+        2.1f, 8.9f, 0.0f,   0.22f, 0.25f, 0.3f,
+        2.9f, 8.5f, 0.0f,   0.22f, 0.25f, 0.3f,
+        3.5f, 8.5f, 0.0f,   0.22f, 0.25f, 0.3f,
+        3.5f, 8.9f, 0.0f,   0.22f, 0.25f, 0.3f,
+        2.9f, 8.9f, 0.0f,   0.22f, 0.25f, 0.3f,
+        3.5f, 6.2f, 0.0f,   0.2f, 0.6f, 0.9f,
+        15.5f, 6.2f, 0.0f,   0.2f, 0.6f, 0.9f,
+        15.5f, 8.2f, 0.0f,   0.2f, 0.6f, 0.9f,
+        3.5f, 8.2f, 0.0f,   0.2f, 0.6f, 0.9f,
+        3.5f, 3.5f, 0.0f,   0.2f, 0.6f, 0.9f,
+        15.5f, 3.5f, 0.0f,   0.2f, 0.6f, 0.9f,
+        15.5f, 5.5f, 0.0f,   0.2f, 0.6f, 0.9f,
+        3.5f, 5.5f, 0.0f,   0.2f, 0.6f, 0.9f,
+        3.5f, 0.8f, 0.0f,   0.2f, 0.6f, 0.9f,
+        15.5f, 0.8f, 0.0f,   0.2f, 0.6f, 0.9f,
+        15.5f, 2.8f, 0.0f,   0.2f, 0.6f, 0.9f,
+        3.5f, 2.8f, 0.0f,   0.2f, 0.6f, 0.9f,
+        5.5f, 8.2f, 0.0f,   0.45f, 0.3f, 0.15f,
+        5.9f, 8.2f, 0.0f,   0.45f, 0.3f, 0.15f,
+        5.9f, 9.4f, 0.0f,   0.45f, 0.3f, 0.15f,
+        5.5f, 9.4f, 0.0f,   0.45f, 0.3f, 0.15f,
+        5.0f, 9.0f, 0.0f,   0.15f, 0.55f, 0.2f,
+        6.4f, 9.0f, 0.0f,   0.15f, 0.55f, 0.2f,
+        6.4f, 9.8f, 0.0f,   0.15f, 0.55f, 0.2f,
+        5.0f, 9.8f, 0.0f,   0.15f, 0.55f, 0.2f,
+        5.2f, 9.6f, 0.0f,   0.18f, 0.65f, 0.22f,
+        6.2f, 9.6f, 0.0f,   0.18f, 0.65f, 0.22f,
+        6.2f, 10.200001f, 0.0f,   0.18f, 0.65f, 0.22f,
+        5.2f, 10.200001f, 0.0f,   0.18f, 0.65f, 0.22f,
+        8.0f, 8.2f, 0.0f,   0.3f, 0.3f, 0.3f,
+        8.2f, 8.2f, 0.0f,   0.3f, 0.3f, 0.3f,
+        8.2f, 9.8f, 0.0f,   0.3f, 0.3f, 0.3f,
+        8.0f, 9.8f, 0.0f,   0.3f, 0.3f, 0.3f,
+        7.0f, 9.0f, 0.0f,   0.75f, 0.15f, 0.15f,
+        8.0f, 9.0f, 0.0f,   0.75f, 0.15f, 0.15f,
+        8.0f, 9.7f, 0.0f,   0.75f, 0.15f, 0.15f,
+        7.0f, 9.7f, 0.0f,   0.75f, 0.15f, 0.15f,
+        7.3f, 9.2f, 0.0f,   0.95f, 0.85f, 0.2f,
+        7.6000004f, 9.2f, 0.0f,   0.95f, 0.85f, 0.2f,
+        7.6000004f, 9.5f, 0.0f,   0.95f, 0.85f, 0.2f,
+        7.3f, 9.5f, 0.0f,   0.95f, 0.85f, 0.2f,
+        11.0f, 8.2f, 0.0f,   0.35f, 0.25f, 0.15f,
+        11.2f, 8.2f, 0.0f,   0.35f, 0.25f, 0.15f,
+        11.2f, 9.2f, 0.0f,   0.35f, 0.25f, 0.15f,
+        11.0f, 9.2f, 0.0f,   0.35f, 0.25f, 0.15f,
+        10.8f, 9.1f, 0.0f,   0.25f, 0.25f, 0.28f,
+        11.400001f, 9.1f, 0.0f,   0.25f, 0.25f, 0.28f,
+        11.400001f, 9.400001f, 0.0f,   0.25f, 0.25f, 0.28f,
+        10.8f, 9.400001f, 0.0f,   0.25f, 0.25f, 0.28f,
+        10.95f, 9.4f, 0.0f,   0.95f, 0.5f, 0.1f,
+        11.25f, 9.4f, 0.0f,   0.95f, 0.5f, 0.1f,
+        11.25f, 9.9f, 0.0f,   0.95f, 0.5f, 0.1f,
+        10.95f, 9.9f, 0.0f,   0.95f, 0.5f, 0.1f,
+        11.05f, 9.5f, 0.0f,   0.95f, 0.9f, 0.2f,
+        11.2f, 9.5f, 0.0f,   0.95f, 0.9f, 0.2f,
+        11.2f, 9.8f, 0.0f,   0.95f, 0.9f, 0.2f,
+        11.05f, 9.8f, 0.0f,   0.95f, 0.9f, 0.2f,
+        13.5f, 8.2f, 0.0f,   0.4f, 0.43f, 0.52f,
+        15.3f, 8.2f, 0.0f,   0.4f, 0.43f, 0.52f,
+        15.3f, 9.7f, 0.0f,   0.4f, 0.43f, 0.52f,
+        13.5f, 9.7f, 0.0f,   0.4f, 0.43f, 0.52f,
+        13.5f, 9.7f, 0.0f,   0.28f, 0.3f, 0.38f,
+        13.9f, 9.7f, 0.0f,   0.28f, 0.3f, 0.38f,
+        13.9f, 10.0f, 0.0f,   0.28f, 0.3f, 0.38f,
+        13.5f, 10.0f, 0.0f,   0.28f, 0.3f, 0.38f,
+        14.2f, 9.7f, 0.0f,   0.28f, 0.3f, 0.38f,
+        14.599999f, 9.7f, 0.0f,   0.28f, 0.3f, 0.38f,
+        14.599999f, 10.0f, 0.0f,   0.28f, 0.3f, 0.38f,
+        14.2f, 10.0f, 0.0f,   0.28f, 0.3f, 0.38f,
+        14.9f, 9.7f, 0.0f,   0.28f, 0.3f, 0.38f,
+        15.299999f, 9.7f, 0.0f,   0.28f, 0.3f, 0.38f,
+        15.299999f, 10.0f, 0.0f,   0.28f, 0.3f, 0.38f,
+        14.9f, 10.0f, 0.0f,   0.28f, 0.3f, 0.38f,
+        14.2f, 8.8f, 0.0f,   0.18f, 0.2f, 0.25f,
+        14.599999f, 8.8f, 0.0f,   0.18f, 0.2f, 0.25f,
+        14.599999f, 9.400001f, 0.0f,   0.18f, 0.2f, 0.25f,
+        14.2f, 9.400001f, 0.0f,   0.18f, 0.2f, 0.25f,
+        3.5f, 0.0f, 0.0f,   0.35f, 0.38f, 0.45f,
+        15.5f, 0.0f, 0.0f,   0.35f, 0.38f, 0.45f,
+        15.5f, 0.8f, 0.0f,   0.35f, 0.38f, 0.45f,
+        3.5f, 0.8f, 0.0f,   0.35f, 0.38f, 0.45f,
+        4.0f, 0.8f, 0.0f,   0.28f, 0.3f, 0.38f,
+        4.6f, 0.8f, 0.0f,   0.28f, 0.3f, 0.38f,
+        4.6f, 1.2f, 0.0f,   0.28f, 0.3f, 0.38f,
+        4.0f, 1.2f, 0.0f,   0.28f, 0.3f, 0.38f,
+        5.2f, 0.8f, 0.0f,   0.28f, 0.3f, 0.38f,
+        5.7999997f, 0.8f, 0.0f,   0.28f, 0.3f, 0.38f,
+        5.7999997f, 1.2f, 0.0f,   0.28f, 0.3f, 0.38f,
+        5.2f, 1.2f, 0.0f,   0.28f, 0.3f, 0.38f,
+        6.3999996f, 0.8f, 0.0f,   0.28f, 0.3f, 0.38f,
+        6.9999995f, 0.8f, 0.0f,   0.28f, 0.3f, 0.38f,
+        6.9999995f, 1.2f, 0.0f,   0.28f, 0.3f, 0.38f,
+        6.3999996f, 1.2f, 0.0f,   0.28f, 0.3f, 0.38f,
+        7.5999994f, 0.8f, 0.0f,   0.28f, 0.3f, 0.38f,
+        8.2f, 0.8f, 0.0f,   0.28f, 0.3f, 0.38f,
+        8.2f, 1.2f, 0.0f,   0.28f, 0.3f, 0.38f,
+        7.5999994f, 1.2f, 0.0f,   0.28f, 0.3f, 0.38f,
+        8.799999f, 0.8f, 0.0f,   0.28f, 0.3f, 0.38f,
+        9.4f, 0.8f, 0.0f,   0.28f, 0.3f, 0.38f,
+        9.4f, 1.2f, 0.0f,   0.28f, 0.3f, 0.38f,
+        8.799999f, 1.2f, 0.0f,   0.28f, 0.3f, 0.38f,
+        9.999999f, 0.8f, 0.0f,   0.28f, 0.3f, 0.38f,
+        10.599999f, 0.8f, 0.0f,   0.28f, 0.3f, 0.38f,
+        10.599999f, 1.2f, 0.0f,   0.28f, 0.3f, 0.38f,
+        9.999999f, 1.2f, 0.0f,   0.28f, 0.3f, 0.38f,
+        11.199999f, 0.8f, 0.0f,   0.28f, 0.3f, 0.38f,
+        11.799999f, 0.8f, 0.0f,   0.28f, 0.3f, 0.38f,
+        11.799999f, 1.2f, 0.0f,   0.28f, 0.3f, 0.38f,
+        11.199999f, 1.2f, 0.0f,   0.28f, 0.3f, 0.38f,
+        12.399999f, 0.8f, 0.0f,   0.28f, 0.3f, 0.38f,
+        12.999999f, 0.8f, 0.0f,   0.28f, 0.3f, 0.38f,
+        12.999999f, 1.2f, 0.0f,   0.28f, 0.3f, 0.38f,
+        12.399999f, 1.2f, 0.0f,   0.28f, 0.3f, 0.38f,
+        13.599998f, 0.8f, 0.0f,   0.28f, 0.3f, 0.38f,
+        14.199999f, 0.8f, 0.0f,   0.28f, 0.3f, 0.38f,
+        14.199999f, 1.2f, 0.0f,   0.28f, 0.3f, 0.38f,
+        13.599998f, 1.2f, 0.0f,   0.28f, 0.3f, 0.38f,
+        14.799998f, 0.8f, 0.0f,   0.28f, 0.3f, 0.38f,
+        15.399999f, 0.8f, 0.0f,   0.28f, 0.3f, 0.38f,
+        15.399999f, 1.2f, 0.0f,   0.28f, 0.3f, 0.38f,
+        14.799998f, 1.2f, 0.0f,   0.28f, 0.3f, 0.38f
+    };
+    GLuint indices[] = {
+        0, 1, 2, 2, 3, 0,
+        4, 5, 6, 6, 7, 4,
+        8, 9, 10, 10, 11, 8,
+        12, 13, 14, 14, 15, 12,
+        16, 17, 18, 18, 19, 16,
+        20, 21, 22, 22, 23, 20,
+        24, 25, 26, 26, 27, 24,
+        28, 29, 30, 30, 31, 28,
+        32, 33, 34, 34, 35, 32,
+        36, 37, 38, 38, 39, 36,
+        40, 41, 42, 42, 43, 40,
+        44, 45, 46, 46, 47, 44,
+        48, 49, 50, 50, 51, 48,
+        52, 53, 54, 54, 55, 52,
+        56, 57, 58, 58, 59, 56,
+        60, 61, 62, 62, 63, 60,
+        64, 65, 66, 66, 67, 64,
+        68, 69, 70, 70, 71, 68,
+        72, 73, 74, 74, 75, 72,
+        76, 77, 78, 78, 79, 76,
+        80, 81, 82, 82, 83, 80,
+        84, 85, 86, 86, 87, 84,
+        88, 89, 90, 90, 91, 88,
+        92, 93, 94, 94, 95, 92,
+        96, 97, 98, 98, 99, 96,
+        100, 101, 102, 102, 103, 100,
+        104, 105, 106, 106, 107, 104,
+        108, 109, 110, 110, 111, 108,
+        112, 113, 114, 114, 115, 112,
+        116, 117, 118, 118, 119, 116,
+        120, 121, 122, 122, 123, 120,
+        124, 125, 126, 126, 127, 124,
+        128, 129, 130, 130, 131, 128,
+        132, 133, 134, 134, 135, 132,
+        136, 137, 138, 138, 139, 136,
+        140, 141, 142, 142, 143, 140,
+        144, 145, 146, 146, 147, 144
+    };
+    int meshmesh = 48;
+    int foul_indices = 18;
+    int falafel_indices = (int)(sizeof(indices) / sizeof(indices[0])) - meshmesh - foul_indices;
 
     unsigned int shiko, biko, fiko;
     glGenVertexArrays(1, &biko);
@@ -940,33 +1083,33 @@ int main() {
     glGenBuffers(1, &fiko);
     glBindVertexArray(biko);
     glBindBuffer(GL_ARRAY_BUFFER, shiko);
-    glBufferData(GL_ARRAY_BUFFER, batates.size() * sizeof(Beshamel), batates.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, fiko);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, kofta.size() * sizeof(unsigned int), kofta.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Beshamel), (void*)0);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Beshamel), (void*)(2 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    Beshamel miko_verts[] = {
-        { -0.2f, -0.2f,  0.95f, 0.85f, 0.2f },
-        { 0.2f, -0.2f,  0.95f, 0.85f, 0.2f },
-        { 0.2f,  0.2f,  0.95f, 0.85f, 0.2f },
-        { -0.2f,  0.2f,  0.95f, 0.85f, 0.2f }
+    std::vector<float> quadVertices = {
+        -0.2f, -0.2f, 0.0f,   0.95f, 0.85f, 0.2f,
+        0.2f, -0.2f, 0.0f,   0.95f, 0.85f, 0.2f,
+        0.2f, 0.2f, 0.0f,   0.95f, 0.85f, 0.2f,
+        -0.2f, 0.2f, 0.0f,   0.95f, 0.85f, 0.2f
     };
-    unsigned int miko_inds[] = { 0, 1, 2, 2, 3, 0 };
+    GLuint quadIndices[] = { 0, 1, 2, 2, 3, 0 };
     unsigned int ziko, ziro_vao, ziro_ebo;
     glGenVertexArrays(1, &ziro_vao);
     glGenBuffers(1, &ziko);
     glGenBuffers(1, &ziro_ebo);
     glBindVertexArray(ziro_vao);
     glBindBuffer(GL_ARRAY_BUFFER, ziko);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(miko_verts), miko_verts, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, quadVertices.size() * sizeof(float), quadVertices.data(), GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ziro_ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(miko_inds), miko_inds, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Beshamel), (void*)0);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadIndices), quadIndices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Beshamel), (void*)(2 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
     std::vector<float> menuVertices = {
         4.90f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
@@ -1133,8 +1276,7 @@ int main() {
                 spawnWave(g_currentWave, soso);
             }
 
-            bool wPressed = (glfwGetKey(hamada, GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(hamada, GLFW_KEY_UP) == GLFW_PRESS);
-            bool sPressed = (glfwGetKey(hamada, GLFW_KEY_S) == GLFW_PRESS || glfwGetKey(hamada, GLFW_KEY_DOWN) == GLFW_PRESS);
+            processInput(hamada);
             for (auto& p : basal) {
                 bool laneSelected = tamtam[p.laneId] && p.kind != 2;
                 if (laneSelected && wPressed && !p.isJumping) {
@@ -1193,9 +1335,6 @@ int main() {
             }
 
         }
-
-        glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
 
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
