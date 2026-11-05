@@ -362,6 +362,7 @@ void spawnWave(int waveNumber, const Koshary& grid) {
 
 int locModel = -1, locTint = -1, locOffset = -1, locHighlight = -1, locGray = -1;
 unsigned int uiVAO = 0;
+float g_uiRed = 0.0f;
 
 bool sevenSeg[10][7] = {
     { 1, 1, 1, 1, 1, 1, 0 },
@@ -381,7 +382,7 @@ void uiShape(GLenum mode, int first, int count, float x, float y, float w, float
     model = glm::translate(model, glm::vec3(x, y, 0.0f));
     model = glm::scale(model, glm::vec3(w, h, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
-    glUniform3f(locTint, r, g, b);
+    glUniform3f(locTint, r + (1.0f - r) * g_uiRed, g * (1.0f - g_uiRed), b * (1.0f - g_uiRed));
     glDrawArrays(mode, first, count);
 }
 
@@ -470,7 +471,7 @@ void drawHealthBar(float cx, float y, int health, int maxHealth) {
     uiRect(cx - 0.3f, y + 0.02f, 0.6f * frac, 0.06f, 1.0f - frac, frac, 0.1f);
 }
 
-void drawGuard(float x, float y, float lift) {
+void drawGuard(float x, float y, float lift, int kind = 0) {
     uiRect(x - 0.15f, y - 0.15f, 0.1f, 0.15f, 0.2f, 0.2f, 0.25f);
     uiRect(x + 0.05f, y - 0.15f, 0.1f, 0.15f, 0.2f, 0.2f, 0.25f);
     uiRect(x - 0.18f, y, 0.36f, 0.5f, 0.2f, 0.35f, 0.8f);
@@ -478,13 +479,32 @@ void drawGuard(float x, float y, float lift) {
     uiCircle(x, y + 0.66f, 0.15f, 0.95f, 0.8f, 0.65f);
     uiRect(x - 0.17f, y + 0.7f, 0.34f, 0.12f, 0.6f, 0.6f, 0.65f);
     uiTriUp(x - 0.05f, y + 0.82f, 0.1f, 0.12f, 0.8f, 0.1f, 0.1f);
-    uiRect(x - 0.38f, y + 0.12f, 0.2f, 0.28f, 0.6f, 0.6f, 0.65f);
-    uiTriDown(x - 0.38f, y - 0.02f, 0.2f, 0.14f, 0.6f, 0.6f, 0.65f);
-    uiRect(x + 0.2f, y + 0.25f + lift, 0.06f, 0.5f, 0.85f, 0.85f, 0.9f);
-    uiRect(x + 0.13f, y + 0.22f + lift, 0.2f, 0.05f, 0.5f, 0.35f, 0.15f);
+    if (kind == 0) {
+        uiRect(x - 0.38f, y + 0.12f, 0.2f, 0.28f, 0.6f, 0.6f, 0.65f);
+        uiTriDown(x - 0.38f, y - 0.02f, 0.2f, 0.14f, 0.6f, 0.6f, 0.65f);
+        uiRect(x + 0.2f, y + 0.25f + lift, 0.06f, 0.5f, 0.85f, 0.85f, 0.9f);
+        uiRect(x + 0.13f, y + 0.22f + lift, 0.2f, 0.05f, 0.5f, 0.35f, 0.15f);
+    }
+    else if (kind == 1) {
+        uiRect(x + 0.26f, y + 0.12f + lift * 0.4f, 0.05f, 0.62f, 0.5f, 0.32f, 0.12f);
+        uiRect(x + 0.2f, y + 0.12f + lift * 0.4f, 0.1f, 0.05f, 0.5f, 0.32f, 0.12f);
+        uiRect(x + 0.2f, y + 0.69f + lift * 0.4f, 0.1f, 0.05f, 0.5f, 0.32f, 0.12f);
+        uiRect(x + 0.2f, y + 0.15f + lift * 0.4f, 0.015f, 0.57f, 0.9f, 0.9f, 0.85f);
+        uiRect(x + 0.2f, y + 0.42f + lift * 0.4f, 0.5f, 0.03f, 0.8f, 0.8f, 0.75f);
+        uiTriRight(x + 0.7f, y + 0.38f + lift * 0.4f, 0.12f, 0.11f, 0.85f, 0.85f, 0.9f);
+        uiRect(x - 0.25f, y + 0.5f, 0.07f, 0.3f, 0.45f, 0.28f, 0.12f);
+        uiRect(x - 0.3f, y + 0.5f, 0.17f, 0.04f, 0.3f, 0.5f, 0.25f);
+    }
+    else {
+        uiRect(x + 0.06f, y - 0.1f, 0.38f, 0.92f, 0.45f, 0.47f, 0.55f);
+        uiRect(x + 0.1f, y - 0.06f, 0.3f, 0.84f, 0.65f, 0.67f, 0.72f);
+        uiRect(x + 0.23f, y + 0.1f, 0.04f, 0.56f, 0.85f, 0.7f, 0.2f);
+        uiRect(x + 0.14f, y + 0.4f, 0.22f, 0.04f, 0.85f, 0.7f, 0.2f);
+        uiTriDown(x + 0.06f, y - 0.22f, 0.38f, 0.14f, 0.45f, 0.47f, 0.55f);
+    }
 }
 
-void drawEnemyActor(float x, float y, float lift) {
+void drawEnemyActor(float x, float y, float lift, int variant = 2) {
     uiRect(x - 0.16f, y - 0.15f, 0.1f, 0.15f, 0.25f, 0.1f, 0.1f);
     uiRect(x + 0.06f, y - 0.15f, 0.1f, 0.15f, 0.25f, 0.1f, 0.1f);
     uiRect(x - 0.2f, y, 0.4f, 0.55f, 0.55f, 0.12f, 0.12f);
@@ -493,7 +513,52 @@ void drawEnemyActor(float x, float y, float lift) {
     uiTriUp(x + 0.07f, y + 0.8f, 0.1f, 0.2f, 0.9f, 0.9f, 0.8f);
     uiCircle(x - 0.09f, y + 0.74f, 0.03f, 1.0f, 0.9f, 0.1f);
     uiCircle(x + 0.01f, y + 0.74f, 0.03f, 1.0f, 0.9f, 0.1f);
-    uiRect(x - 0.36f, y + 0.15f + lift, 0.08f, 0.5f, 0.45f, 0.28f, 0.12f);
+    if (variant == 0) {
+        uiRect(x - 0.34f, y + 0.55f + lift * 0.4f, 0.06f, 0.5f, 0.45f, 0.28f, 0.12f);
+        uiRect(x - 0.4f, y + 0.95f + lift * 0.4f, 0.18f, 0.05f, 0.45f, 0.28f, 0.12f);
+        uiRect(x - 0.4f, y + 0.55f + lift * 0.4f, 0.18f, 0.05f, 0.45f, 0.28f, 0.12f);
+        uiRect(x - 0.78f, y + 0.77f + lift * 0.4f, 0.48f, 0.03f, 0.8f, 0.8f, 0.75f);
+        uiTriRight(x - 0.78f, y + 0.725f + lift * 0.4f, -0.12f, 0.11f, 0.85f, 0.85f, 0.9f);
+    }
+    else if (variant == 1) {
+        uiRect(x - 0.62f, y + 0.12f + lift * 0.4f, 0.46f, 0.06f, 0.45f, 0.28f, 0.12f);
+        uiRect(x - 0.64f, y + 0.0f + lift * 0.4f, 0.05f, 0.3f, 0.35f, 0.22f, 0.1f);
+        uiRect(x - 0.9f, y + 0.14f + lift * 0.4f, 0.28f, 0.03f, 0.8f, 0.8f, 0.75f);
+        uiTriRight(x - 0.9f, y + 0.095f + lift * 0.4f, -0.12f, 0.11f, 0.85f, 0.85f, 0.9f);
+    }
+    else {
+        uiRect(x - 0.36f, y + 0.15f + lift, 0.08f, 0.5f, 0.45f, 0.28f, 0.12f);
+        uiTriUp(x - 0.3f, y + 0.5f, 0.12f, 0.16f, 0.75f, 0.75f, 0.8f);
+        uiTriUp(x + 0.1f, y + 0.5f, 0.12f, 0.16f, 0.75f, 0.75f, 0.8f);
+    }
+}
+
+float redFor(int health, int maxHealth, float flash) {
+    float frac = (float)health / (float)maxHealth;
+    if (frac < 0.0f) frac = 0.0f;
+    float red = (1.0f - frac) * 0.65f + (flash > 0.0f ? flash * 0.5f : 0.0f);
+    return red > 0.85f ? 0.85f : red;
+}
+
+void drawPlayerUnit(const Hawawshy& p) {
+    int maxHp = p.kind == 2 ? 7 : 5;
+    float duck = p.isDucking ? -0.12f : 0.0f;
+    float base = soso.tababa[p.laneId].centerY - 0.55f + p.yOffset + duck;
+    float swing = (p.kind != 2 && p.spd == 0.0f) ? 0.15f * sin((float)glfwGetTime() * 30.0f) : 0.0f;
+    g_uiRed = redFor(p.health, maxHp, p.damageTint);
+    drawGuard(p.xPos, base, swing, p.kind);
+    g_uiRed = 0.0f;
+    drawHealthBar(p.xPos, base + 1.05f, p.health, maxHp);
+}
+
+void drawEnemyUnit(const Enemy& e) {
+    int maxHp = e.type == HARD_MELEE ? 7 : 5;
+    float base = e.yPos - 0.55f;
+    float swing = e.blocked ? -0.15f * sin((float)glfwGetTime() * 30.0f) : 0.0f;
+    g_uiRed = redFor(e.health, maxHp, e.damageTint);
+    drawEnemyActor(e.xPos, base, swing, (int)e.type);
+    g_uiRed = 0.0f;
+    drawHealthBar(e.xPos, base + 1.05f, e.health, maxHp);
 }
 
 void drawBubble(float x, float y, int icon) {
@@ -542,7 +607,7 @@ void drawCutscene(float t) {
     if (t > 7.0f && t < 9.5f) drawBubble(guardX - 0.3f, gy + 1.05f, 2);
     if (t > 14.5f) {
         float inX = 17.0f - std::min(t - 14.5f, 1.0f) * 1.7f;
-        for (int l = 0; l < 3; l++) drawEnemyActor(inX, soso.tababa[l].yStart + 0.25f, 0.0f);
+        for (int l = 0; l < 3; l++) drawEnemyActor(inX, soso.tababa[l].yStart + 0.25f, 0.0f, l);
         drawBubble(guardX - 0.3f, gy + 1.05f, 2);
     }
 }
@@ -1044,22 +1109,6 @@ int main() {
         }
         glBindVertexArray(ziro_vao);
 
-        for (const auto& enemy : g_enemies) {
-            if (enemy.isAlive) {
-
-                if (enemy.type == EASY_UPPER) {
-                    glUniform3f(fizzo, 1.0f, 0.2f, 0.2f);
-                } else if (enemy.type == MEDIUM_LOWER) {
-                    glUniform3f(fizzo, 1.0f, 0.6f, 0.0f);
-                } else if (enemy.type == HARD_MELEE) {
-                    glUniform3f(fizzo, 0.6f, 0.1f, 0.8f);
-                }
-                if (enemy.damageTint > 0.0f) glUniform3f(fizzo, 2.0f, 0.2f, 0.2f);
-                glUniform2f(wizzo, enemy.xPos, enemy.yPos);
-                glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
-            }
-        }
-
         for (const auto& coin : g_coins) {
             if (!coin.collected) {
 
@@ -1071,25 +1120,12 @@ int main() {
             }
         }
 
-        for (const auto& p : basal) {
-            float duckOffset = p.isDucking ? -0.15f : 0.0f;
-            float cy = soso.tababa[p.laneId].centerY + p.yOffset + duckOffset;
-            glUniform2f(wizzo, p.xPos, cy);
-            if (p.damageTint > 0.0f) glUniform3f(fizzo, 2.0f, 0.2f, 0.2f);
-            else if (p.kind == 1) glUniform3f(fizzo, 0.4f, 1.0f, 1.1f);
-            else if (p.kind == 2) glUniform3f(fizzo, 0.6f, 0.6f, 0.75f);
-            else glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        }
-
         uiBegin();
         for (const auto& enemy : g_enemies) {
-            if (enemy.isAlive) drawHealthBar(enemy.xPos, enemy.yPos + 0.3f, enemy.health, enemy.type == HARD_MELEE ? 7 : 5);
+            if (enemy.isAlive) drawEnemyUnit(enemy);
         }
         for (const auto& p : basal) {
-            float duckOffset = p.isDucking ? -0.15f : 0.0f;
-            float cy = soso.tababa[p.laneId].centerY + p.yOffset + duckOffset;
-            drawHealthBar(p.xPos, cy + 0.3f, p.health, p.kind == 2 ? 7 : 5);
+            drawPlayerUnit(p);
         }
         drawCoinTracker();
         drawCards();
