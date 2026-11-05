@@ -250,10 +250,7 @@ void el_mouse_dos(GLFWwindow* tabl, int b, int a, int m) {
         }
         return;
     }
-    if (wX >= soso.asfar && wX <= soso.akhdar) {
-        std::cout << "Clicked Gatehouse Home Base!\n";
-    }
-    else {
+    if (!(wX >= soso.asfar && wX <= soso.akhdar)) {
         int nawwar = soso.getLaneFromY(wY);
         if (nawwar != -1) {
             tamtam[nawwar] = !tamtam[nawwar];
@@ -399,7 +396,6 @@ void hurtEnemy(Enemy& e, int dmg) {
         drop.yPos = e.yPos;
         drop.collected = false;
         g_coins.push_back(drop);
-        std::cout << "Enemy Defeated! Gold Coin Dropped!" << std::endl;
     }
 }
 
@@ -1173,7 +1169,6 @@ int main() {
 
                 if (enemy.xPos <= 3.5f) {
                     g_gameOver = true;
-                    std::cout << "GAME OVER! Enemy breached Home Base!" << std::endl;
                 }
             }
 
@@ -1184,7 +1179,6 @@ int main() {
                     if (std::abs(coin.xPos - p.xPos) < 0.6f && std::abs(coin.yPos - py) < 0.6f) {
                         coin.collected = true;
                         g_playerCoins += 10;
-                        std::cout << "Coin Picked Up! Total Coins: " << g_playerCoins << std::endl;
                         break;
                     }
                 }
@@ -1195,7 +1189,6 @@ int main() {
             if (allDefeated && g_waveInProgress) {
                 g_waveInProgress = false;
                 g_currentWave++;
-                std::cout << "Wave Cleared! Advancing to Wave " << g_currentWave << std::endl;
                 if (g_currentWave > 3) isWin = true;
             }
 
