@@ -23,6 +23,7 @@ struct Hawawshy {
     float damageTint;
     int kind;
     float attackTimer;
+    float duckTimer;
 };
 
 struct Beshamel {
@@ -246,7 +247,7 @@ void el_mouse_dos(GLFWwindow* tabl, int b, int a, int m) {
     if (card != -1) {
         for (size_t i = 0; i < tamtam.size(); ++i) {
             if (tamtam[i] && g_playerCoins >= cardCost[card]) {
-                basal.push_back({ (int)i, soso.akhdar, card == 2 ? 0.0f : g_playerSpeed, 0.0f, false, false, 0.0f, card == 2 ? 7 : 5, 0.0f, card, 0.0f });
+                basal.push_back({ (int)i, soso.akhdar, card == 2 ? 0.0f : g_playerSpeed, 0.0f, false, false, 0.0f, card == 2 ? 7 : 5, 0.0f, card, 0.0f, 0.0f });
                 g_playerCoins -= cardCost[card];
             }
         }
@@ -374,7 +375,7 @@ void spawnWave(int waveNumber, const Koshary& grid) {
         g_spawnInterval = 3.0f;
     } else if (waveNumber == 3) {
         for (int i = 0; i < 10; i++) g_spawnQueue.push_back((i % 3 == 0) ? EASY_UPPER : ((i % 3 == 1) ? MEDIUM_LOWER : HARD_MELEE));
-        g_spawnInterval = 2.2f;
+        g_spawnInterval = 2.8f;
     }
     g_spawnTimer = 0.0f;
     g_waveInProgress = true;
@@ -1156,7 +1157,9 @@ int main() {
                     p.isJumping = true;
                     p.jumpTimer = 0.0f;
                 }
-                p.isDucking = laneSelected && sPressed;
+                if (laneSelected && sPressed) p.duckTimer = 0.4f;
+                else if (p.duckTimer > 0.0f) p.duckTimer -= koko;
+                p.isDucking = laneSelected && p.duckTimer > 0.0f;
                 if (p.isJumping) {
                     p.jumpTimer += koko * 5.0f;
                     p.yOffset = 0.6f * sin(p.jumpTimer);
@@ -1172,8 +1175,8 @@ int main() {
 
             for (auto it = basal.begin(); it != basal.end();) {
                 it->xPos += it->spd * koko;
-                if (it->xPos > 16.5f) it = basal.erase(it);
-                else ++it;
+                if (it->xPos > 15.3f) it->xPos = 15.3f;
+                ++it;
             }
 
             bool allDefeated = true;
@@ -1194,7 +1197,7 @@ int main() {
                     float py = soso.tababa[p.laneId].centerY;
                     if (std::abs(coin.xPos - p.xPos) < 0.6f && std::abs(coin.yPos - py) < 0.6f) {
                         coin.collected = true;
-                        g_playerCoins += 10;
+                        g_playerCoins += 20;
                         std::cout << "Coin Picked Up! Total Coins: " << g_playerCoins << std::endl;
                         break;
                     }
