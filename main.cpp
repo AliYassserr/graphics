@@ -171,7 +171,6 @@ float cutsceneTime = 0.0f;
 int menuHover = -1;
 int cardHover = -1;
 float g_animTime = 0.0f;
-std::string g_lastTitle;
 
 // ---- Functions defined in a later member section ----
 int menuButtonAt(float x, float y);
@@ -1301,51 +1300,6 @@ std::string cutsceneLine(float t) {
     return "";
 }
 
-std::string cardsLine() {
-    const char* names[3] = { "Melee", "Ranged", "Defense" };
-    std::string line = "Cards: ";
-    for (int i = 0; i < 3; i++) {
-        if (i > 0) line += ", ";
-        line += names[i];
-        line += " " + std::to_string(cardCost[i]);
-        line += g_playerCoins >= cardCost[i] ? " ready" : " locked";
-    }
-    return line;
-}
-
-void updateWindowTitle(GLFWwindow* window) {
-    std::string title = "Tower Defense Engine";
-    if (inMainMenu) {
-        title += " | Main menu: Start (green), Sound (blue) or M turns sound on/off, End (red)";
-    }
-    else if (inCutscene) {
-        title += " | Intro";
-        std::string line = cutsceneLine(cutsceneTime);
-        if (!line.empty()) title += ": " + line;
-        title += " (click or ESC to skip)";
-    }
-    else if (isWin) {
-        title += " | VICTORY! All three waves are cleared. Restart (rewind icon) or Main menu (house icon)";
-    }
-    else if (g_gameOver) {
-        title += " | DEFEAT! An enemy reached the Home Base. Restart (rewind icon) or Main menu (house icon)";
-    }
-    else if (isPaused) {
-        title += " | PAUSED: Continue (green), Restart (blue), Main menu (orange)";
-    }
-    else {
-        int wave = g_currentWave > 3 ? 3 : g_currentWave;
-        title += " | Coins " + std::to_string(g_playerCoins);
-        title += " | Wave " + std::to_string(wave) + " of 3";
-        title += " | " + cardsLine();
-    }
-    title += g_muted ? " | Sound OFF (M or speaker button)" : " | Sound ON (M or speaker button)";
-    if (title != g_lastTitle) {
-        glfwSetWindowTitle(window, title.c_str());
-        g_lastTitle = title;
-    }
-}
-
 void buildMenuMesh() {
     std::vector<float> menuVertices = {
         4.90f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
@@ -1799,7 +1753,6 @@ int main() {
 
         if (!g_gameOver && !isPaused && !inMainMenu && !isWin && !inCutscene) updateGame(hamada, koko);
 
-        updateWindowTitle(hamada);
         beginFrame(dodo);
 
         if (inMainMenu) {
