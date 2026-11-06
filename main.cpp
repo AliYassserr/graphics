@@ -18,7 +18,7 @@ int locModel = -1, locTint = -1, locOffset = -1, locHighlight = -1, locGray = -1
 int gizmo = -1, wizzo = -1, fizzo = -1, hilo = -1;
 unsigned int uiVAO = 0, biko = 0, ziro_vao = 0, menuVAO = 0;
 int meshmesh = 0, falafel_indices = 0;
-int menuIconStart = 24, menuIconCount = 42;
+int menuIconStart = 48, menuIconCount = 42;
 float uiRed = 0.0f;
 
 struct Character {
@@ -929,7 +929,7 @@ void drawGuard(float x, float y, float lift, int kind = 0) {
     model = glm::scale(model, glm::vec3(0.1f, 0.15f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, 0.2f + (1.0f - 0.2f) * uiRed, 0.2f * (1.0f - uiRed), 0.25f * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
     }
     {
     glm::mat4 model = glm::mat4(1.0f);
@@ -937,7 +937,7 @@ void drawGuard(float x, float y, float lift, int kind = 0) {
     model = glm::scale(model, glm::vec3(0.1f, 0.15f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, 0.2f + (1.0f - 0.2f) * uiRed, 0.2f * (1.0f - uiRed), 0.25f * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
     }
     {
     glm::mat4 model = glm::mat4(1.0f);
@@ -945,7 +945,7 @@ void drawGuard(float x, float y, float lift, int kind = 0) {
     model = glm::scale(model, glm::vec3(0.36f, 0.5f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, 0.2f + (1.0f - 0.2f) * uiRed, 0.35f * (1.0f - uiRed), 0.8f * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
     }
     {
     glm::mat4 model = glm::mat4(1.0f);
@@ -953,7 +953,7 @@ void drawGuard(float x, float y, float lift, int kind = 0) {
     model = glm::scale(model, glm::vec3(0.36f, 0.08f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, 0.85f + (1.0f - 0.85f) * uiRed, 0.7f * (1.0f - uiRed), 0.2f * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
     }
     {
     glm::mat4 model = glm::mat4(1.0f);
@@ -961,7 +961,7 @@ void drawGuard(float x, float y, float lift, int kind = 0) {
     model = glm::scale(model, glm::vec3(0.15f, 0.15f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, 0.95f + (1.0f - 0.95f) * uiRed, 0.8f * (1.0f - uiRed), 0.65f * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLE_FAN, 15, 34);
+    glDrawArrays(GL_TRIANGLE_FAN, 13, 34);
     }
     {
     glm::mat4 model = glm::mat4(1.0f);
@@ -969,7 +969,7 @@ void drawGuard(float x, float y, float lift, int kind = 0) {
     model = glm::scale(model, glm::vec3(0.34f, 0.12f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, 0.6f + (1.0f - 0.6f) * uiRed, 0.6f * (1.0f - uiRed), 0.65f * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
     }
     {
     glm::mat4 model = glm::mat4(1.0f);
@@ -977,7 +977,7 @@ void drawGuard(float x, float y, float lift, int kind = 0) {
     model = glm::scale(model, glm::vec3(0.1f, 0.12f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, 0.8f + (1.0f - 0.8f) * uiRed, 0.1f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLES, 6, 3);
+    glDrawArrays(GL_TRIANGLES, 4, 3);
     }
     if (kind == 0) {
         {
@@ -986,7 +986,7 @@ void drawGuard(float x, float y, float lift, int kind = 0) {
         model = glm::scale(model, glm::vec3(0.2f, 0.28f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.6f + (1.0f - 0.6f) * uiRed, 0.6f * (1.0f - uiRed), 0.65f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -994,7 +994,7 @@ void drawGuard(float x, float y, float lift, int kind = 0) {
         model = glm::scale(model, glm::vec3(0.2f, 0.14f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.6f + (1.0f - 0.6f) * uiRed, 0.6f * (1.0f - uiRed), 0.65f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 12, 3);
+        glDrawArrays(GL_TRIANGLES, 10, 3);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1002,7 +1002,7 @@ void drawGuard(float x, float y, float lift, int kind = 0) {
         model = glm::scale(model, glm::vec3(0.06f, 0.5f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.85f + (1.0f - 0.85f) * uiRed, 0.85f * (1.0f - uiRed), 0.9f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1010,7 +1010,7 @@ void drawGuard(float x, float y, float lift, int kind = 0) {
         model = glm::scale(model, glm::vec3(0.2f, 0.05f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.5f + (1.0f - 0.5f) * uiRed, 0.35f * (1.0f - uiRed), 0.15f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
     }
     else if (kind == 1) {
@@ -1020,7 +1020,7 @@ void drawGuard(float x, float y, float lift, int kind = 0) {
         model = glm::scale(model, glm::vec3(0.05f, 0.62f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.5f + (1.0f - 0.5f) * uiRed, 0.32f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1028,7 +1028,7 @@ void drawGuard(float x, float y, float lift, int kind = 0) {
         model = glm::scale(model, glm::vec3(0.1f, 0.05f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.5f + (1.0f - 0.5f) * uiRed, 0.32f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1036,7 +1036,7 @@ void drawGuard(float x, float y, float lift, int kind = 0) {
         model = glm::scale(model, glm::vec3(0.1f, 0.05f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.5f + (1.0f - 0.5f) * uiRed, 0.32f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1044,7 +1044,7 @@ void drawGuard(float x, float y, float lift, int kind = 0) {
         model = glm::scale(model, glm::vec3(0.015f, 0.57f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.9f + (1.0f - 0.9f) * uiRed, 0.9f * (1.0f - uiRed), 0.85f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1052,7 +1052,7 @@ void drawGuard(float x, float y, float lift, int kind = 0) {
         model = glm::scale(model, glm::vec3(0.5f, 0.03f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.8f + (1.0f - 0.8f) * uiRed, 0.8f * (1.0f - uiRed), 0.75f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1060,7 +1060,7 @@ void drawGuard(float x, float y, float lift, int kind = 0) {
         model = glm::scale(model, glm::vec3(0.12f, 0.11f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.85f + (1.0f - 0.85f) * uiRed, 0.85f * (1.0f - uiRed), 0.9f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 9, 3);
+        glDrawArrays(GL_TRIANGLES, 7, 3);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1068,7 +1068,7 @@ void drawGuard(float x, float y, float lift, int kind = 0) {
         model = glm::scale(model, glm::vec3(0.07f, 0.3f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.45f + (1.0f - 0.45f) * uiRed, 0.28f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1076,7 +1076,7 @@ void drawGuard(float x, float y, float lift, int kind = 0) {
         model = glm::scale(model, glm::vec3(0.17f, 0.04f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.3f + (1.0f - 0.3f) * uiRed, 0.5f * (1.0f - uiRed), 0.25f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
     }
     else {
@@ -1086,7 +1086,7 @@ void drawGuard(float x, float y, float lift, int kind = 0) {
         model = glm::scale(model, glm::vec3(0.38f, 0.92f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.45f + (1.0f - 0.45f) * uiRed, 0.47f * (1.0f - uiRed), 0.55f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1094,7 +1094,7 @@ void drawGuard(float x, float y, float lift, int kind = 0) {
         model = glm::scale(model, glm::vec3(0.3f, 0.84f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.65f + (1.0f - 0.65f) * uiRed, 0.67f * (1.0f - uiRed), 0.72f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1102,7 +1102,7 @@ void drawGuard(float x, float y, float lift, int kind = 0) {
         model = glm::scale(model, glm::vec3(0.04f, 0.56f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.85f + (1.0f - 0.85f) * uiRed, 0.7f * (1.0f - uiRed), 0.2f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1110,7 +1110,7 @@ void drawGuard(float x, float y, float lift, int kind = 0) {
         model = glm::scale(model, glm::vec3(0.22f, 0.04f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.85f + (1.0f - 0.85f) * uiRed, 0.7f * (1.0f - uiRed), 0.2f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1118,7 +1118,7 @@ void drawGuard(float x, float y, float lift, int kind = 0) {
         model = glm::scale(model, glm::vec3(0.38f, 0.14f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.45f + (1.0f - 0.45f) * uiRed, 0.47f * (1.0f - uiRed), 0.55f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 12, 3);
+        glDrawArrays(GL_TRIANGLES, 10, 3);
         }
     }
 }
@@ -1271,7 +1271,7 @@ void drawEnemyActor(float x, float y, float lift, int variant = 2) {
     model = glm::scale(model, glm::vec3(0.1f, 0.15f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, 0.25f + (1.0f - 0.25f) * uiRed, 0.1f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
     }
     {
     glm::mat4 model = glm::mat4(1.0f);
@@ -1279,7 +1279,7 @@ void drawEnemyActor(float x, float y, float lift, int variant = 2) {
     model = glm::scale(model, glm::vec3(0.1f, 0.15f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, 0.25f + (1.0f - 0.25f) * uiRed, 0.1f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
     }
     {
     glm::mat4 model = glm::mat4(1.0f);
@@ -1287,7 +1287,7 @@ void drawEnemyActor(float x, float y, float lift, int variant = 2) {
     model = glm::scale(model, glm::vec3(0.4f, 0.55f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, 0.55f + (1.0f - 0.55f) * uiRed, 0.12f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
     }
     {
     glm::mat4 model = glm::mat4(1.0f);
@@ -1295,7 +1295,7 @@ void drawEnemyActor(float x, float y, float lift, int variant = 2) {
     model = glm::scale(model, glm::vec3(0.17f, 0.17f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, 0.35f + (1.0f - 0.35f) * uiRed, 0.55f * (1.0f - uiRed), 0.25f * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLE_FAN, 15, 34);
+    glDrawArrays(GL_TRIANGLE_FAN, 13, 34);
     }
     {
     glm::mat4 model = glm::mat4(1.0f);
@@ -1303,7 +1303,7 @@ void drawEnemyActor(float x, float y, float lift, int variant = 2) {
     model = glm::scale(model, glm::vec3(0.1f, 0.2f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, 0.9f + (1.0f - 0.9f) * uiRed, 0.9f * (1.0f - uiRed), 0.8f * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLES, 6, 3);
+    glDrawArrays(GL_TRIANGLES, 4, 3);
     }
     {
     glm::mat4 model = glm::mat4(1.0f);
@@ -1311,7 +1311,7 @@ void drawEnemyActor(float x, float y, float lift, int variant = 2) {
     model = glm::scale(model, glm::vec3(0.1f, 0.2f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, 0.9f + (1.0f - 0.9f) * uiRed, 0.9f * (1.0f - uiRed), 0.8f * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLES, 6, 3);
+    glDrawArrays(GL_TRIANGLES, 4, 3);
     }
     {
     glm::mat4 model = glm::mat4(1.0f);
@@ -1319,7 +1319,7 @@ void drawEnemyActor(float x, float y, float lift, int variant = 2) {
     model = glm::scale(model, glm::vec3(0.03f, 0.03f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, 1.0f + (1.0f - 1.0f) * uiRed, 0.9f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLE_FAN, 15, 34);
+    glDrawArrays(GL_TRIANGLE_FAN, 13, 34);
     }
     {
     glm::mat4 model = glm::mat4(1.0f);
@@ -1327,7 +1327,7 @@ void drawEnemyActor(float x, float y, float lift, int variant = 2) {
     model = glm::scale(model, glm::vec3(0.03f, 0.03f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, 1.0f + (1.0f - 1.0f) * uiRed, 0.9f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLE_FAN, 15, 34);
+    glDrawArrays(GL_TRIANGLE_FAN, 13, 34);
     }
     if (variant == 0) {
         {
@@ -1336,7 +1336,7 @@ void drawEnemyActor(float x, float y, float lift, int variant = 2) {
         model = glm::scale(model, glm::vec3(0.06f, 0.5f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.45f + (1.0f - 0.45f) * uiRed, 0.28f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1344,7 +1344,7 @@ void drawEnemyActor(float x, float y, float lift, int variant = 2) {
         model = glm::scale(model, glm::vec3(0.18f, 0.05f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.45f + (1.0f - 0.45f) * uiRed, 0.28f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1352,7 +1352,7 @@ void drawEnemyActor(float x, float y, float lift, int variant = 2) {
         model = glm::scale(model, glm::vec3(0.18f, 0.05f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.45f + (1.0f - 0.45f) * uiRed, 0.28f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1360,7 +1360,7 @@ void drawEnemyActor(float x, float y, float lift, int variant = 2) {
         model = glm::scale(model, glm::vec3(0.48f, 0.03f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.8f + (1.0f - 0.8f) * uiRed, 0.8f * (1.0f - uiRed), 0.75f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1368,7 +1368,7 @@ void drawEnemyActor(float x, float y, float lift, int variant = 2) {
         model = glm::scale(model, glm::vec3(-0.12f, 0.11f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.85f + (1.0f - 0.85f) * uiRed, 0.85f * (1.0f - uiRed), 0.9f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 9, 3);
+        glDrawArrays(GL_TRIANGLES, 7, 3);
         }
     }
     else if (variant == 1) {
@@ -1378,7 +1378,7 @@ void drawEnemyActor(float x, float y, float lift, int variant = 2) {
         model = glm::scale(model, glm::vec3(0.46f, 0.06f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.45f + (1.0f - 0.45f) * uiRed, 0.28f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1386,7 +1386,7 @@ void drawEnemyActor(float x, float y, float lift, int variant = 2) {
         model = glm::scale(model, glm::vec3(0.05f, 0.3f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.35f + (1.0f - 0.35f) * uiRed, 0.22f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1394,7 +1394,7 @@ void drawEnemyActor(float x, float y, float lift, int variant = 2) {
         model = glm::scale(model, glm::vec3(0.28f, 0.03f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.8f + (1.0f - 0.8f) * uiRed, 0.8f * (1.0f - uiRed), 0.75f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1402,7 +1402,7 @@ void drawEnemyActor(float x, float y, float lift, int variant = 2) {
         model = glm::scale(model, glm::vec3(-0.12f, 0.11f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.85f + (1.0f - 0.85f) * uiRed, 0.85f * (1.0f - uiRed), 0.9f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 9, 3);
+        glDrawArrays(GL_TRIANGLES, 7, 3);
         }
     }
     else {
@@ -1412,7 +1412,7 @@ void drawEnemyActor(float x, float y, float lift, int variant = 2) {
         model = glm::scale(model, glm::vec3(0.08f, 0.5f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.45f + (1.0f - 0.45f) * uiRed, 0.28f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1420,7 +1420,7 @@ void drawEnemyActor(float x, float y, float lift, int variant = 2) {
         model = glm::scale(model, glm::vec3(0.12f, 0.16f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.75f + (1.0f - 0.75f) * uiRed, 0.75f * (1.0f - uiRed), 0.8f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 6, 3);
+        glDrawArrays(GL_TRIANGLES, 4, 3);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1428,7 +1428,7 @@ void drawEnemyActor(float x, float y, float lift, int variant = 2) {
         model = glm::scale(model, glm::vec3(0.12f, 0.16f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.75f + (1.0f - 0.75f) * uiRed, 0.75f * (1.0f - uiRed), 0.8f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 6, 3);
+        glDrawArrays(GL_TRIANGLES, 4, 3);
         }
     }
 }
@@ -1443,7 +1443,7 @@ void drawProjectile(const Projectile& pr) {
         model = glm::scale(model, glm::vec3(0.5f, 0.04f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.85f + (1.0f - 0.85f) * uiRed, 0.85f * (1.0f - uiRed), 0.8f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1451,7 +1451,7 @@ void drawProjectile(const Projectile& pr) {
         model = glm::scale(model, glm::vec3(0.16f, 0.16f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.95f + (1.0f - 0.95f) * uiRed, 0.95f * (1.0f - uiRed), 1.0f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 9, 3);
+        glDrawArrays(GL_TRIANGLES, 7, 3);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1459,7 +1459,7 @@ void drawProjectile(const Projectile& pr) {
         model = glm::scale(model, glm::vec3(0.07f, 0.14f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.2f + (1.0f - 0.2f) * uiRed, 0.7f * (1.0f - uiRed), 0.3f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
     }
     else {
@@ -1469,7 +1469,7 @@ void drawProjectile(const Projectile& pr) {
         model = glm::scale(model, glm::vec3(0.5f, 0.04f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.55f + (1.0f - 0.55f) * uiRed, 0.3f * (1.0f - uiRed), 0.15f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1477,7 +1477,7 @@ void drawProjectile(const Projectile& pr) {
         model = glm::scale(model, glm::vec3(-0.16f, 0.16f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.95f + (1.0f - 0.95f) * uiRed, 0.15f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 9, 3);
+        glDrawArrays(GL_TRIANGLES, 7, 3);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1485,7 +1485,7 @@ void drawProjectile(const Projectile& pr) {
         model = glm::scale(model, glm::vec3(0.07f, 0.14f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.95f + (1.0f - 0.95f) * uiRed, 0.55f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
     }
 }
@@ -1612,27 +1612,63 @@ void buildMenuMesh() {
         4.90f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
         11.10f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
         11.10f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
-        11.10f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
         4.90f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
-        4.90f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
+
         5.50f, 6.00f, 0.0f,   0.20f, 0.60f, 0.25f,
         10.50f, 6.00f, 0.0f,   0.20f, 0.60f, 0.25f,
         10.50f, 7.40f, 0.0f,   0.20f, 0.60f, 0.25f,
-        10.50f, 7.40f, 0.0f,   0.20f, 0.60f, 0.25f,
         5.50f, 7.40f, 0.0f,   0.20f, 0.60f, 0.25f,
-        5.50f, 6.00f, 0.0f,   0.20f, 0.60f, 0.25f,
+
         5.50f, 4.10f, 0.0f,   0.20f, 0.40f, 0.80f,
         10.50f, 4.10f, 0.0f,   0.20f, 0.40f, 0.80f,
         10.50f, 5.50f, 0.0f,   0.20f, 0.40f, 0.80f,
-        10.50f, 5.50f, 0.0f,   0.20f, 0.40f, 0.80f,
         5.50f, 5.50f, 0.0f,   0.20f, 0.40f, 0.80f,
-        5.50f, 4.10f, 0.0f,   0.20f, 0.40f, 0.80f,
+
         5.50f, 2.20f, 0.0f,   0.75f, 0.20f, 0.20f,
         10.50f, 2.20f, 0.0f,   0.75f, 0.20f, 0.20f,
         10.50f, 3.60f, 0.0f,   0.75f, 0.20f, 0.20f,
-        10.50f, 3.60f, 0.0f,   0.75f, 0.20f, 0.20f,
         5.50f, 3.60f, 0.0f,   0.75f, 0.20f, 0.20f,
-        5.50f, 2.20f, 0.0f,   0.75f, 0.20f, 0.20f,
+
+        4.90f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
+        11.10f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
+        11.10f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
+        4.90f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
+
+        5.50f, 6.00f, 0.0f,   0.20f, 0.60f, 0.25f,
+        10.50f, 6.00f, 0.0f,   0.20f, 0.60f, 0.25f,
+        10.50f, 7.40f, 0.0f,   0.20f, 0.60f, 0.25f,
+        5.50f, 7.40f, 0.0f,   0.20f, 0.60f, 0.25f,
+
+        5.50f, 4.10f, 0.0f,   0.20f, 0.40f, 0.80f,
+        10.50f, 4.10f, 0.0f,   0.20f, 0.40f, 0.80f,
+        10.50f, 5.50f, 0.0f,   0.20f, 0.40f, 0.80f,
+        5.50f, 5.50f, 0.0f,   0.20f, 0.40f, 0.80f,
+
+        5.50f, 2.20f, 0.0f,   0.80f, 0.50f, 0.15f,
+        10.50f, 2.20f, 0.0f,   0.80f, 0.50f, 0.15f,
+        10.50f, 3.60f, 0.0f,   0.80f, 0.50f, 0.15f,
+        5.50f, 3.60f, 0.0f,   0.80f, 0.50f, 0.15f,
+
+        4.90f, 3.80f, 0.0f,   0.12f, 0.45f, 0.20f,
+        11.10f, 3.80f, 0.0f,   0.12f, 0.45f, 0.20f,
+        11.10f, 8.00f, 0.0f,   0.12f, 0.45f, 0.20f,
+        4.90f, 8.00f, 0.0f,   0.12f, 0.45f, 0.20f,
+
+        4.90f, 3.80f, 0.0f,   0.50f, 0.12f, 0.12f,
+        11.10f, 3.80f, 0.0f,   0.50f, 0.12f, 0.12f,
+        11.10f, 8.00f, 0.0f,   0.50f, 0.12f, 0.12f,
+        4.90f, 8.00f, 0.0f,   0.50f, 0.12f, 0.12f,
+
+        5.50f, 6.00f, 0.0f,   0.20f, 0.40f, 0.80f,
+        10.50f, 6.00f, 0.0f,   0.20f, 0.40f, 0.80f,
+        10.50f, 7.40f, 0.0f,   0.20f, 0.40f, 0.80f,
+        5.50f, 7.40f, 0.0f,   0.20f, 0.40f, 0.80f,
+
+        5.50f, 4.10f, 0.0f,   0.80f, 0.50f, 0.15f,
+        10.50f, 4.10f, 0.0f,   0.80f, 0.50f, 0.15f,
+        10.50f, 5.50f, 0.0f,   0.80f, 0.50f, 0.15f,
+        5.50f, 5.50f, 0.0f,   0.80f, 0.50f, 0.15f,
+
         7.70f, 6.20f, 0.0f,   1.00f, 1.00f, 1.00f,
         7.70f, 7.20f, 0.0f,   1.00f, 1.00f, 1.00f,
         8.50f, 6.70f, 0.0f,   1.00f, 1.00f, 1.00f,
@@ -1675,30 +1711,6 @@ void buildMenuMesh() {
         8.40f, 2.70f, 0.0f,   1.00f, 1.00f, 1.00f,
         8.40f, 3.10f, 0.0f,   1.00f, 1.00f, 1.00f,
         8.75f, 2.90f, 0.0f,   1.00f, 1.00f, 1.00f,
-        4.90f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
-        11.10f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
-        11.10f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
-        11.10f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
-        4.90f, 8.00f, 0.0f,   0.18f, 0.20f, 0.28f,
-        4.90f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
-        5.50f, 6.00f, 0.0f,   0.20f, 0.60f, 0.25f,
-        10.50f, 6.00f, 0.0f,   0.20f, 0.60f, 0.25f,
-        10.50f, 7.40f, 0.0f,   0.20f, 0.60f, 0.25f,
-        10.50f, 7.40f, 0.0f,   0.20f, 0.60f, 0.25f,
-        5.50f, 7.40f, 0.0f,   0.20f, 0.60f, 0.25f,
-        5.50f, 6.00f, 0.0f,   0.20f, 0.60f, 0.25f,
-        5.50f, 4.10f, 0.0f,   0.20f, 0.40f, 0.80f,
-        10.50f, 4.10f, 0.0f,   0.20f, 0.40f, 0.80f,
-        10.50f, 5.50f, 0.0f,   0.20f, 0.40f, 0.80f,
-        10.50f, 5.50f, 0.0f,   0.20f, 0.40f, 0.80f,
-        5.50f, 5.50f, 0.0f,   0.20f, 0.40f, 0.80f,
-        5.50f, 4.10f, 0.0f,   0.20f, 0.40f, 0.80f,
-        5.50f, 2.20f, 0.0f,   0.80f, 0.50f, 0.15f,
-        10.50f, 2.20f, 0.0f,   0.80f, 0.50f, 0.15f,
-        10.50f, 3.60f, 0.0f,   0.80f, 0.50f, 0.15f,
-        10.50f, 3.60f, 0.0f,   0.80f, 0.50f, 0.15f,
-        5.50f, 3.60f, 0.0f,   0.80f, 0.50f, 0.15f,
-        5.50f, 2.20f, 0.0f,   0.80f, 0.50f, 0.15f,
         7.70f, 6.20f, 0.0f,   1.00f, 1.00f, 1.00f,
         7.70f, 7.20f, 0.0f,   1.00f, 1.00f, 1.00f,
         8.50f, 6.70f, 0.0f,   1.00f, 1.00f, 1.00f,
@@ -1717,30 +1729,6 @@ void buildMenuMesh() {
         7.45f, 3.00f, 0.0f,   1.00f, 1.00f, 1.00f,
         8.55f, 3.00f, 0.0f,   1.00f, 1.00f, 1.00f,
         8.00f, 3.45f, 0.0f,   1.00f, 1.00f, 1.00f,
-        4.90f, 3.80f, 0.0f,   0.12f, 0.45f, 0.20f,
-        11.10f, 3.80f, 0.0f,   0.12f, 0.45f, 0.20f,
-        11.10f, 8.00f, 0.0f,   0.12f, 0.45f, 0.20f,
-        11.10f, 8.00f, 0.0f,   0.12f, 0.45f, 0.20f,
-        4.90f, 8.00f, 0.0f,   0.12f, 0.45f, 0.20f,
-        4.90f, 3.80f, 0.0f,   0.12f, 0.45f, 0.20f,
-        4.90f, 3.80f, 0.0f,   0.50f, 0.12f, 0.12f,
-        11.10f, 3.80f, 0.0f,   0.50f, 0.12f, 0.12f,
-        11.10f, 8.00f, 0.0f,   0.50f, 0.12f, 0.12f,
-        11.10f, 8.00f, 0.0f,   0.50f, 0.12f, 0.12f,
-        4.90f, 8.00f, 0.0f,   0.50f, 0.12f, 0.12f,
-        4.90f, 3.80f, 0.0f,   0.50f, 0.12f, 0.12f,
-        5.50f, 6.00f, 0.0f,   0.20f, 0.40f, 0.80f,
-        10.50f, 6.00f, 0.0f,   0.20f, 0.40f, 0.80f,
-        10.50f, 7.40f, 0.0f,   0.20f, 0.40f, 0.80f,
-        10.50f, 7.40f, 0.0f,   0.20f, 0.40f, 0.80f,
-        5.50f, 7.40f, 0.0f,   0.20f, 0.40f, 0.80f,
-        5.50f, 6.00f, 0.0f,   0.20f, 0.40f, 0.80f,
-        5.50f, 4.10f, 0.0f,   0.80f, 0.50f, 0.15f,
-        10.50f, 4.10f, 0.0f,   0.80f, 0.50f, 0.15f,
-        10.50f, 5.50f, 0.0f,   0.80f, 0.50f, 0.15f,
-        10.50f, 5.50f, 0.0f,   0.80f, 0.50f, 0.15f,
-        5.50f, 5.50f, 0.0f,   0.80f, 0.50f, 0.15f,
-        5.50f, 4.10f, 0.0f,   0.80f, 0.50f, 0.15f,
         7.95f, 6.20f, 0.0f,   1.00f, 1.00f, 1.00f,
         7.95f, 7.20f, 0.0f,   1.00f, 1.00f, 1.00f,
         7.45f, 6.70f, 0.0f,   1.00f, 1.00f, 1.00f,
@@ -1758,15 +1746,30 @@ void buildMenuMesh() {
         8.00f, 5.25f, 0.0f,   1.00f, 1.00f, 1.00f
     };
 
-    
-    
+    GLuint menuIndices[] = {
+        0, 1, 2, 2, 3, 0,
+        4, 5, 6, 6, 7, 4,
+        8, 9, 10, 10, 11, 8,
+        12, 13, 14, 14, 15, 12,
+        16, 17, 18, 18, 19, 16,
+        20, 21, 22, 22, 23, 20,
+        24, 25, 26, 26, 27, 24,
+        28, 29, 30, 30, 31, 28,
+        32, 33, 34, 34, 35, 32,
+        36, 37, 38, 38, 39, 36,
+        40, 41, 42, 42, 43, 40,
+        44, 45, 46, 46, 47, 44
+    };
 
-    unsigned int menuVBO;
+    unsigned int menuVBO, menuEBO;
     glGenVertexArrays(1, &menuVAO);
     glGenBuffers(1, &menuVBO);
+    glGenBuffers(1, &menuEBO);
     glBindVertexArray(menuVAO);
     glBindBuffer(GL_ARRAY_BUFFER, menuVBO);
     glBufferData(GL_ARRAY_BUFFER, menuVertices.size() * sizeof(float), menuVertices.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, menuEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(menuIndices), menuIndices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
@@ -1778,9 +1781,7 @@ void buildUiMesh() {
         0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
         1.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
         1.0f, 1.0f, 0.0f,   1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f, 0.0f,   1.0f, 1.0f, 1.0f,
         0.0f, 1.0f, 0.0f,   1.0f, 1.0f, 1.0f,
-        0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
         0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
         1.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
         0.5f, 1.0f, 0.0f,   1.0f, 1.0f, 1.0f,
@@ -1789,9 +1790,9 @@ void buildUiMesh() {
         1.0f, 0.5f, 0.0f,   1.0f, 1.0f, 1.0f,
         0.0f, 1.0f, 0.0f,   1.0f, 1.0f, 1.0f,
         1.0f, 1.0f, 0.0f,   1.0f, 1.0f, 1.0f,
-        0.5f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f,
-        0.0f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f
+        0.5f, 0.0f, 0.0f,   1.0f, 1.0f, 1.0f
     };
+    GLuint uiIndices[] = { 0, 1, 2, 2, 3, 0 };
     for (int i = 0; i <= 32; i++) {
         float angle = i * 2.0f * 3.14159265f / 32.0f;
         uiVertices.push_back(cos(angle));
@@ -1802,12 +1803,15 @@ void buildUiMesh() {
         uiVertices.push_back(1.0f);
     }
 
-    unsigned int uiVBO;
+    unsigned int uiVBO, uiEBO;
     glGenVertexArrays(1, &uiVAO);
     glGenBuffers(1, &uiVBO);
+    glGenBuffers(1, &uiEBO);
     glBindVertexArray(uiVAO);
     glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
     glBufferData(GL_ARRAY_BUFFER, uiVertices.size() * sizeof(float), uiVertices.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, uiEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uiIndices), uiIndices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
@@ -1863,7 +1867,7 @@ void drawMuteButton() {
     model = glm::scale(model, glm::vec3(0.5f, 0.5f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, (muted ? 0.3f : 0.15f) + (1.0f - (muted ? 0.3f : 0.15f)) * uiRed, (muted ? 0.3f : 0.6f) * (1.0f - uiRed), (muted ? 0.33f : 0.25f) * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLE_FAN, 15, 34);
+    glDrawArrays(GL_TRIANGLE_FAN, 13, 34);
     }
     float shade = muted ? 0.55f : 1.0f;
     {
@@ -1872,7 +1876,7 @@ void drawMuteButton() {
     model = glm::scale(model, glm::vec3(0.1f, 0.2f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, shade + (1.0f - shade) * uiRed, shade * (1.0f - uiRed), shade * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
     }
     {
     glm::mat4 model = glm::mat4(1.0f);
@@ -1880,7 +1884,7 @@ void drawMuteButton() {
     model = glm::scale(model, glm::vec3(0.1f, 0.4f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, shade + (1.0f - shade) * uiRed, shade * (1.0f - uiRed), shade * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
     }
     {
     glm::mat4 model = glm::mat4(1.0f);
@@ -1888,7 +1892,7 @@ void drawMuteButton() {
     model = glm::scale(model, glm::vec3(0.1f, 0.6f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, shade + (1.0f - shade) * uiRed, shade * (1.0f - uiRed), shade * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
     }
     if (muted) {
     glm::mat4 model = glm::mat4(1.0f);
@@ -1896,7 +1900,7 @@ void drawMuteButton() {
     model = glm::scale(model, glm::vec3(0.8f, 0.1f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, 0.9f + (1.0f - 0.9f) * uiRed, 0.1f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
     }
     uiEnd();
 }
@@ -1908,7 +1912,7 @@ void drawCoinTracker() {
     model = glm::scale(model, glm::vec3(2.7f, 1.35f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, 0.12f + (1.0f - 0.12f) * uiRed, 0.12f * (1.0f - uiRed), 0.16f * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
     }
     {
     glm::mat4 model = glm::mat4(1.0f);
@@ -1916,7 +1920,7 @@ void drawCoinTracker() {
     model = glm::scale(model, glm::vec3(3.55f, 1.35f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, 0.12f + (1.0f - 0.12f) * uiRed, 0.12f * (1.0f - uiRed), 0.16f * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
     }
     int shown = playerCoins / 10;
     for (int i = 0; i < 8; i++) {
@@ -1925,7 +1929,7 @@ void drawCoinTracker() {
     model = glm::scale(model, glm::vec3(0.14f, 0.14f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, 0.2f + (1.0f - 0.2f) * uiRed, 0.2f * (1.0f - uiRed), 0.24f * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLE_FAN, 15, 34);
+    glDrawArrays(GL_TRIANGLE_FAN, 13, 34);
     }
     for (int i = 0; i < shown && i < 24; i++) {
         float cx = 12.75f + (i % 8) * 0.4f;
@@ -1936,7 +1940,7 @@ void drawCoinTracker() {
         model = glm::scale(model, glm::vec3(0.14f, 0.14f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 1.0f + (1.0f - 1.0f) * uiRed, 0.8f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLE_FAN, 15, 34);
+        glDrawArrays(GL_TRIANGLE_FAN, 13, 34);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -1944,7 +1948,7 @@ void drawCoinTracker() {
         model = glm::scale(model, glm::vec3(0.085f, 0.085f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.9f + (1.0f - 0.9f) * uiRed, 0.62f * (1.0f - uiRed), 0.05f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLE_FAN, 15, 34);
+        glDrawArrays(GL_TRIANGLE_FAN, 13, 34);
         }
     }
 }
@@ -1962,7 +1966,7 @@ void drawCards() {
         model = glm::scale(model, glm::vec3(1.05f, 1.55f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, (cardColor[i][0]) + (1.0f - (cardColor[i][0])) * uiRed, (cardColor[i][1]) * (1.0f - uiRed), (cardColor[i][2]) * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         glUniform1f(locHighlight, 0.0f);
         {
@@ -1971,7 +1975,7 @@ void drawCards() {
         model = glm::scale(model, glm::vec3(0.93f, 0.4f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.1f + (1.0f - 0.1f) * uiRed, 0.1f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         if (i == 0) {
             {
@@ -1980,7 +1984,7 @@ void drawCards() {
             model = glm::scale(model, glm::vec3(0.08f, 0.17f, 1.0f));
             glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
             glUniform3f(locTint, 0.45f + (1.0f - 0.45f) * uiRed, 0.28f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
-            glDrawArrays(GL_TRIANGLES, 0, 6);
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
             }
             {
             glm::mat4 model = glm::mat4(1.0f);
@@ -1988,7 +1992,7 @@ void drawCards() {
             model = glm::scale(model, glm::vec3(0.44f, 0.08f, 1.0f));
             glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
             glUniform3f(locTint, 0.85f + (1.0f - 0.85f) * uiRed, 0.75f * (1.0f - uiRed), 0.3f * (1.0f - uiRed));
-            glDrawArrays(GL_TRIANGLES, 0, 6);
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
             }
             {
             glm::mat4 model = glm::mat4(1.0f);
@@ -1996,7 +2000,7 @@ void drawCards() {
             model = glm::scale(model, glm::vec3(0.1f, 0.55f, 1.0f));
             glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
             glUniform3f(locTint, 0.9f + (1.0f - 0.9f) * uiRed, 0.9f * (1.0f - uiRed), 0.95f * (1.0f - uiRed));
-            glDrawArrays(GL_TRIANGLES, 0, 6);
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
             }
             {
             glm::mat4 model = glm::mat4(1.0f);
@@ -2004,7 +2008,7 @@ void drawCards() {
             model = glm::scale(model, glm::vec3(0.1f, 0.13f, 1.0f));
             glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
             glUniform3f(locTint, 0.9f + (1.0f - 0.9f) * uiRed, 0.9f * (1.0f - uiRed), 0.95f * (1.0f - uiRed));
-            glDrawArrays(GL_TRIANGLES, 6, 3);
+            glDrawArrays(GL_TRIANGLES, 4, 3);
             }
         }
         else if (i == 1) {
@@ -2014,7 +2018,7 @@ void drawCards() {
             model = glm::scale(model, glm::vec3(0.5f, 0.06f, 1.0f));
             glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
             glUniform3f(locTint, 0.75f + (1.0f - 0.75f) * uiRed, 0.55f * (1.0f - uiRed), 0.3f * (1.0f - uiRed));
-            glDrawArrays(GL_TRIANGLES, 0, 6);
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
             }
             {
             glm::mat4 model = glm::mat4(1.0f);
@@ -2022,7 +2026,7 @@ void drawCards() {
             model = glm::scale(model, glm::vec3(0.22f, 0.28f, 1.0f));
             glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
             glUniform3f(locTint, 0.9f + (1.0f - 0.9f) * uiRed, 0.9f * (1.0f - uiRed), 0.95f * (1.0f - uiRed));
-            glDrawArrays(GL_TRIANGLES, 9, 3);
+            glDrawArrays(GL_TRIANGLES, 7, 3);
             }
             {
             glm::mat4 model = glm::mat4(1.0f);
@@ -2030,7 +2034,7 @@ void drawCards() {
             model = glm::scale(model, glm::vec3(0.14f, 0.13f, 1.0f));
             glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
             glUniform3f(locTint, 0.95f + (1.0f - 0.95f) * uiRed, 0.95f * (1.0f - uiRed), 0.95f * (1.0f - uiRed));
-            glDrawArrays(GL_TRIANGLES, 6, 3);
+            glDrawArrays(GL_TRIANGLES, 4, 3);
             }
             {
             glm::mat4 model = glm::mat4(1.0f);
@@ -2038,7 +2042,7 @@ void drawCards() {
             model = glm::scale(model, glm::vec3(0.14f, 0.13f, 1.0f));
             glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
             glUniform3f(locTint, 0.95f + (1.0f - 0.95f) * uiRed, 0.95f * (1.0f - uiRed), 0.95f * (1.0f - uiRed));
-            glDrawArrays(GL_TRIANGLES, 12, 3);
+            glDrawArrays(GL_TRIANGLES, 10, 3);
             }
         }
         else {
@@ -2048,7 +2052,7 @@ void drawCards() {
             model = glm::scale(model, glm::vec3(0.54f, 0.45f, 1.0f));
             glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
             glUniform3f(locTint, 0.9f + (1.0f - 0.9f) * uiRed, 0.9f * (1.0f - uiRed), 0.95f * (1.0f - uiRed));
-            glDrawArrays(GL_TRIANGLES, 0, 6);
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
             }
             {
             glm::mat4 model = glm::mat4(1.0f);
@@ -2056,7 +2060,7 @@ void drawCards() {
             model = glm::scale(model, glm::vec3(0.54f, 0.33f, 1.0f));
             glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
             glUniform3f(locTint, 0.9f + (1.0f - 0.9f) * uiRed, 0.9f * (1.0f - uiRed), 0.95f * (1.0f - uiRed));
-            glDrawArrays(GL_TRIANGLES, 12, 3);
+            glDrawArrays(GL_TRIANGLES, 10, 3);
             }
             {
             glm::mat4 model = glm::mat4(1.0f);
@@ -2064,7 +2068,7 @@ void drawCards() {
             model = glm::scale(model, glm::vec3(0.08f, 0.55f, 1.0f));
             glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
             glUniform3f(locTint, (cardColor[i][0]) + (1.0f - (cardColor[i][0])) * uiRed, (cardColor[i][1]) * (1.0f - uiRed), (cardColor[i][2]) * (1.0f - uiRed));
-            glDrawArrays(GL_TRIANGLES, 0, 6);
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
             }
             {
             glm::mat4 model = glm::mat4(1.0f);
@@ -2072,7 +2076,7 @@ void drawCards() {
             model = glm::scale(model, glm::vec3(0.34f, 0.08f, 1.0f));
             glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
             glUniform3f(locTint, (cardColor[i][0]) + (1.0f - (cardColor[i][0])) * uiRed, (cardColor[i][1]) * (1.0f - uiRed), (cardColor[i][2]) * (1.0f - uiRed));
-            glDrawArrays(GL_TRIANGLES, 0, 6);
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
             }
         }
         int pips = textReady ? 0 : cardCost[i] / 10;
@@ -2084,7 +2088,7 @@ void drawCards() {
             model = glm::scale(model, glm::vec3(0.1f, 0.1f, 1.0f));
             glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
             glUniform3f(locTint, 1.0f + (1.0f - 1.0f) * uiRed, 0.8f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
-            glDrawArrays(GL_TRIANGLE_FAN, 15, 34);
+            glDrawArrays(GL_TRIANGLE_FAN, 13, 34);
             }
             {
             glm::mat4 model = glm::mat4(1.0f);
@@ -2092,7 +2096,7 @@ void drawCards() {
             model = glm::scale(model, glm::vec3(0.06f, 0.06f, 1.0f));
             glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
             glUniform3f(locTint, 0.9f + (1.0f - 0.9f) * uiRed, 0.62f * (1.0f - uiRed), 0.05f * (1.0f - uiRed));
-            glDrawArrays(GL_TRIANGLE_FAN, 15, 34);
+            glDrawArrays(GL_TRIANGLE_FAN, 13, 34);
             }
         }
     }
@@ -2109,7 +2113,7 @@ void drawHealthBar(float cx, float y, int health, int maxHealth) {
     model = glm::scale(model, glm::vec3(0.64f, 0.1f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, 0.1f + (1.0f - 0.1f) * uiRed, 0.1f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
     }
     {
     glm::mat4 model = glm::mat4(1.0f);
@@ -2117,7 +2121,7 @@ void drawHealthBar(float cx, float y, int health, int maxHealth) {
     model = glm::scale(model, glm::vec3(0.6f * frac, 0.06f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, (1.0f - frac) + (1.0f - (1.0f - frac)) * uiRed, frac * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
     }
 }
 
@@ -2128,7 +2132,7 @@ void drawBubble(float x, float y, int icon) {
     model = glm::scale(model, glm::vec3(0.9f, 0.6f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, 1.0f + (1.0f - 1.0f) * uiRed, 1.0f * (1.0f - uiRed), 1.0f * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
     }
     {
     glm::mat4 model = glm::mat4(1.0f);
@@ -2136,7 +2140,7 @@ void drawBubble(float x, float y, int icon) {
     model = glm::scale(model, glm::vec3(0.2f, 0.15f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, 1.0f + (1.0f - 1.0f) * uiRed, 1.0f * (1.0f - uiRed), 1.0f * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLES, 12, 3);
+    glDrawArrays(GL_TRIANGLES, 10, 3);
     }
     if (icon == 0) {
         {
@@ -2145,7 +2149,7 @@ void drawBubble(float x, float y, int icon) {
         model = glm::scale(model, glm::vec3(0.32f, 0.24f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.55f + (1.0f - 0.55f) * uiRed, 0.35f * (1.0f - uiRed), 0.2f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -2153,7 +2157,7 @@ void drawBubble(float x, float y, int icon) {
         model = glm::scale(model, glm::vec3(0.46f, 0.2f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.75f + (1.0f - 0.75f) * uiRed, 0.2f * (1.0f - uiRed), 0.2f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 6, 3);
+        glDrawArrays(GL_TRIANGLES, 4, 3);
         }
     }
     else if (icon == 1) {
@@ -2163,7 +2167,7 @@ void drawBubble(float x, float y, int icon) {
         model = glm::scale(model, glm::vec3(0.05f, 0.46f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.2f + (1.0f - 0.2f) * uiRed, 0.2f * (1.0f - uiRed), 0.2f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -2171,7 +2175,7 @@ void drawBubble(float x, float y, int icon) {
         model = glm::scale(model, glm::vec3(0.32f, 0.25f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.8f + (1.0f - 0.8f) * uiRed, 0.1f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 9, 3);
+        glDrawArrays(GL_TRIANGLES, 7, 3);
         }
     }
     else {
@@ -2181,7 +2185,7 @@ void drawBubble(float x, float y, int icon) {
         model = glm::scale(model, glm::vec3(0.06f, 0.28f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.45f + (1.0f - 0.45f) * uiRed, 0.47f * (1.0f - uiRed), 0.55f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -2189,7 +2193,7 @@ void drawBubble(float x, float y, int icon) {
         model = glm::scale(model, glm::vec3(0.1f, 0.08f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.45f + (1.0f - 0.45f) * uiRed, 0.47f * (1.0f - uiRed), 0.55f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 6, 3);
+        glDrawArrays(GL_TRIANGLES, 4, 3);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -2197,7 +2201,7 @@ void drawBubble(float x, float y, int icon) {
         model = glm::scale(model, glm::vec3(0.24f, 0.05f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.5f + (1.0f - 0.5f) * uiRed, 0.32f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -2205,7 +2209,7 @@ void drawBubble(float x, float y, int icon) {
         model = glm::scale(model, glm::vec3(0.04f, 0.09f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 0.5f + (1.0f - 0.5f) * uiRed, 0.32f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
     }
 }
@@ -2218,7 +2222,7 @@ void drawCutscene(float t) {
     model = glm::scale(model, glm::vec3(15.4f, 0.65f, 1.0f));
     glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
     glUniform3f(locTint, 0.1f + (1.0f - 0.1f) * uiRed, 0.1f * (1.0f - uiRed), 0.14f * (1.0f - uiRed));
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
     }
     if (t > 0.5f && t < 4.5f) {
         float pulse = 0.6f + 0.4f * sin(t * 6.0f);
@@ -2228,7 +2232,7 @@ void drawCutscene(float t) {
         model = glm::scale(model, glm::vec3(3.2f, 0.1f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, pulse + (1.0f - pulse) * uiRed, pulse * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -2236,7 +2240,7 @@ void drawCutscene(float t) {
         model = glm::scale(model, glm::vec3(3.2f, 0.1f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, pulse + (1.0f - pulse) * uiRed, pulse * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -2244,7 +2248,7 @@ void drawCutscene(float t) {
         model = glm::scale(model, glm::vec3(0.1f, 8.2f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, pulse + (1.0f - pulse) * uiRed, pulse * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
         {
         glm::mat4 model = glm::mat4(1.0f);
@@ -2252,7 +2256,7 @@ void drawCutscene(float t) {
         model = glm::scale(model, glm::vec3(0.1f, 8.2f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, pulse + (1.0f - pulse) * uiRed, pulse * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
         }
     }
     float guardX = 4.0f;
@@ -2269,7 +2273,7 @@ void drawCutscene(float t) {
         model = glm::scale(model, glm::vec3(0.1f, 0.1f, 1.0f));
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
         glUniform3f(locTint, 1.0f + (1.0f - 1.0f) * uiRed, 0.9f * (1.0f - uiRed), 0.2f * (1.0f - uiRed));
-        glDrawArrays(GL_TRIANGLE_FAN, 15, 34);
+        glDrawArrays(GL_TRIANGLE_FAN, 13, 34);
         }
     }
     else if (t >= 13.5f) {
@@ -2291,10 +2295,10 @@ void drawMainMenu() {
     glBindVertexArray(menuVAO);
     glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
     glUniform1f(hilo, 0.0f);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
     for (int i = 0; i < 3; i++) {
         glUniform1f(hilo, i == menuHover ? 1.0f : 0.0f);
-        glDrawArrays(GL_TRIANGLES, 6 + i * 6, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)((1 + i) * 6 * sizeof(unsigned int)));
     }
     glUniform1f(hilo, 0.0f);
     if (!textReady) glDrawArrays(GL_TRIANGLES, menuIconStart, menuIconCount);
@@ -2306,20 +2310,20 @@ void drawEndOrPauseMenu() {
     glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
     if (isWin || gameOver) {
         glUniform1f(hilo, 0.0f);
-        glDrawArrays(GL_TRIANGLES, isWin ? 108 : 114, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)((isWin ? 8 : 9) * 6 * sizeof(unsigned int)));
         for (int i = 0; i < 2; i++) {
             glUniform1f(hilo, i == menuHover ? 1.0f : 0.0f);
-            glDrawArrays(GL_TRIANGLES, 120 + i * 6, 6);
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)((10 + i) * 6 * sizeof(unsigned int)));
         }
         glUniform1f(hilo, 0.0f);
-        if (!textReady) glDrawArrays(GL_TRIANGLES, 132, 15);
+        if (!textReady) glDrawArrays(GL_TRIANGLES, 108, 15);
     }
     else {
         glUniform1f(hilo, 0.0f);
-        glDrawArrays(GL_TRIANGLES, 66, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(4 * 6 * sizeof(unsigned int)));
         for (int i = 0; i < 3; i++) {
             glUniform1f(hilo, i == menuHover ? 1.0f : 0.0f);
-            glDrawArrays(GL_TRIANGLES, 72 + i * 6, 6);
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)((5 + i) * 6 * sizeof(unsigned int)));
         }
         glUniform1f(hilo, 0.0f);
         if (!textReady) glDrawArrays(GL_TRIANGLES, 90, 18);
