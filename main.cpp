@@ -1607,18 +1607,6 @@ std::string cutsceneLine(float t) {
     return "";
 }
 
-std::string cardsLine() {
-    const char* names[3] = { "Melee", "Ranged", "Defense" };
-    std::string line = "Cards: ";
-    for (int i = 0; i < 3; i++) {
-        if (i > 0) line += ", ";
-        line += names[i];
-        line += " " + std::to_string(cardCost[i]);
-        line += playerCoins >= cardCost[i] ? " ready" : " locked";
-    }
-    return line;
-}
-
 void buildMenuMesh() {
     std::vector<float> menuVertices = {
         4.90f, 1.70f, 0.0f,   0.18f, 0.20f, 0.28f,
