@@ -13,18 +13,13 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-// ========================================================================
-// SHARED DATA: types and state used by several members, grouped by owner
-// ========================================================================
-
-// ---- Member 1 data: window size and OpenGL handles ----
 int ard_3ard = 1280, tol_3ard = 720;
 int locModel = -1, locTint = -1, locOffset = -1, locHighlight = -1, locGray = -1;
 int gizmo = -1, wizzo = -1, fizzo = -1, hilo = -1;
 unsigned int uiVAO = 0, biko = 0, ziro_vao = 0, menuVAO = 0;
 int meshmesh = 0, falafel_indices = 0;
 int menuIconStart = 24, menuIconCount = 42;
-float g_uiRed = 0.0f;
+float uiRed = 0.0f;
 
 struct Character {
     unsigned int TextureID;
@@ -35,10 +30,9 @@ struct Character {
 
 std::map<char, Character> Characters;
 unsigned int textVAO = 0, textVBO = 0, textProgram = 0;
-bool g_textReady = false;
-unsigned int g_mainProgram = 0;
+bool textReady = false;
+unsigned int mainProgram = 0;
 
-// ---- Member 2 data: lanes, players and input state ----
 struct Mahshy { int id; float yStart, yEnd, centerY; };
 
 struct Hawawshy {
@@ -72,7 +66,7 @@ public:
 
 bool wPressed = false;
 bool sPressed = false;
-float g_playerSpeed = 1.5f;
+float playerSpeed = 1.5f;
 
 Koshary soso;
 std::vector<Hawawshy> basal;
@@ -80,7 +74,6 @@ std::vector<bool> tamtam(3, false);
 int ziz = -1;
 bool tot = true;
 
-// ---- Member 3 data: enemies, coins, projectiles and waves ----
 enum EnemyType { EASY_UPPER, MEDIUM_LOWER, HARD_MELEE };
 
 struct Enemy {
@@ -136,8 +129,8 @@ struct Coin {
     bool collected;
 };
 
-std::vector<Enemy> g_enemies;
-std::vector<Coin> g_coins;
+std::vector<Enemy> enemies;
+std::vector<Coin> coins;
 
 struct Projectile {
     int laneId;
@@ -150,40 +143,32 @@ struct Projectile {
     float ignoreMaxX;
 };
 
-std::vector<Projectile> g_projectiles;
+std::vector<Projectile> projectiles;
 
-std::vector<EnemyType> g_spawnQueue;
-float g_spawnTimer = 0.0f;
-float g_spawnInterval = 3.0f;
-int g_nextEnemyId = 0;
-int g_currentWave = 1;
-bool g_waveInProgress = false;
-int g_playerCoins = 30;
+std::vector<EnemyType> spawnQueue;
+float spawnTimer = 0.0f;
+float spawnInterval = 3.0f;
+int nextEnemyId = 0;
+int currentWave = 1;
+bool waveInProgress = false;
+int playerCoins = 30;
 int cardCost[3] = { 10, 20, 30 };
 
-// ---- Member 4 data: menus, cutscene and UI state ----
 bool isPaused = false;
 bool inMainMenu = true;
 bool isWin = false;
-bool g_gameOver = false;
+bool gameOver = false;
 bool inCutscene = false;
 float cutsceneTime = 0.0f;
 int menuHover = -1;
 int cardHover = -1;
-float g_animTime = 0.0f;
-std::string g_lastTitle;
+float animTime = 0.0f;
 
-// ---- Functions defined in a later member section ----
 int menuButtonAt(float x, float y);
 int cardAt(float x, float y);
 bool handleMenuClick(GLFWwindow* window, float wX, float wY);
 void hurtEnemy(Enemy& e, int dmg);
 void drawHealthBar(float cx, float y, int health, int maxHealth);
-
-// ========================================================================
-// MEMBER 1: OpenGL engine and environment
-// (window, shaders, VAO/VBO, projection, render pass, Home Base and scenery)
-// ========================================================================
 
 const char* kalmita ="#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
@@ -237,22 +222,6 @@ void el_shasha_betrg3(GLFWwindow* bobo, int ard, int tool) {
     glViewport(0, 0, ard, tool);
 }
 
-// ---- shape drawing helpers: model matrix and tint per shape ----
-void uiShape(GLenum mode, int first, int count, float x, float y, float w, float h, float r, float g, float b) {
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(x, y, 0.0f));
-    model = glm::scale(model, glm::vec3(w, h, 1.0f));
-    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
-    glUniform3f(locTint, r + (1.0f - r) * g_uiRed, g * (1.0f - g_uiRed), b * (1.0f - g_uiRed));
-    glDrawArrays(mode, first, count);
-}
-
-void uiRect(float x, float y, float w, float h, float r, float g, float b) { uiShape(GL_TRIANGLES, 0, 6, x, y, w, h, r, g, b); }
-void uiTriUp(float x, float y, float w, float h, float r, float g, float b) { uiShape(GL_TRIANGLES, 6, 3, x, y, w, h, r, g, b); }
-void uiTriRight(float x, float y, float w, float h, float r, float g, float b) { uiShape(GL_TRIANGLES, 9, 3, x, y, w, h, r, g, b); }
-void uiTriDown(float x, float y, float w, float h, float r, float g, float b) { uiShape(GL_TRIANGLES, 12, 3, x, y, w, h, r, g, b); }
-void uiCircle(float cx, float cy, float rad, float r, float g, float b) { uiShape(GL_TRIANGLE_FAN, 15, 34, cx, cy, rad, rad, r, g, b); }
-
 void uiBegin() {
     glBindVertexArray(uiVAO);
     glUniform2f(locOffset, 0.0f, 0.0f);
@@ -273,7 +242,7 @@ GLFWwindow* initWindow() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    GLFWwindow* hamada = glfwCreateWindow(ard_3ard, tol_3ard, "Tower Defense Engine", NULL, NULL);
+    GLFWwindow* hamada = glfwCreateWindow(ard_3ard, tol_3ard, "", NULL, NULL);
     if (!hamada) { glfwTerminate(); return nullptr; }
     glfwMakeContextCurrent(hamada);
     glfwSwapInterval(1);
@@ -565,7 +534,6 @@ void drawEnvironment() {
     glDrawElements(GL_TRIANGLES, falafel_indices, GL_UNSIGNED_INT, (void*)(envIndexOffset * sizeof(unsigned int)));
 }
 
-// ---- text engine: FreeType glyph bitmaps drawn on quads (LearnOpenGL "Text Rendering") ----
 const char* textVertexSrc = "#version 330 core\n"
 "layout (location = 0) in vec4 vertex;\n"
 "out vec2 TexCoords;\n"
@@ -727,7 +695,7 @@ void RenderText(std::string text, float x, float y, float scale, glm::vec3 color
     }
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
-    glUseProgram(g_mainProgram);
+    glUseProgram(mainProgram);
 }
 
 float textWidth(const std::string& text, float scale) {
@@ -740,10 +708,6 @@ void drawText(const std::string& text, float cx, float y, float em, glm::vec3 co
     float scale = em / 48.0f;
     RenderText(text, cx - textWidth(text, scale) / 2.0f, y, scale, color);
 }
-
-// ========================================================================
-// MEMBER 2: core gameplay (lanes, hover and click input, player actions, collisions and damage)
-// ========================================================================
 
 float triSign(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3) {
     return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
@@ -779,7 +743,7 @@ void el_mouse_beteeth(GLFWwindow* tabl, double mash, double mosh) {
     float wX = (float)mash / winW * 16.0f;
     float wY = (1.0f - (float)mosh / winH) * 10.0f;
     if (inCutscene) return;
-    if (inMainMenu || isPaused || g_gameOver || isWin) {
+    if (inMainMenu || isPaused || gameOver || isWin) {
         menuHover = menuButtonAt(wX, wY);
         return;
     }
@@ -806,9 +770,9 @@ void el_mouse_dos(GLFWwindow* tabl, int b, int a, int m) {
     if (card != -1) {
         bool placed = false;
         for (size_t i = 0; i < tamtam.size(); ++i) {
-            if (tamtam[i] && g_playerCoins >= cardCost[card]) {
-                basal.push_back({ (int)i, soso.akhdar, card == 2 ? 0.0f : g_playerSpeed, 0.0f, false, false, 0.0f, card == 2 ? 7 : 5, 0.0f, card, 0.0f });
-                g_playerCoins -= cardCost[card];
+            if (tamtam[i] && playerCoins >= cardCost[card]) {
+                basal.push_back({ (int)i, soso.akhdar, card == 2 ? 0.0f : playerSpeed, 0.0f, false, false, 0.0f, card == 2 ? 7 : 5, 0.0f, card, 0.0f });
+                playerCoins -= cardCost[card];
                 placed = true;
             }
         }
@@ -854,7 +818,7 @@ void advancePlayers(float dt) {
 }
 
 void updateCombat(float dt) {
-    for (auto& e : g_enemies) {
+    for (auto& e : enemies) {
         e.blocked = false;
         if (e.damageTint > 0.0f) e.damageTint -= dt * 3.0f;
         if (e.attackTimer > 0.0f) e.attackTimer -= dt;
@@ -866,24 +830,24 @@ void updateCombat(float dt) {
 
     for (auto& p : basal) {
         if (p.kind == 1 && p.attackTimer <= 0.0f) {
-            g_projectiles.push_back({ p.laneId, p.xPos + 0.2f, 0.42f, 6.0f, true, 2, -100.0f, -100.0f });
+            projectiles.push_back({ p.laneId, p.xPos + 0.2f, 0.42f, 6.0f, true, 2, -100.0f, -100.0f });
             p.attackTimer = 1.2f;
             playSound(SND_SHOOT);
         }
     }
-    for (auto& e : g_enemies) {
+    for (auto& e : enemies) {
         if (!e.isAlive || e.type == HARD_MELEE || e.xPos > 15.5f || e.attackTimer > 0.0f) continue;
         bool high = (e.type == EASY_UPPER);
-        g_projectiles.push_back({ e.laneId, e.xPos - 0.2f, high ? 0.8f : 0.15f, -5.0f, false, high ? 0 : 1, -100.0f, -100.0f });
+        projectiles.push_back({ e.laneId, e.xPos - 0.2f, high ? 0.8f : 0.15f, -5.0f, false, high ? 0 : 1, -100.0f, -100.0f });
         e.attackTimer = high ? 2.0f : 2.4f;
         playSound(SND_ENEMY_SHOOT);
     }
 
-    for (auto it = g_projectiles.begin(); it != g_projectiles.end();) {
+    for (auto it = projectiles.begin(); it != projectiles.end();) {
         it->xPos += it->spd * dt;
         bool remove = false;
         if (it->fromPlayer) {
-            for (auto& e : g_enemies) {
+            for (auto& e : enemies) {
                 if (!e.isAlive || e.laneId != it->laneId || e.xPos > 16.0f) continue;
                 if (std::abs(it->xPos - e.xPos) < 0.35f) {
                     hurtEnemy(e, 1);
@@ -917,13 +881,13 @@ void updateCombat(float dt) {
             }
             if (it->xPos < soso.akhdar) remove = true;
         }
-        if (remove) it = g_projectiles.erase(it);
+        if (remove) it = projectiles.erase(it);
         else ++it;
     }
 
     for (auto& p : basal) {
         bool isColliding = false;
-        for (auto& e : g_enemies) {
+        for (auto& e : enemies) {
             if (!e.isAlive || e.laneId != p.laneId) continue;
             if (std::abs(p.xPos - e.xPos) >= 0.6f) continue;
             isColliding = true;
@@ -939,7 +903,7 @@ void updateCombat(float dt) {
                 e.attackTimer = 0.6f;
             }
         }
-        p.spd = (isColliding || p.kind == 2) ? 0.0f : g_playerSpeed;
+        p.spd = (isColliding || p.kind == 2) ? 0.0f : playerSpeed;
     }
 
     for (auto it = basal.begin(); it != basal.end();) {
@@ -959,35 +923,203 @@ float redFor(int health, int maxHealth, float flash) {
 }
 
 void drawGuard(float x, float y, float lift, int kind = 0) {
-    uiRect(x - 0.15f, y - 0.15f, 0.1f, 0.15f, 0.2f, 0.2f, 0.25f);
-    uiRect(x + 0.05f, y - 0.15f, 0.1f, 0.15f, 0.2f, 0.2f, 0.25f);
-    uiRect(x - 0.18f, y, 0.36f, 0.5f, 0.2f, 0.35f, 0.8f);
-    uiRect(x - 0.18f, y + 0.42f, 0.36f, 0.08f, 0.85f, 0.7f, 0.2f);
-    uiCircle(x, y + 0.66f, 0.15f, 0.95f, 0.8f, 0.65f);
-    uiRect(x - 0.17f, y + 0.7f, 0.34f, 0.12f, 0.6f, 0.6f, 0.65f);
-    uiTriUp(x - 0.05f, y + 0.82f, 0.1f, 0.12f, 0.8f, 0.1f, 0.1f);
+    {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(x - 0.15f, y - 0.15f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.1f, 0.15f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, 0.2f + (1.0f - 0.2f) * uiRed, 0.2f * (1.0f - uiRed), 0.25f * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+    {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(x + 0.05f, y - 0.15f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.1f, 0.15f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, 0.2f + (1.0f - 0.2f) * uiRed, 0.2f * (1.0f - uiRed), 0.25f * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+    {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(x - 0.18f, y, 0.0f));
+    model = glm::scale(model, glm::vec3(0.36f, 0.5f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, 0.2f + (1.0f - 0.2f) * uiRed, 0.35f * (1.0f - uiRed), 0.8f * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+    {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(x - 0.18f, y + 0.42f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.36f, 0.08f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, 0.85f + (1.0f - 0.85f) * uiRed, 0.7f * (1.0f - uiRed), 0.2f * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+    {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(x, y + 0.66f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.15f, 0.15f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, 0.95f + (1.0f - 0.95f) * uiRed, 0.8f * (1.0f - uiRed), 0.65f * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLE_FAN, 15, 34);
+    }
+    {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(x - 0.17f, y + 0.7f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.34f, 0.12f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, 0.6f + (1.0f - 0.6f) * uiRed, 0.6f * (1.0f - uiRed), 0.65f * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+    {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(x - 0.05f, y + 0.82f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.1f, 0.12f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, 0.8f + (1.0f - 0.8f) * uiRed, 0.1f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLES, 6, 3);
+    }
     if (kind == 0) {
-        uiRect(x - 0.38f, y + 0.12f, 0.2f, 0.28f, 0.6f, 0.6f, 0.65f);
-        uiTriDown(x - 0.38f, y - 0.02f, 0.2f, 0.14f, 0.6f, 0.6f, 0.65f);
-        uiRect(x + 0.2f, y + 0.25f + lift, 0.06f, 0.5f, 0.85f, 0.85f, 0.9f);
-        uiRect(x + 0.13f, y + 0.22f + lift, 0.2f, 0.05f, 0.5f, 0.35f, 0.15f);
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x - 0.38f, y + 0.12f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.2f, 0.28f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.6f + (1.0f - 0.6f) * uiRed, 0.6f * (1.0f - uiRed), 0.65f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x - 0.38f, y - 0.02f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.2f, 0.14f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.6f + (1.0f - 0.6f) * uiRed, 0.6f * (1.0f - uiRed), 0.65f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 12, 3);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x + 0.2f, y + 0.25f + lift, 0.0f));
+        model = glm::scale(model, glm::vec3(0.06f, 0.5f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.85f + (1.0f - 0.85f) * uiRed, 0.85f * (1.0f - uiRed), 0.9f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x + 0.13f, y + 0.22f + lift, 0.0f));
+        model = glm::scale(model, glm::vec3(0.2f, 0.05f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.5f + (1.0f - 0.5f) * uiRed, 0.35f * (1.0f - uiRed), 0.15f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
     }
     else if (kind == 1) {
-        uiRect(x + 0.26f, y + 0.12f + lift * 0.4f, 0.05f, 0.62f, 0.5f, 0.32f, 0.12f);
-        uiRect(x + 0.2f, y + 0.12f + lift * 0.4f, 0.1f, 0.05f, 0.5f, 0.32f, 0.12f);
-        uiRect(x + 0.2f, y + 0.69f + lift * 0.4f, 0.1f, 0.05f, 0.5f, 0.32f, 0.12f);
-        uiRect(x + 0.2f, y + 0.15f + lift * 0.4f, 0.015f, 0.57f, 0.9f, 0.9f, 0.85f);
-        uiRect(x + 0.2f, y + 0.42f + lift * 0.4f, 0.5f, 0.03f, 0.8f, 0.8f, 0.75f);
-        uiTriRight(x + 0.7f, y + 0.38f + lift * 0.4f, 0.12f, 0.11f, 0.85f, 0.85f, 0.9f);
-        uiRect(x - 0.25f, y + 0.5f, 0.07f, 0.3f, 0.45f, 0.28f, 0.12f);
-        uiRect(x - 0.3f, y + 0.5f, 0.17f, 0.04f, 0.3f, 0.5f, 0.25f);
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x + 0.26f, y + 0.12f + lift * 0.4f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.05f, 0.62f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.5f + (1.0f - 0.5f) * uiRed, 0.32f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x + 0.2f, y + 0.12f + lift * 0.4f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.1f, 0.05f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.5f + (1.0f - 0.5f) * uiRed, 0.32f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x + 0.2f, y + 0.69f + lift * 0.4f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.1f, 0.05f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.5f + (1.0f - 0.5f) * uiRed, 0.32f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x + 0.2f, y + 0.15f + lift * 0.4f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.015f, 0.57f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.9f + (1.0f - 0.9f) * uiRed, 0.9f * (1.0f - uiRed), 0.85f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x + 0.2f, y + 0.42f + lift * 0.4f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.5f, 0.03f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.8f + (1.0f - 0.8f) * uiRed, 0.8f * (1.0f - uiRed), 0.75f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x + 0.7f, y + 0.38f + lift * 0.4f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.12f, 0.11f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.85f + (1.0f - 0.85f) * uiRed, 0.85f * (1.0f - uiRed), 0.9f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 9, 3);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x - 0.25f, y + 0.5f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.07f, 0.3f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.45f + (1.0f - 0.45f) * uiRed, 0.28f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x - 0.3f, y + 0.5f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.17f, 0.04f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.3f + (1.0f - 0.3f) * uiRed, 0.5f * (1.0f - uiRed), 0.25f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
     }
     else {
-        uiRect(x + 0.06f, y - 0.1f, 0.38f, 0.92f, 0.45f, 0.47f, 0.55f);
-        uiRect(x + 0.1f, y - 0.06f, 0.3f, 0.84f, 0.65f, 0.67f, 0.72f);
-        uiRect(x + 0.23f, y + 0.1f, 0.04f, 0.56f, 0.85f, 0.7f, 0.2f);
-        uiRect(x + 0.14f, y + 0.4f, 0.22f, 0.04f, 0.85f, 0.7f, 0.2f);
-        uiTriDown(x + 0.06f, y - 0.22f, 0.38f, 0.14f, 0.45f, 0.47f, 0.55f);
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x + 0.06f, y - 0.1f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.38f, 0.92f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.45f + (1.0f - 0.45f) * uiRed, 0.47f * (1.0f - uiRed), 0.55f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x + 0.1f, y - 0.06f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.3f, 0.84f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.65f + (1.0f - 0.65f) * uiRed, 0.67f * (1.0f - uiRed), 0.72f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x + 0.23f, y + 0.1f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.04f, 0.56f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.85f + (1.0f - 0.85f) * uiRed, 0.7f * (1.0f - uiRed), 0.2f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x + 0.14f, y + 0.4f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.22f, 0.04f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.85f + (1.0f - 0.85f) * uiRed, 0.7f * (1.0f - uiRed), 0.2f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x + 0.06f, y - 0.22f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.38f, 0.14f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.45f + (1.0f - 0.45f) * uiRed, 0.47f * (1.0f - uiRed), 0.55f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 12, 3);
+        }
     }
 }
 
@@ -996,45 +1128,41 @@ void drawPlayerUnit(const Hawawshy& p) {
     float duck = p.isDucking ? -0.12f : 0.0f;
     float base = soso.tababa[p.laneId].centerY - 0.55f + p.yOffset + duck;
     float swing = 0.0f;
-    if (p.kind == 0) swing = 0.15f * sin(g_animTime * (p.spd == 0.0f ? 30.0f : 12.0f));
-    else if (p.kind == 1 && p.spd == 0.0f) swing = 0.15f * sin(g_animTime * 30.0f);
-    g_uiRed = redFor(p.health, maxHp, p.damageTint);
+    if (p.kind == 0) swing = 0.15f * sin(animTime * (p.spd == 0.0f ? 30.0f : 12.0f));
+    else if (p.kind == 1 && p.spd == 0.0f) swing = 0.15f * sin(animTime * 30.0f);
+    uiRed = redFor(p.health, maxHp, p.damageTint);
     drawGuard(p.xPos, base, swing, p.kind);
-    g_uiRed = 0.0f;
+    uiRed = 0.0f;
     drawHealthBar(p.xPos, base + 1.05f, p.health, maxHp);
 }
 
-// ========================================================================
-// MEMBER 3: enemies, waves and collectibles (spawner, enemy movement, coin drops and pickup)
-// ========================================================================
-
 void spawnWave(int waveNumber, const Koshary& grid) {
-    g_enemies.clear();
-    g_spawnQueue.clear();
+    enemies.clear();
+    spawnQueue.clear();
 
     if (waveNumber == 1) {
-        for (int i = 0; i < 3; i++) g_spawnQueue.push_back(EASY_UPPER);
-        g_spawnInterval = 3.5f;
+        for (int i = 0; i < 3; i++) spawnQueue.push_back(EASY_UPPER);
+        spawnInterval = 3.5f;
     } else if (waveNumber == 2) {
-        for (int i = 0; i < 5; i++) g_spawnQueue.push_back((i % 2 == 0) ? EASY_UPPER : MEDIUM_LOWER);
-        g_spawnInterval = 3.0f;
+        for (int i = 0; i < 5; i++) spawnQueue.push_back((i % 2 == 0) ? EASY_UPPER : MEDIUM_LOWER);
+        spawnInterval = 3.0f;
     } else if (waveNumber == 3) {
-        for (int i = 0; i < 10; i++) g_spawnQueue.push_back((i % 3 == 0) ? EASY_UPPER : ((i % 3 == 1) ? MEDIUM_LOWER : HARD_MELEE));
-        g_spawnInterval = 2.2f;
+        for (int i = 0; i < 10; i++) spawnQueue.push_back((i % 3 == 0) ? EASY_UPPER : ((i % 3 == 1) ? MEDIUM_LOWER : HARD_MELEE));
+        spawnInterval = 2.2f;
     }
-    g_spawnTimer = 0.0f;
-    g_waveInProgress = true;
+    spawnTimer = 0.0f;
+    waveInProgress = true;
 }
 
 void updateSpawner(float dt) {
-    if (g_spawnQueue.empty()) return;
-    g_spawnTimer -= dt;
-    if (g_spawnTimer > 0.0f) return;
-    EnemyType type = g_spawnQueue.front();
-    g_spawnQueue.erase(g_spawnQueue.begin());
+    if (spawnQueue.empty()) return;
+    spawnTimer -= dt;
+    if (spawnTimer > 0.0f) return;
+    EnemyType type = spawnQueue.front();
+    spawnQueue.erase(spawnQueue.begin());
     int lane = rand() % (int)soso.tababa.size();
-    g_enemies.push_back(Enemy(g_nextEnemyId++, type, lane, 16.0f, soso.tababa[lane].centerY));
-    g_spawnTimer = g_spawnInterval;
+    enemies.push_back(Enemy(nextEnemyId++, type, lane, 16.0f, soso.tababa[lane].centerY));
+    spawnTimer = spawnInterval;
 }
 
 void hurtEnemy(Enemy& e, int dmg) {
@@ -1046,7 +1174,7 @@ void hurtEnemy(Enemy& e, int dmg) {
         drop.xPos = e.xPos;
         drop.yPos = e.yPos;
         drop.collected = false;
-        g_coins.push_back(drop);
+        coins.push_back(drop);
         playSound(SND_DEATH);
     }
     else {
@@ -1055,43 +1183,43 @@ void hurtEnemy(Enemy& e, int dmg) {
 }
 
 void startWaveIfNeeded() {
-    if (!g_waveInProgress && g_currentWave <= 3) {
-        spawnWave(g_currentWave, soso);
+    if (!waveInProgress && currentWave <= 3) {
+        spawnWave(currentWave, soso);
     }
 }
 
 void updateEnemiesAndWaves(float dt) {
     bool allDefeated = true;
-    for (auto& enemy : g_enemies) {
+    for (auto& enemy : enemies) {
         if (!enemy.isAlive) continue;
         enemy.update(dt);
         allDefeated = false;
 
         if (enemy.xPos <= 3.5f) {
-            if (!g_gameOver) playSound(SND_LOSE);
-            g_gameOver = true;
+            if (!gameOver) playSound(SND_LOSE);
+            gameOver = true;
         }
     }
 
-    for (auto& coin : g_coins) {
+    for (auto& coin : coins) {
         if (coin.collected) continue;
         for (const auto& p : basal) {
             float py = soso.tababa[p.laneId].centerY;
             if (std::abs(coin.xPos - p.xPos) < 0.6f && std::abs(coin.yPos - py) < 0.6f) {
                 coin.collected = true;
                 playSound(SND_COIN);
-                g_playerCoins += 10;
+                playerCoins += 10;
                 break;
             }
         }
     }
 
-    if (!g_spawnQueue.empty()) allDefeated = false;
+    if (!spawnQueue.empty()) allDefeated = false;
 
-    if (allDefeated && g_waveInProgress) {
-        g_waveInProgress = false;
-        g_currentWave++;
-        if (g_currentWave > 3) {
+    if (allDefeated && waveInProgress) {
+        waveInProgress = false;
+        currentWave++;
+        if (currentWave > 3) {
             isWin = true;
             playSound(SND_WIN);
         }
@@ -1124,7 +1252,7 @@ void buildCoinMesh() {
 void drawCoins() {
     glBindVertexArray(ziro_vao);
 
-    for (const auto& coin : g_coins) {
+    for (const auto& coin : coins) {
         if (!coin.collected) {
 
             glUniform3f(fizzo, 1.0f, 0.85f, 0.0f);
@@ -1137,31 +1265,171 @@ void drawCoins() {
 }
 
 void drawEnemyActor(float x, float y, float lift, int variant = 2) {
-    uiRect(x - 0.16f, y - 0.15f, 0.1f, 0.15f, 0.25f, 0.1f, 0.1f);
-    uiRect(x + 0.06f, y - 0.15f, 0.1f, 0.15f, 0.25f, 0.1f, 0.1f);
-    uiRect(x - 0.2f, y, 0.4f, 0.55f, 0.55f, 0.12f, 0.12f);
-    uiCircle(x, y + 0.72f, 0.17f, 0.35f, 0.55f, 0.25f);
-    uiTriUp(x - 0.17f, y + 0.8f, 0.1f, 0.2f, 0.9f, 0.9f, 0.8f);
-    uiTriUp(x + 0.07f, y + 0.8f, 0.1f, 0.2f, 0.9f, 0.9f, 0.8f);
-    uiCircle(x - 0.09f, y + 0.74f, 0.03f, 1.0f, 0.9f, 0.1f);
-    uiCircle(x + 0.01f, y + 0.74f, 0.03f, 1.0f, 0.9f, 0.1f);
+    {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(x - 0.16f, y - 0.15f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.1f, 0.15f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, 0.25f + (1.0f - 0.25f) * uiRed, 0.1f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+    {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(x + 0.06f, y - 0.15f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.1f, 0.15f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, 0.25f + (1.0f - 0.25f) * uiRed, 0.1f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+    {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(x - 0.2f, y, 0.0f));
+    model = glm::scale(model, glm::vec3(0.4f, 0.55f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, 0.55f + (1.0f - 0.55f) * uiRed, 0.12f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+    {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(x, y + 0.72f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.17f, 0.17f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, 0.35f + (1.0f - 0.35f) * uiRed, 0.55f * (1.0f - uiRed), 0.25f * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLE_FAN, 15, 34);
+    }
+    {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(x - 0.17f, y + 0.8f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.1f, 0.2f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, 0.9f + (1.0f - 0.9f) * uiRed, 0.9f * (1.0f - uiRed), 0.8f * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLES, 6, 3);
+    }
+    {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(x + 0.07f, y + 0.8f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.1f, 0.2f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, 0.9f + (1.0f - 0.9f) * uiRed, 0.9f * (1.0f - uiRed), 0.8f * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLES, 6, 3);
+    }
+    {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(x - 0.09f, y + 0.74f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.03f, 0.03f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, 1.0f + (1.0f - 1.0f) * uiRed, 0.9f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLE_FAN, 15, 34);
+    }
+    {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(x + 0.01f, y + 0.74f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.03f, 0.03f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, 1.0f + (1.0f - 1.0f) * uiRed, 0.9f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLE_FAN, 15, 34);
+    }
     if (variant == 0) {
-        uiRect(x - 0.34f, y + 0.55f + lift * 0.4f, 0.06f, 0.5f, 0.45f, 0.28f, 0.12f);
-        uiRect(x - 0.4f, y + 0.95f + lift * 0.4f, 0.18f, 0.05f, 0.45f, 0.28f, 0.12f);
-        uiRect(x - 0.4f, y + 0.55f + lift * 0.4f, 0.18f, 0.05f, 0.45f, 0.28f, 0.12f);
-        uiRect(x - 0.78f, y + 0.77f + lift * 0.4f, 0.48f, 0.03f, 0.8f, 0.8f, 0.75f);
-        uiTriRight(x - 0.78f, y + 0.725f + lift * 0.4f, -0.12f, 0.11f, 0.85f, 0.85f, 0.9f);
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x - 0.34f, y + 0.55f + lift * 0.4f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.06f, 0.5f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.45f + (1.0f - 0.45f) * uiRed, 0.28f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x - 0.4f, y + 0.95f + lift * 0.4f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.18f, 0.05f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.45f + (1.0f - 0.45f) * uiRed, 0.28f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x - 0.4f, y + 0.55f + lift * 0.4f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.18f, 0.05f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.45f + (1.0f - 0.45f) * uiRed, 0.28f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x - 0.78f, y + 0.77f + lift * 0.4f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.48f, 0.03f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.8f + (1.0f - 0.8f) * uiRed, 0.8f * (1.0f - uiRed), 0.75f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x - 0.78f, y + 0.725f + lift * 0.4f, 0.0f));
+        model = glm::scale(model, glm::vec3(-0.12f, 0.11f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.85f + (1.0f - 0.85f) * uiRed, 0.85f * (1.0f - uiRed), 0.9f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 9, 3);
+        }
     }
     else if (variant == 1) {
-        uiRect(x - 0.62f, y + 0.12f + lift * 0.4f, 0.46f, 0.06f, 0.45f, 0.28f, 0.12f);
-        uiRect(x - 0.64f, y + 0.0f + lift * 0.4f, 0.05f, 0.3f, 0.35f, 0.22f, 0.1f);
-        uiRect(x - 0.9f, y + 0.14f + lift * 0.4f, 0.28f, 0.03f, 0.8f, 0.8f, 0.75f);
-        uiTriRight(x - 0.9f, y + 0.095f + lift * 0.4f, -0.12f, 0.11f, 0.85f, 0.85f, 0.9f);
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x - 0.62f, y + 0.12f + lift * 0.4f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.46f, 0.06f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.45f + (1.0f - 0.45f) * uiRed, 0.28f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x - 0.64f, y + 0.0f + lift * 0.4f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.05f, 0.3f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.35f + (1.0f - 0.35f) * uiRed, 0.22f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x - 0.9f, y + 0.14f + lift * 0.4f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.28f, 0.03f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.8f + (1.0f - 0.8f) * uiRed, 0.8f * (1.0f - uiRed), 0.75f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x - 0.9f, y + 0.095f + lift * 0.4f, 0.0f));
+        model = glm::scale(model, glm::vec3(-0.12f, 0.11f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.85f + (1.0f - 0.85f) * uiRed, 0.85f * (1.0f - uiRed), 0.9f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 9, 3);
+        }
     }
     else {
-        uiRect(x - 0.36f, y + 0.15f + lift, 0.08f, 0.5f, 0.45f, 0.28f, 0.12f);
-        uiTriUp(x - 0.3f, y + 0.5f, 0.12f, 0.16f, 0.75f, 0.75f, 0.8f);
-        uiTriUp(x + 0.1f, y + 0.5f, 0.12f, 0.16f, 0.75f, 0.75f, 0.8f);
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x - 0.36f, y + 0.15f + lift, 0.0f));
+        model = glm::scale(model, glm::vec3(0.08f, 0.5f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.45f + (1.0f - 0.45f) * uiRed, 0.28f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x - 0.3f, y + 0.5f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.12f, 0.16f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.75f + (1.0f - 0.75f) * uiRed, 0.75f * (1.0f - uiRed), 0.8f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 6, 3);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x + 0.1f, y + 0.5f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.12f, 0.16f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.75f + (1.0f - 0.75f) * uiRed, 0.75f * (1.0f - uiRed), 0.8f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 6, 3);
+        }
     }
 }
 
@@ -1169,14 +1437,56 @@ void drawProjectile(const Projectile& pr) {
     float base = soso.tababa[pr.laneId].centerY - 0.55f;
     float y = base + pr.height;
     if (pr.fromPlayer) {
-        uiRect(pr.xPos - 0.3f, y - 0.02f, 0.5f, 0.04f, 0.85f, 0.85f, 0.8f);
-        uiTriRight(pr.xPos + 0.2f, y - 0.08f, 0.16f, 0.16f, 0.95f, 0.95f, 1.0f);
-        uiRect(pr.xPos - 0.34f, y - 0.07f, 0.07f, 0.14f, 0.2f, 0.7f, 0.3f);
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(pr.xPos - 0.3f, y - 0.02f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.5f, 0.04f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.85f + (1.0f - 0.85f) * uiRed, 0.85f * (1.0f - uiRed), 0.8f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(pr.xPos + 0.2f, y - 0.08f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.16f, 0.16f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.95f + (1.0f - 0.95f) * uiRed, 0.95f * (1.0f - uiRed), 1.0f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 9, 3);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(pr.xPos - 0.34f, y - 0.07f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.07f, 0.14f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.2f + (1.0f - 0.2f) * uiRed, 0.7f * (1.0f - uiRed), 0.3f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
     }
     else {
-        uiRect(pr.xPos - 0.2f, y - 0.02f, 0.5f, 0.04f, 0.55f, 0.3f, 0.15f);
-        uiTriRight(pr.xPos - 0.2f, y - 0.08f, -0.16f, 0.16f, 0.95f, 0.15f, 0.1f);
-        uiRect(pr.xPos + 0.3f, y - 0.07f, 0.07f, 0.14f, 0.95f, 0.55f, 0.1f);
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(pr.xPos - 0.2f, y - 0.02f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.5f, 0.04f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.55f + (1.0f - 0.55f) * uiRed, 0.3f * (1.0f - uiRed), 0.15f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(pr.xPos - 0.2f, y - 0.08f, 0.0f));
+        model = glm::scale(model, glm::vec3(-0.16f, 0.16f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.95f + (1.0f - 0.95f) * uiRed, 0.15f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 9, 3);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(pr.xPos + 0.3f, y - 0.07f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.07f, 0.14f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.95f + (1.0f - 0.95f) * uiRed, 0.55f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
     }
 }
 
@@ -1184,17 +1494,13 @@ void drawEnemyUnit(const Enemy& e) {
     int maxHp = e.type == HARD_MELEE ? 7 : 5;
     float base = e.yPos - 0.55f;
     float swing = 0.0f;
-    if (e.type == HARD_MELEE) swing = -0.15f * sin(g_animTime * (e.blocked ? 30.0f : 14.0f));
-    else if (e.blocked) swing = -0.15f * sin(g_animTime * 30.0f);
-    g_uiRed = redFor(e.health, maxHp, e.damageTint);
+    if (e.type == HARD_MELEE) swing = -0.15f * sin(animTime * (e.blocked ? 30.0f : 14.0f));
+    else if (e.blocked) swing = -0.15f * sin(animTime * 30.0f);
+    uiRed = redFor(e.health, maxHp, e.damageTint);
     drawEnemyActor(e.xPos, base, swing, (int)e.type);
-    g_uiRed = 0.0f;
+    uiRed = 0.0f;
     drawHealthBar(e.xPos, base + 1.05f, e.health, maxHp);
 }
-
-// ========================================================================
-// MEMBER 4: UI, cutscene, audio and menus (menus, cards, coin tracker, health bars, win/lose, title text)
-// ========================================================================
 
 int menuButtonAt(float x, float y) {
     glm::vec2 pt(x, y);
@@ -1220,7 +1526,7 @@ int cardAt(float x, float y) {
 }
 
 void toggleMute() {
-    g_muted = !g_muted;
+    muted = !muted;
     playSound(SND_CLICK);
 }
 void dos_zrar(GLFWwindow* tabl, int nono, int zaza, int pika, int mizo) {
@@ -1229,7 +1535,7 @@ void dos_zrar(GLFWwindow* tabl, int nono, int zaza, int pika, int mizo) {
         if (nono == GLFW_KEY_ESCAPE && pika == GLFW_PRESS) inCutscene = false;
         return;
     }
-    if (inMainMenu || g_gameOver || isWin) return;
+    if (inMainMenu || gameOver || isWin) return;
 
     if (nono == GLFW_KEY_ESCAPE && pika == GLFW_PRESS) {
         isPaused = !isPaused;
@@ -1239,19 +1545,19 @@ void dos_zrar(GLFWwindow* tabl, int nono, int zaza, int pika, int mizo) {
 }
 
 void restartGame() {
-    g_enemies.clear();
-    g_coins.clear();
-    g_projectiles.clear();
-    g_spawnQueue.clear();
-    g_spawnTimer = 0.0f;
-    g_nextEnemyId = 0;
-    g_animTime = 0.0f;
+    enemies.clear();
+    coins.clear();
+    projectiles.clear();
+    spawnQueue.clear();
+    spawnTimer = 0.0f;
+    nextEnemyId = 0;
+    animTime = 0.0f;
     basal.clear();
     for (size_t i = 0; i < tamtam.size(); ++i) tamtam[i] = false;
-    g_currentWave = 1;
-    g_playerCoins = 30;
-    g_waveInProgress = false;
-    g_gameOver = false;
+    currentWave = 1;
+    playerCoins = 30;
+    waveInProgress = false;
+    gameOver = false;
     isWin = false;
     isPaused = false;
     inCutscene = false;
@@ -1272,7 +1578,7 @@ bool handleMenuClick(GLFWwindow* window, float wX, float wY) {
         else if (hit == 2) glfwSetWindowShouldClose(window, true);
         return true;
     }
-    if (isWin || g_gameOver) {
+    if (isWin || gameOver) {
         int hit = menuButtonAt(wX, wY);
         if (hit == 3) { toggleMute(); return true; }
         if (hit == 0 || hit == 1) playSound(SND_CLICK);
@@ -1308,42 +1614,9 @@ std::string cardsLine() {
         if (i > 0) line += ", ";
         line += names[i];
         line += " " + std::to_string(cardCost[i]);
-        line += g_playerCoins >= cardCost[i] ? " ready" : " locked";
+        line += playerCoins >= cardCost[i] ? " ready" : " locked";
     }
     return line;
-}
-
-void updateWindowTitle(GLFWwindow* window) {
-    std::string title = "Tower Defense Engine";
-    if (inMainMenu) {
-        title += " | Main menu: Start (green), Sound (blue) or M turns sound on/off, End (red)";
-    }
-    else if (inCutscene) {
-        title += " | Intro";
-        std::string line = cutsceneLine(cutsceneTime);
-        if (!line.empty()) title += ": " + line;
-        title += " (click or ESC to skip)";
-    }
-    else if (isWin) {
-        title += " | VICTORY! All three waves are cleared. Restart (rewind icon) or Main menu (house icon)";
-    }
-    else if (g_gameOver) {
-        title += " | DEFEAT! An enemy reached the Home Base. Restart (rewind icon) or Main menu (house icon)";
-    }
-    else if (isPaused) {
-        title += " | PAUSED: Continue (green), Restart (blue), Main menu (orange)";
-    }
-    else {
-        int wave = g_currentWave > 3 ? 3 : g_currentWave;
-        title += " | Coins " + std::to_string(g_playerCoins);
-        title += " | Wave " + std::to_string(wave) + " of 3";
-        title += " | " + cardsLine();
-    }
-    title += g_muted ? " | Sound OFF (M or speaker button)" : " | Sound ON (M or speaker button)";
-    if (title != g_lastTitle) {
-        glfwSetWindowTitle(window, title.c_str());
-        g_lastTitle = title;
-    }
 }
 
 void buildMenuMesh() {
@@ -1553,35 +1826,34 @@ void buildUiMesh() {
     glEnableVertexAttribArray(1);
 }
 
-// ---- text shown on screen: menu labels, HUD numbers, cutscene subtitles ----
 void drawMenuLabels(const char* title, const char* a, const char* b, const char* c) {
     glm::vec3 white(1.0f, 1.0f, 1.0f);
     drawText(title, 8.0f, 7.58f, 0.5f, glm::vec3(1.0f, 0.85f, 0.3f));
     drawText(a, 8.0f, 6.5f, 0.55f, white);
     drawText(b, 8.0f, 4.6f, 0.55f, white);
     if (c) drawText(c, 8.0f, 2.7f, 0.55f, white);
-    drawText(g_muted ? "SOUND OFF (M)" : "SOUND ON (M)", 3.1f, 0.78f, 0.32f, white);
+    drawText(muted ? "SOUND OFF (M)" : "SOUND ON (M)", 3.1f, 0.78f, 0.32f, white);
 }
 
 void drawMainMenuText() {
-    if (!g_textReady) return;
-    drawMenuLabels("TOWER DEFENSE", "START", g_muted ? "SOUND: OFF" : "SOUND: ON", "END");
+    if (!textReady) return;
+    drawMenuLabels("TOWER DEFENSE", "START", muted ? "SOUND: OFF" : "SOUND: ON", "END");
 }
 
 void drawEndOrPauseText() {
-    if (!g_textReady) return;
+    if (!textReady) return;
     if (isWin) drawMenuLabels("VICTORY!", "RESTART", "MAIN MENU", nullptr);
-    else if (g_gameOver) drawMenuLabels("DEFEAT!", "RESTART", "MAIN MENU", nullptr);
+    else if (gameOver) drawMenuLabels("DEFEAT!", "RESTART", "MAIN MENU", nullptr);
     else drawMenuLabels("PAUSED", "CONTINUE", "RESTART", "MAIN MENU");
 }
 
 void drawHudText() {
-    if (!g_textReady) return;
-    int wave = g_currentWave > 3 ? 3 : g_currentWave;
-    drawText("COINS " + std::to_string(g_playerCoins), 10.95f, 9.3f, 0.42f, glm::vec3(1.0f, 0.85f, 0.2f));
+    if (!textReady) return;
+    int wave = currentWave > 3 ? 3 : currentWave;
+    drawText("COINS " + std::to_string(playerCoins), 10.95f, 9.3f, 0.42f, glm::vec3(1.0f, 0.85f, 0.2f));
     drawText("WAVE " + std::to_string(wave) + " OF 3", 10.95f, 8.75f, 0.34f, glm::vec3(0.9f, 0.9f, 0.95f));
     for (int i = 0; i < 3; i++) {
-        bool unlocked = g_playerCoins >= cardCost[i];
+        bool unlocked = playerCoins >= cardCost[i];
         float cx = 3.7f + i * 1.15f + 0.525f;
         glm::vec3 col = unlocked ? glm::vec3(1.0f, 0.85f, 0.2f) : glm::vec3(0.6f, 0.6f, 0.6f);
         drawText(std::to_string(cardCost[i]), cx, 8.48f, 0.34f, col);
@@ -1589,7 +1861,7 @@ void drawHudText() {
 }
 
 void drawCutsceneText(float t) {
-    if (!g_textReady) return;
+    if (!textReady) return;
     std::string line = cutsceneLine(t);
     if (!line.empty()) drawText(line, 8.0f, 0.27f, 0.4f, glm::vec3(1.0f, 1.0f, 1.0f));
 }
@@ -1597,25 +1869,95 @@ void drawCutsceneText(float t) {
 void drawMuteButton() {
     uiBegin();
     glUniform1f(locHighlight, menuHover == 3 ? 1.0f : 0.0f);
-    uiCircle(0.9f, 0.9f, 0.5f, g_muted ? 0.3f : 0.15f, g_muted ? 0.3f : 0.6f, g_muted ? 0.33f : 0.25f);
-    float shade = g_muted ? 0.55f : 1.0f;
-    uiRect(0.62f, 0.7f, 0.1f, 0.2f, shade, shade, shade);
-    uiRect(0.82f, 0.7f, 0.1f, 0.4f, shade, shade, shade);
-    uiRect(1.02f, 0.7f, 0.1f, 0.6f, shade, shade, shade);
-    if (g_muted) uiRect(0.5f, 0.84f, 0.8f, 0.1f, 0.9f, 0.1f, 0.1f);
+    {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.9f, 0.9f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.5f, 0.5f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, (muted ? 0.3f : 0.15f) + (1.0f - (muted ? 0.3f : 0.15f)) * uiRed, (muted ? 0.3f : 0.6f) * (1.0f - uiRed), (muted ? 0.33f : 0.25f) * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLE_FAN, 15, 34);
+    }
+    float shade = muted ? 0.55f : 1.0f;
+    {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.62f, 0.7f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.1f, 0.2f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, shade + (1.0f - shade) * uiRed, shade * (1.0f - uiRed), shade * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+    {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.82f, 0.7f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.1f, 0.4f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, shade + (1.0f - shade) * uiRed, shade * (1.0f - uiRed), shade * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+    {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(1.02f, 0.7f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.1f, 0.6f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, shade + (1.0f - shade) * uiRed, shade * (1.0f - uiRed), shade * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+    if (muted) {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.5f, 0.84f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.8f, 0.1f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, 0.9f + (1.0f - 0.9f) * uiRed, 0.1f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
     uiEnd();
 }
 
 void drawCoinTracker() {
-    if (g_textReady) uiRect(9.6f, 8.6f, 2.7f, 1.35f, 0.12f, 0.12f, 0.16f);
-    uiRect(12.4f, 8.6f, 3.55f, 1.35f, 0.12f, 0.12f, 0.16f);
-    int shown = g_playerCoins / 10;
-    for (int i = 0; i < 8; i++) uiCircle(12.75f + i * 0.4f, 9.65f, 0.14f, 0.2f, 0.2f, 0.24f);
+    if (textReady) {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(9.6f, 8.6f, 0.0f));
+    model = glm::scale(model, glm::vec3(2.7f, 1.35f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, 0.12f + (1.0f - 0.12f) * uiRed, 0.12f * (1.0f - uiRed), 0.16f * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+    {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(12.4f, 8.6f, 0.0f));
+    model = glm::scale(model, glm::vec3(3.55f, 1.35f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, 0.12f + (1.0f - 0.12f) * uiRed, 0.12f * (1.0f - uiRed), 0.16f * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+    int shown = playerCoins / 10;
+    for (int i = 0; i < 8; i++) {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(12.75f + i * 0.4f, 9.65f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.14f, 0.14f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, 0.2f + (1.0f - 0.2f) * uiRed, 0.2f * (1.0f - uiRed), 0.24f * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLE_FAN, 15, 34);
+    }
     for (int i = 0; i < shown && i < 24; i++) {
         float cx = 12.75f + (i % 8) * 0.4f;
         float cy = 9.65f - (i / 8) * 0.38f;
-        uiCircle(cx, cy, 0.14f, 1.0f, 0.8f, 0.1f);
-        uiCircle(cx, cy, 0.085f, 0.9f, 0.62f, 0.05f);
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(cx, cy, 0.0f));
+        model = glm::scale(model, glm::vec3(0.14f, 0.14f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 1.0f + (1.0f - 1.0f) * uiRed, 0.8f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLE_FAN, 15, 34);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(cx, cy, 0.0f));
+        model = glm::scale(model, glm::vec3(0.085f, 0.085f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.9f + (1.0f - 0.9f) * uiRed, 0.62f * (1.0f - uiRed), 0.05f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLE_FAN, 15, 34);
+        }
     }
 }
 
@@ -1623,35 +1965,147 @@ void drawCards() {
     float cardColor[3][3] = { { 0.70f, 0.45f, 0.20f }, { 0.15f, 0.55f, 0.55f }, { 0.45f, 0.50f, 0.60f } };
     for (int i = 0; i < 3; i++) {
         float x0 = 3.7f + i * 1.15f, y0 = 8.35f, cx = x0 + 0.525f;
-        bool unlocked = g_playerCoins >= cardCost[i];
+        bool unlocked = playerCoins >= cardCost[i];
         glUniform1f(locGray, unlocked ? 0.0f : 1.0f);
         glUniform1f(locHighlight, (unlocked && i == cardHover) ? 1.0f : 0.0f);
-        uiRect(x0, y0, 1.05f, 1.55f, cardColor[i][0], cardColor[i][1], cardColor[i][2]);
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x0, y0, 0.0f));
+        model = glm::scale(model, glm::vec3(1.05f, 1.55f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, (cardColor[i][0]) + (1.0f - (cardColor[i][0])) * uiRed, (cardColor[i][1]) * (1.0f - uiRed), (cardColor[i][2]) * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
         glUniform1f(locHighlight, 0.0f);
-        uiRect(x0 + 0.06f, y0 + 0.06f, 0.93f, 0.4f, 0.1f, 0.1f, 0.12f);
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x0 + 0.06f, y0 + 0.06f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.93f, 0.4f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.1f + (1.0f - 0.1f) * uiRed, 0.1f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
         if (i == 0) {
-            uiRect(cx - 0.04f, y0 + 0.55f, 0.08f, 0.17f, 0.45f, 0.28f, 0.12f);
-            uiRect(cx - 0.22f, y0 + 0.72f, 0.44f, 0.08f, 0.85f, 0.75f, 0.3f);
-            uiRect(cx - 0.05f, y0 + 0.8f, 0.1f, 0.55f, 0.9f, 0.9f, 0.95f);
-            uiTriUp(cx - 0.05f, y0 + 1.35f, 0.1f, 0.13f, 0.9f, 0.9f, 0.95f);
+            {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(cx - 0.04f, y0 + 0.55f, 0.0f));
+            model = glm::scale(model, glm::vec3(0.08f, 0.17f, 1.0f));
+            glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+            glUniform3f(locTint, 0.45f + (1.0f - 0.45f) * uiRed, 0.28f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+            }
+            {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(cx - 0.22f, y0 + 0.72f, 0.0f));
+            model = glm::scale(model, glm::vec3(0.44f, 0.08f, 1.0f));
+            glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+            glUniform3f(locTint, 0.85f + (1.0f - 0.85f) * uiRed, 0.75f * (1.0f - uiRed), 0.3f * (1.0f - uiRed));
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+            }
+            {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(cx - 0.05f, y0 + 0.8f, 0.0f));
+            model = glm::scale(model, glm::vec3(0.1f, 0.55f, 1.0f));
+            glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+            glUniform3f(locTint, 0.9f + (1.0f - 0.9f) * uiRed, 0.9f * (1.0f - uiRed), 0.95f * (1.0f - uiRed));
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+            }
+            {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(cx - 0.05f, y0 + 1.35f, 0.0f));
+            model = glm::scale(model, glm::vec3(0.1f, 0.13f, 1.0f));
+            glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+            glUniform3f(locTint, 0.9f + (1.0f - 0.9f) * uiRed, 0.9f * (1.0f - uiRed), 0.95f * (1.0f - uiRed));
+            glDrawArrays(GL_TRIANGLES, 6, 3);
+            }
         }
         else if (i == 1) {
-            uiRect(cx - 0.35f, y0 + 0.98f, 0.5f, 0.06f, 0.75f, 0.55f, 0.3f);
-            uiTriRight(cx + 0.15f, y0 + 0.87f, 0.22f, 0.28f, 0.9f, 0.9f, 0.95f);
-            uiTriUp(cx - 0.42f, y0 + 1.04f, 0.14f, 0.13f, 0.95f, 0.95f, 0.95f);
-            uiTriDown(cx - 0.42f, y0 + 0.85f, 0.14f, 0.13f, 0.95f, 0.95f, 0.95f);
+            {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(cx - 0.35f, y0 + 0.98f, 0.0f));
+            model = glm::scale(model, glm::vec3(0.5f, 0.06f, 1.0f));
+            glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+            glUniform3f(locTint, 0.75f + (1.0f - 0.75f) * uiRed, 0.55f * (1.0f - uiRed), 0.3f * (1.0f - uiRed));
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+            }
+            {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(cx + 0.15f, y0 + 0.87f, 0.0f));
+            model = glm::scale(model, glm::vec3(0.22f, 0.28f, 1.0f));
+            glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+            glUniform3f(locTint, 0.9f + (1.0f - 0.9f) * uiRed, 0.9f * (1.0f - uiRed), 0.95f * (1.0f - uiRed));
+            glDrawArrays(GL_TRIANGLES, 9, 3);
+            }
+            {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(cx - 0.42f, y0 + 1.04f, 0.0f));
+            model = glm::scale(model, glm::vec3(0.14f, 0.13f, 1.0f));
+            glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+            glUniform3f(locTint, 0.95f + (1.0f - 0.95f) * uiRed, 0.95f * (1.0f - uiRed), 0.95f * (1.0f - uiRed));
+            glDrawArrays(GL_TRIANGLES, 6, 3);
+            }
+            {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(cx - 0.42f, y0 + 0.85f, 0.0f));
+            model = glm::scale(model, glm::vec3(0.14f, 0.13f, 1.0f));
+            glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+            glUniform3f(locTint, 0.95f + (1.0f - 0.95f) * uiRed, 0.95f * (1.0f - uiRed), 0.95f * (1.0f - uiRed));
+            glDrawArrays(GL_TRIANGLES, 12, 3);
+            }
         }
         else {
-            uiRect(cx - 0.27f, y0 + 0.95f, 0.54f, 0.45f, 0.9f, 0.9f, 0.95f);
-            uiTriDown(cx - 0.27f, y0 + 0.62f, 0.54f, 0.33f, 0.9f, 0.9f, 0.95f);
-            uiRect(cx - 0.04f, y0 + 0.75f, 0.08f, 0.55f, cardColor[i][0], cardColor[i][1], cardColor[i][2]);
-            uiRect(cx - 0.17f, y0 + 1.08f, 0.34f, 0.08f, cardColor[i][0], cardColor[i][1], cardColor[i][2]);
+            {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(cx - 0.27f, y0 + 0.95f, 0.0f));
+            model = glm::scale(model, glm::vec3(0.54f, 0.45f, 1.0f));
+            glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+            glUniform3f(locTint, 0.9f + (1.0f - 0.9f) * uiRed, 0.9f * (1.0f - uiRed), 0.95f * (1.0f - uiRed));
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+            }
+            {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(cx - 0.27f, y0 + 0.62f, 0.0f));
+            model = glm::scale(model, glm::vec3(0.54f, 0.33f, 1.0f));
+            glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+            glUniform3f(locTint, 0.9f + (1.0f - 0.9f) * uiRed, 0.9f * (1.0f - uiRed), 0.95f * (1.0f - uiRed));
+            glDrawArrays(GL_TRIANGLES, 12, 3);
+            }
+            {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(cx - 0.04f, y0 + 0.75f, 0.0f));
+            model = glm::scale(model, glm::vec3(0.08f, 0.55f, 1.0f));
+            glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+            glUniform3f(locTint, (cardColor[i][0]) + (1.0f - (cardColor[i][0])) * uiRed, (cardColor[i][1]) * (1.0f - uiRed), (cardColor[i][2]) * (1.0f - uiRed));
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+            }
+            {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(cx - 0.17f, y0 + 1.08f, 0.0f));
+            model = glm::scale(model, glm::vec3(0.34f, 0.08f, 1.0f));
+            glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+            glUniform3f(locTint, (cardColor[i][0]) + (1.0f - (cardColor[i][0])) * uiRed, (cardColor[i][1]) * (1.0f - uiRed), (cardColor[i][2]) * (1.0f - uiRed));
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+            }
         }
-        int pips = g_textReady ? 0 : cardCost[i] / 10;
+        int pips = textReady ? 0 : cardCost[i] / 10;
         for (int k = 0; k < pips; k++) {
             float px = x0 + 0.525f + (k - (pips - 1) / 2.0f) * 0.28f;
-            uiCircle(px, y0 + 0.26f, 0.1f, 1.0f, 0.8f, 0.1f);
-            uiCircle(px, y0 + 0.26f, 0.06f, 0.9f, 0.62f, 0.05f);
+            {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(px, y0 + 0.26f, 0.0f));
+            model = glm::scale(model, glm::vec3(0.1f, 0.1f, 1.0f));
+            glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+            glUniform3f(locTint, 1.0f + (1.0f - 1.0f) * uiRed, 0.8f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
+            glDrawArrays(GL_TRIANGLE_FAN, 15, 34);
+            }
+            {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(px, y0 + 0.26f, 0.0f));
+            model = glm::scale(model, glm::vec3(0.06f, 0.06f, 1.0f));
+            glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+            glUniform3f(locTint, 0.9f + (1.0f - 0.9f) * uiRed, 0.62f * (1.0f - uiRed), 0.05f * (1.0f - uiRed));
+            glDrawArrays(GL_TRIANGLE_FAN, 15, 34);
+            }
         }
     }
     glUniform1f(locGray, 0.0f);
@@ -1661,38 +2115,157 @@ void drawHealthBar(float cx, float y, int health, int maxHealth) {
     float frac = (float)health / (float)maxHealth;
     if (frac < 0.0f) frac = 0.0f;
     if (frac > 1.0f) frac = 1.0f;
-    uiRect(cx - 0.32f, y, 0.64f, 0.1f, 0.1f, 0.1f, 0.1f);
-    uiRect(cx - 0.3f, y + 0.02f, 0.6f * frac, 0.06f, 1.0f - frac, frac, 0.1f);
+    {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(cx - 0.32f, y, 0.0f));
+    model = glm::scale(model, glm::vec3(0.64f, 0.1f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, 0.1f + (1.0f - 0.1f) * uiRed, 0.1f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+    {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(cx - 0.3f, y + 0.02f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.6f * frac, 0.06f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, (1.0f - frac) + (1.0f - (1.0f - frac)) * uiRed, frac * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
 }
 
 void drawBubble(float x, float y, int icon) {
-    uiRect(x, y, 0.9f, 0.6f, 1.0f, 1.0f, 1.0f);
-    uiTriDown(x + 0.2f, y - 0.15f, 0.2f, 0.15f, 1.0f, 1.0f, 1.0f);
+    {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(x, y, 0.0f));
+    model = glm::scale(model, glm::vec3(0.9f, 0.6f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, 1.0f + (1.0f - 1.0f) * uiRed, 1.0f * (1.0f - uiRed), 1.0f * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+    {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(x + 0.2f, y - 0.15f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.2f, 0.15f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, 1.0f + (1.0f - 1.0f) * uiRed, 1.0f * (1.0f - uiRed), 1.0f * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLES, 12, 3);
+    }
     if (icon == 0) {
-        uiRect(x + 0.29f, y + 0.08f, 0.32f, 0.24f, 0.55f, 0.35f, 0.2f);
-        uiTriUp(x + 0.22f, y + 0.32f, 0.46f, 0.2f, 0.75f, 0.2f, 0.2f);
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x + 0.29f, y + 0.08f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.32f, 0.24f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.55f + (1.0f - 0.55f) * uiRed, 0.35f * (1.0f - uiRed), 0.2f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x + 0.22f, y + 0.32f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.46f, 0.2f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.75f + (1.0f - 0.75f) * uiRed, 0.2f * (1.0f - uiRed), 0.2f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 6, 3);
+        }
     }
     else if (icon == 1) {
-        uiRect(x + 0.28f, y + 0.07f, 0.05f, 0.46f, 0.2f, 0.2f, 0.2f);
-        uiTriRight(x + 0.33f, y + 0.28f, 0.32f, 0.25f, 0.8f, 0.1f, 0.1f);
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x + 0.28f, y + 0.07f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.05f, 0.46f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.2f + (1.0f - 0.2f) * uiRed, 0.2f * (1.0f - uiRed), 0.2f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x + 0.33f, y + 0.28f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.32f, 0.25f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.8f + (1.0f - 0.8f) * uiRed, 0.1f * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 9, 3);
+        }
     }
     else {
-        uiRect(x + 0.42f, y + 0.2f, 0.06f, 0.28f, 0.45f, 0.47f, 0.55f);
-        uiTriUp(x + 0.4f, y + 0.48f, 0.1f, 0.08f, 0.45f, 0.47f, 0.55f);
-        uiRect(x + 0.33f, y + 0.16f, 0.24f, 0.05f, 0.5f, 0.32f, 0.12f);
-        uiRect(x + 0.43f, y + 0.07f, 0.04f, 0.09f, 0.5f, 0.32f, 0.12f);
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x + 0.42f, y + 0.2f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.06f, 0.28f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.45f + (1.0f - 0.45f) * uiRed, 0.47f * (1.0f - uiRed), 0.55f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x + 0.4f, y + 0.48f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.1f, 0.08f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.45f + (1.0f - 0.45f) * uiRed, 0.47f * (1.0f - uiRed), 0.55f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 6, 3);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x + 0.33f, y + 0.16f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.24f, 0.05f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.5f + (1.0f - 0.5f) * uiRed, 0.32f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x + 0.43f, y + 0.07f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.04f, 0.09f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 0.5f + (1.0f - 0.5f) * uiRed, 0.32f * (1.0f - uiRed), 0.12f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
     }
 }
 
 void drawCutscene(float t) {
     float gy = 3.75f;
-    if (g_textReady) uiRect(0.3f, 0.05f, 15.4f, 0.65f, 0.1f, 0.1f, 0.14f);
+    if (textReady) {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.3f, 0.05f, 0.0f));
+    model = glm::scale(model, glm::vec3(15.4f, 0.65f, 1.0f));
+    glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+    glUniform3f(locTint, 0.1f + (1.0f - 0.1f) * uiRed, 0.1f * (1.0f - uiRed), 0.14f * (1.0f - uiRed));
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
     if (t > 0.5f && t < 4.5f) {
         float pulse = 0.6f + 0.4f * sin(t * 6.0f);
-        uiRect(0.4f, 0.4f, 3.2f, 0.1f, pulse, pulse, 0.1f);
-        uiRect(0.4f, 8.5f, 3.2f, 0.1f, pulse, pulse, 0.1f);
-        uiRect(0.4f, 0.4f, 0.1f, 8.2f, pulse, pulse, 0.1f);
-        uiRect(3.5f, 0.4f, 0.1f, 8.2f, pulse, pulse, 0.1f);
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.4f, 0.4f, 0.0f));
+        model = glm::scale(model, glm::vec3(3.2f, 0.1f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, pulse + (1.0f - pulse) * uiRed, pulse * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.4f, 8.5f, 0.0f));
+        model = glm::scale(model, glm::vec3(3.2f, 0.1f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, pulse + (1.0f - pulse) * uiRed, pulse * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.4f, 0.4f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.1f, 8.2f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, pulse + (1.0f - pulse) * uiRed, pulse * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(3.5f, 0.4f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.1f, 8.2f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, pulse + (1.0f - pulse) * uiRed, pulse * (1.0f - uiRed), 0.1f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
     }
     float guardX = 4.0f;
     float lift = 0.0f;
@@ -1702,7 +2275,14 @@ void drawCutscene(float t) {
         guardX += 0.08f * sin(t * 30.0f);
         enemyX = 8.9f - 0.08f * sin(t * 30.0f);
         lift = 0.15f * sin(t * 30.0f);
-        if (((int)(t * 10.0f)) % 2 == 0) uiCircle(8.55f, gy + 0.45f, 0.1f, 1.0f, 0.9f, 0.2f);
+        if (((int)(t * 10.0f)) % 2 == 0) {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(8.55f, gy + 0.45f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 1.0f));
+        glUniformMatrix4fv(locModel, 1, GL_FALSE, &model[0][0]);
+        glUniform3f(locTint, 1.0f + (1.0f - 1.0f) * uiRed, 0.9f * (1.0f - uiRed), 0.2f * (1.0f - uiRed));
+        glDrawArrays(GL_TRIANGLE_FAN, 15, 34);
+        }
     }
     else if (t >= 13.5f) {
         enemyX = 8.9f + (t - 13.5f) * 5.0f;
@@ -1729,14 +2309,14 @@ void drawMainMenu() {
         glDrawArrays(GL_TRIANGLES, 6 + i * 6, 6);
     }
     glUniform1f(hilo, 0.0f);
-    if (!g_textReady) glDrawArrays(GL_TRIANGLES, menuIconStart, menuIconCount);
+    if (!textReady) glDrawArrays(GL_TRIANGLES, menuIconStart, menuIconCount);
 }
 
 void drawEndOrPauseMenu() {
     glBindVertexArray(menuVAO);
     glUniform2f(wizzo, 0.0f, 0.0f);
     glUniform3f(fizzo, 1.0f, 1.0f, 1.0f);
-    if (isWin || g_gameOver) {
+    if (isWin || gameOver) {
         glUniform1f(hilo, 0.0f);
         glDrawArrays(GL_TRIANGLES, isWin ? 108 : 114, 6);
         for (int i = 0; i < 2; i++) {
@@ -1744,7 +2324,7 @@ void drawEndOrPauseMenu() {
             glDrawArrays(GL_TRIANGLES, 120 + i * 6, 6);
         }
         glUniform1f(hilo, 0.0f);
-        if (!g_textReady) glDrawArrays(GL_TRIANGLES, 132, 15);
+        if (!textReady) glDrawArrays(GL_TRIANGLES, 132, 15);
     }
     else {
         glUniform1f(hilo, 0.0f);
@@ -1754,16 +2334,12 @@ void drawEndOrPauseMenu() {
             glDrawArrays(GL_TRIANGLES, 72 + i * 6, 6);
         }
         glUniform1f(hilo, 0.0f);
-        if (!g_textReady) glDrawArrays(GL_TRIANGLES, 90, 18);
+        if (!textReady) glDrawArrays(GL_TRIANGLES, 90, 18);
     }
 }
 
-// ========================================================================
-// MAIN: runs each member's part in order
-// ========================================================================
-
 void updateGame(GLFWwindow* window, float dt) {
-    g_animTime += dt;
+    animTime += dt;
     startWaveIfNeeded();
     updatePlayerActions(window, dt);
     updateSpawner(dt);
@@ -1786,8 +2362,8 @@ int main() {
     buildMenuMesh();
     buildUiMesh();
     unsigned int dodo = buildShaderProgram();
-    g_mainProgram = dodo;
-    g_textReady = initText();
+    mainProgram = dodo;
+    textReady = initText();
     glUseProgram(dodo);
     double el_wa2t_el_adeem = glfwGetTime();
 
@@ -1797,9 +2373,8 @@ int main() {
         el_wa2t_el_adeem = el_wa2t_el_goded;
         if (koko > 0.1f) koko = 0.1f;
 
-        if (!g_gameOver && !isPaused && !inMainMenu && !isWin && !inCutscene) updateGame(hamada, koko);
+        if (!gameOver && !isPaused && !inMainMenu && !isWin && !inCutscene) updateGame(hamada, koko);
 
-        updateWindowTitle(hamada);
         beginFrame(dodo);
 
         if (inMainMenu) {
@@ -1828,20 +2403,20 @@ int main() {
         drawCoins();
 
         uiBegin();
-        for (const auto& enemy : g_enemies) {
+        for (const auto& enemy : enemies) {
             if (enemy.isAlive) drawEnemyUnit(enemy);
         }
         for (const auto& p : basal) {
             drawPlayerUnit(p);
         }
-        for (const auto& pr : g_projectiles) {
+        for (const auto& pr : projectiles) {
             drawProjectile(pr);
         }
         drawCoinTracker();
         drawCards();
         uiEnd();
         drawHudText();
-        if (isWin || g_gameOver || isPaused) {
+        if (isWin || gameOver || isPaused) {
             drawEndOrPauseMenu();
             drawMuteButton();
             drawEndOrPauseText();
